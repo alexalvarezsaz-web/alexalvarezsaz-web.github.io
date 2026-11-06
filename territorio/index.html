@@ -118,7 +118,7 @@ body.full .tapclose { display: block; }
 <div class="legend" id="legend"></div>
   <div class="mapbox">
     <div class="mapview" id="mapView"><div class="mapin" id="mapIn">
-      <img id="mapImg" src="/_blob/da98762fa1e997ada817c82663b84c51" width="3072" height="3584" alt="Mapa topográfico del Berguedà y alrededores" draggable="false">
+      <img id="mapImg" src="mapa.jpg" width="3072" height="3584" alt="Mapa topográfico del Berguedà y alrededores" draggable="false">
       
       <canvas id="mapHi" hidden></canvas>
       <div id="mapRain"></div><div id="mapMine"></div><div id="mapNews"></div>
@@ -154,7 +154,7 @@ var SP = { rovello: ['Rovelló', 9, 12], pinetell: ['Pinetell', 9, 12], molleric
 var PINOS = ['rovello', 'pinetell', 'molleric', 'calceta', 'camaperdiu', 'fredolic', 'fredolicgros', 'llenega', 'camagroc'], ROBLES = ['cep', 'rossinyol', 'carlet', 'trompeta', 'lloraverda', 'carbonera', 'llengua'], MIX = ['rovello', 'pinetell', 'cep', 'rossinyol', 'camaperdiu', 'llengua'];
 var FOREST_SP = { 11: PINOS, 12: PINOS, 13: PINOS, 14: PINOS, 23: PINOS, 19: PINOS, 26: PINOS, 27: PINOS, 1: ['cep', 'rossinyol', 'trompeta', 'carbonera', 'lloraverda', 'llengua', 'peurata'], 21: ROBLES, 2: ['gotsvi', 'marcot', 'cep', 'rossinyol'], 7: ROBLES, 3: ROBLES, 8: ROBLES, 9: ROBLES, 15: ROBLES, 10: ['sureny', 'carlet', 'rossinyol'], 28: MIX, 29: MIX, 24: MIX };
 var ZONES = { 'Berguedà': [42.13, 1.82], 'Solsonès': [42.07, 1.63], 'Ripollès': [42.27, 2.06], 'Cerdanya': [42.38, 1.84], 'Osona': [42.01, 2.07], 'Bages': [41.99, 1.82] };
-var MAP_SRC = '/_blob/da98762fa1e997ada817c82663b84c51', TOPO_SRC = '/_blob/19761eb11805ac8857700378c3104d01', DATA_SRC = '/_blob/fba8f4b8d49cb333a23b177072cdbe0c';
+var MAP_SRC = 'mapa.jpg', TOPO_SRC = 'relieve.jpg', DATA_SRC = 'datos.png';
 var FOREST_KEY = [['Pinos (pi roig, pinassa…)', '#12a83a'], ['Pi negre', '#1560d8'], ['Abeto (avet)', '#c218c9'], ['Hayedo', '#ef9a33'], ['Robledal', '#c77f3a'], ['Encinar', '#a98a3f'], ['Coníferas y frondosas', '#a9b94f'], ['Frondosas mixtas', '#e8c257'], ['Ribera', '#55bcd1']];
 var T = { layer: '', rain: false, zonas: null, noticias: null, sitios: null, data: null, loading: false, waiting: [], mine: false, picked: {} };
 
