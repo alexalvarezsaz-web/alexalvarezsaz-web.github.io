@@ -152,8 +152,29 @@ dialog.sheet::backdrop { background: rgba(20, 12, 6, .55); }
 .seed span { flex: 1; min-width: 0; }
 .seed button { min-height: 46px; padding: 0 16px; border: 0; border-radius: 12px; background: #241706; color: #fbf1e3; font: 800 16px var(--display); }
 
-/* Setup map */
-#setup { display: block; width: 100%; height: auto; }
+/* Setup map: wide enough to read and tap on a phone, scrolled sideways to reach the big forage */
+.mapwrap { overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; background: #2c2117; }
+.mapwrap::-webkit-scrollbar { display: none; }
+#setup { display: block; width: max(100%, 820px); height: auto; }
+.hero.map .hero-t { padding-bottom: 12px; }
+.hsum { padding: 4px 18px 2px; font-size: 15px; line-height: 1.5; color: #fbf1e3; }
+.hsum b { color: #f2c04e; }
+.strip { display: flex; gap: 8px; overflow-x: auto; padding: 10px 18px 16px; scrollbar-width: none; }
+.strip::-webkit-scrollbar { display: none; }
+.strip button { flex: none; min-height: 52px; padding: 6px 12px 6px 10px; border-radius: 14px; border: 1px solid #5a4636; background: #2c2117; color: #fbf1e3; display: grid; grid-template-columns: 10px auto; column-gap: 8px; align-items: center; text-align: left; }
+.strip i { grid-row: span 2; width: 10px; height: 10px; border-radius: 50%; background: #9a8f80; }
+.strip .ok i { background: #7cc46a; } .strip .due i { background: #f2c04e; } .strip .late i { background: #ef6b5b; }
+.strip .due, .strip .late { border-color: currentColor; }
+.strip .due { color: #f2c04e; } .strip .late { color: #ef6b5b; }
+.strip b { font-size: 14px; color: #fbf1e3; }
+.strip small { font-size: 12px; color: #cbbba5; }
+.log > li.day { grid-template-columns: minmax(0, 1fr); }
+.day { border-top: 1px solid var(--line); padding: 10px 0; display: grid; gap: 6px; }
+.day:first-child { border-top: 0; }
+.day > h3 { font: 800 16px var(--body); }
+.day > p.small { margin: 0; }
+.day details summary { cursor: pointer; font-size: 13.5px; font-weight: 700; color: var(--muted); min-height: 32px; display: flex; align-items: center; }
+.day .log li:first-child { border-top: 1px solid var(--line); }
 #setup text, .mapbig text { font-family: var(--body); }
 [data-mod], [data-zone], [data-point] { cursor: pointer; }
 [data-mod]:focus-visible, [data-zone]:focus-visible, [data-point]:focus-visible { outline: 3px solid var(--honey); }
@@ -190,14 +211,16 @@ dialog.sheet::backdrop { background: rgba(20, 12, 6, .55); }
       <g id="brood"></g>
       <g id="workers"></g>
     </svg>
-    <svg viewBox="0 0 1000 360" id="setup" hidden role="group" aria-label="Tu montaje visto desde arriba. Toca una parte para ver qué hay o apuntarlo"></svg>
+    <div class="mapwrap" id="mapWrap" hidden><svg viewBox="0 0 1000 360" id="setup" role="group" aria-label="Tu montaje visto desde arriba. Toca una parte para ver qué hay o apuntarlo"></svg></div>
     <div class="hero-b" id="heroB"></div>
+    <div class="hsum" id="hsum" hidden></div>
+    <div class="strip" id="strip" hidden></div>
   </section>
 
   <div id="body" hidden>
     <div class="tiles" id="census"></div>
 
-    <section class="sect" style="margin-top:14px">
+    <section class="sect" id="feedBox" style="margin-top:14px">
       <div class="sect-h"><h2>Cuidados</h2><span class="small">Toca para apuntar</span></div>
       <div class="feed" id="feed"></div>
     </section>
@@ -264,9 +287,12 @@ dialog.sheet::backdrop { background: rgba(20, 12, 6, .55); }
   <div class="pick"><span class="lab">Obreras</span><div class="kinds" id="pickObreras"></div>
     <label id="exactL" hidden style="display:grid;gap:4px;font-size:13px;font-weight:700;color:var(--muted)">Cuántas exactamente<input name="obreras" type="number" min="0" inputmode="numeric" style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:18px"></label>
   </div>
-  <div class="pick"><span class="lab">Huevos</span><div class="kinds" data-lvl="huevos"></div></div>
-  <div class="pick"><span class="lab">Larvas</span><div class="kinds" data-lvl="larvas"></div></div>
-  <div class="pick"><span class="lab">Pupas</span><div class="kinds" data-lvl="pupas"></div></div>
+  <div id="broodPicks" style="display:grid;gap:14px">
+    <div class="pick"><span class="lab">Huevos</span><div class="kinds" data-lvl="huevos"></div></div>
+    <div class="pick"><span class="lab">Larvas</span><div class="kinds" data-lvl="larvas"></div></div>
+    <div class="pick"><span class="lab">Pupas</span><div class="kinds" data-lvl="pupas"></div></div>
+  </div>
+  <p class="small" id="broodNote" hidden>La cría, las semillas y la reina se apuntan en cada zona del mapa. Aquí solo lo de toda la colonia.</p>
   <div class="counts">
     <label>Reinas<input name="reinas" type="number" min="0" inputmode="numeric"></label>
     <label>Temperatura (°C)<input name="temp" type="text" inputmode="decimal" placeholder="Opcional"></label>
@@ -575,14 +601,18 @@ function render() {
   $('heroB').style.padding = '';
   var lc = lastCount(c.id), n = state(c.id), ws = evs(c.id, 'recuento').filter(function (e) { return e.n.obreras != null; }), prev = ws[1];
   var age = c.reina ? Math.max(0, daysAgo(new Date(c.reina + 'T12:00').getTime())) : null;
-  $('heroT').innerHTML = '<h1>' + esc(c.nombre || 'Sin nombre') + '</h1>' + (c.especie ? '<span class="sp">' + esc(c.especie) + (c.casa ? ' · <span style="font-style:normal">' + esc(c.casa) + '</span>' : '') + '</span>' : '') +
-    (age != null ? '<div class="age num">' + nf(age) + '<small>' + (age === 1 ? 'día' : 'días') + ' con reina</small></div>' + (age >= 60 ? '<span class="sp" style="font-style:normal">' + span(age) + '</span>' : '') : '') +
+  var map = isMap(c);
+  $('heroT').innerHTML = '<h1>' + esc(c.nombre || 'Sin nombre') + '</h1>' + (c.especie ? '<span class="sp">' + esc(c.especie) + (c.casa && !map ? ' · <span style="font-style:normal">' + esc(c.casa) + '</span>' : '') + (map && age != null ? ' · <span style="font-style:normal">' + nf(age) + ' días contigo' + (age >= 60 ? ', ' + span(age) : '') + '</span>' : '') + '</span>' : '') +
+    (age != null && !map ? '<div class="age num">' + nf(age) + '<small>' + (age === 1 ? 'día' : 'días') + ' con reina</small></div>' + (age >= 60 ? '<span class="sp" style="font-style:normal">' + span(age) + '</span>' : '') : '') +
     (c.hiberna ? '<span class="hiber">' + hiberText(c) + '</span>' : '');
-  $('heroB').textContent = lc ? 'Última revisión: ' + ago(lc.t) + (lc.temp != null ? ' · ' + String(lc.temp).replace('.', ',') + ' °C' : '') + '.' : 'Haz una revisión y el hormiguero se llenará con lo que veas.';
+  $('heroB').textContent = map ? '' : lc ? 'Última revisión: ' + ago(lc.t) + (lc.temp != null ? ' · ' + String(lc.temp).replace('.', ',') + ' °C' : '') + '.' : 'Haz una revisión y el hormiguero se llenará con lo que veas.';
+  $('heroB').hidden = map;
   renderNest(c, n);
-  // SVG elements have no hidden property, so the attribute is set directly
-  $('nest').toggleAttribute('hidden', isMap(c)); $('setup').toggleAttribute('hidden', !isMap(c));
-  if (isMap(c)) { $('setup').innerHTML = overviewSvg(c); $('heroB').textContent += ' Toca una parte del montaje para ver o apuntar qué hay.'; if (modView) drawMod(); }
+  // With the map, the shelf is the home: summary and care sit with it, and the generic nest and tiles go away
+  $('nest').toggleAttribute('hidden', map); $('mapWrap').hidden = !map; $('hsum').hidden = !map; $('strip').hidden = !map;
+  document.querySelector('.hero').classList.toggle('map', map);
+  $('census').hidden = map; $('feedBox').hidden = map;
+  if (map) { $('setup').innerHTML = overviewSvg(c); $('hsum').innerHTML = mapSummary(c, n, lc); $('strip').innerHTML = careStrip(c); if (modView) drawMod(); }
   var up = prev && n.obreras > prev.n.obreras;
   $('census').innerHTML = '<div class="tile"><span>Obreras</span><b class="num' + (n.rango ? ' word' : '') + '">' + esc(workersTxt(n)) + '</b>' + (up ? '<i>↑ desde ' + esc(workersTxt(prev.n)) + '</i>' : '') + '</div>' +
     BROOD.map(function (k, i) { var l = lvl(n, k); return '<div class="tile"><span>' + STAGES[i + 1][1] + '</span><b class="word">' + (l == null ? '–' : LEVELS[l]) + '</b></div>'; }).join('');
@@ -602,7 +632,11 @@ function render() {
   $('photos').innerHTML = pics.map(function (e) { return '<img src="/_blob/' + esc(e.foto) + '" alt="' + esc(fmtD(e.t) + (e.texto ? ': ' + e.texto : '')) + '" loading="lazy">'; }).join('');
   var all = evs(c.id);
   $('logEmpty').hidden = all.length > 0; $('more').hidden = all.length <= shown;
-  $('log').innerHTML = all.slice(0, shown).map(function (e) {
+  $('log').innerHTML = days(all.slice(0, shown));
+  renderTail(c);
+}
+// One line per entry, as it appears inside a day
+function entry(e) {
     var ic, txt;
     if (e.tipo === 'comida') {
       var f = careName(e.que), o = ORIGINS.filter(function (x) { return x[0] === e.origen; })[0], det = [e.bicho, o && o[1].toLowerCase()].filter(Boolean).join(' · ');
@@ -620,7 +654,46 @@ function render() {
     }
     else { ic = KINDS[e.kind] || KINDS.obs; txt = '<p>' + esc(e.texto || '') + '</p>' + (e.foto ? '<img src="/_blob/' + esc(e.foto) + '" alt="Foto de la nota" loading="lazy">' : ''); }
     return '<li class="' + esc(e.kind || '') + '"><span class="ic" aria-hidden="true">' + ic + '</span><div><button type="button" class="when" data-when="' + esc(e.id) + '" aria-label="Cambiar la fecha: ' + fmtT(e.t) + '">' + fmtT(e.t) + '</button>' + txt + '</div><button type="button" class="x" data-del="' + esc(e.id) + '" aria-label="Borrar">×</button></li>';
+}
+// The diary by day: a summary of the visit, notes in full, and the rest folded away
+function days(list) {
+  var groups = [], by = {};
+  list.forEach(function (e) { var k = dayStart(e.t); if (!by[k]) { by[k] = []; groups.push([k, by[k]]); } by[k].push(e); });
+  return groups.map(function (g) {
+    var es = g[1], notes = es.filter(function (e) { return e.tipo === 'nota'; }), rest = es.filter(function (e) { return e.tipo !== 'nota'; }), parts = [];
+    var zs = rest.filter(function (e) { return e.tipo === 'zona'; }).length, rv = rest.filter(function (e) { return e.tipo === 'recuento'; })[0], care = {};
+    if (rv) { var w = []; if (rv.n.obreras != null) w.push(workersTxt(rv.n) + ' obreras'); BROOD.forEach(function (k) { var l = lvl(rv.n, k); if (l) w.push(k + ' ' + LEVELS[l].toLowerCase()); }); if (rv.temp != null) w.push(String(rv.temp).replace('.', ',') + ' °C'); if (rv.hum != null) w.push(rv.hum + ' %'); parts.push('Revisión' + (w.length ? ': ' + w.join(', ') : '')); }
+    if (zs) parts.push(zs + (zs === 1 ? ' zona apuntada' : ' zonas apuntadas'));
+    rest.forEach(function (e) { if (e.tipo === 'comida') { var n = careName(e.que)[1]; care[n] = (care[n] || 0) + 1; } });
+    var cn = Object.keys(care); if (cn.length) parts.push(cn.map(function (k) { return k + (care[k] > 1 ? ' ×' + care[k] : ''); }).join(', '));
+    var d = new Date(g[0]), title = daysAgo(g[0]) === 0 ? 'Hoy' : daysAgo(g[0]) === 1 ? 'Ayer' : d.getDate() + ' de ' + MONTHS_L[d.getMonth()] + (d.getFullYear() !== new Date().getFullYear() ? ' de ' + d.getFullYear() : '');
+    return '<li class="day"><h3>' + title + '</h3>' + (parts.length ? '<p class="small">' + esc(parts.join(' · ')) + '</p>' : '') +
+      (notes.length ? '<ul class="log">' + notes.map(entry).join('') + '</ul>' : '') +
+      (rest.length ? '<details><summary>Ver ' + (rest.length === 1 ? 'el apunte' : 'los ' + rest.length + ' apuntes') + '</summary><ul class="log">' + rest.map(entry).join('') + '</ul></details>' : '') + '</li>';
   }).join('');
+}
+var MONTHS_L = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+// The line under the map: how many, what brood, where the queen and the seeds are
+function mapSummary(c, n, lc) {
+  var zs = c.zonas || {}, ids = Object.keys(zs), out = [], q = ids.filter(function (k) { return zs[k].reina; })[0];
+  out.push('<b>' + esc(workersTxt(n)) + '</b> obreras');
+  var brood = BROOD.map(function (k) { var m = ids.reduce(function (a, id) { return Math.max(a, zs[id][k] || 0); }, 0); return m ? k + ' ' + LEVELS[m].toLowerCase() : ''; }).filter(Boolean);
+  out.push(brood.length ? esc(brood.join(', ')) : 'sin cría');
+  if (q) out.push((zs[q].reina === 'si' ? 'reina en ' : 'reina, quizá en ') + esc(q === 'tubo' ? 'el tubo' : ZONES[q]));
+  var seeds = ids.filter(function (k) { return (zs[k].semillas || 0) >= 2; }).length; if (seeds) out.push('semillas guardadas en ' + seeds + (seeds === 1 ? ' sitio' : ' sitios'));
+  var mold = ids.filter(function (k) { return zs[k].moho; }); if (mold.length) out.push('<b>⚠️ moho o algo raro en ' + esc(mold.map(function (k) { return ZONES[k].replace(/^.*· /, ''); }).join(', ')) + '</b>');
+  var t = ids.reduce(function (a, k) { return Math.max(a, zs[k].t || 0); }, 0), last = Math.max(t, lc ? lc.t : 0);
+  return out.join(' · ') + (last ? '<br><span style="color:#cbbba5;font-size:13.5px">Última vez que las miraste: ' + ago(last) + '. Toca una parte del montaje para apuntar; desliza para ver el forrajeo grande.</span>' : '');
+}
+// Care as a strip of chips: a dot for how it is going, tap to log it
+function careStrip(c) {
+  var food = evs(c.id, 'comida'), cd = cada(c);
+  return careList(c).filter(function (f) { return f[0] !== 'semillas' || cd[f[0]] > 0 || food.some(function (e) { return e.que === f[0]; }); }).map(function (f) {
+    var p = pointState(c, f[0]);
+    return '<button type="button" class="' + p.st + '" data-food="' + f[0] + '"><i></i><b>' + esc(f[1]) + '</b><small>' + (p.d == null ? 'sin apuntar' : p.txt) + (p.st === 'due' ? ' · toca' : p.st === 'late' ? ' · pasado' : '') + '</small></button>';
+  }).join('');
+}
+function renderTail(c) {
   if (document.activeElement && document.activeElement.closest && !document.activeElement.closest('details')) fillForm(c);
   $('importHist').hidden = Object.keys(S.ev).some(function (k) { return S.ev[k].hist; });
   $('useMap').hidden = isMap(c);
@@ -697,13 +770,18 @@ $('heroB').addEventListener('submit', function (e) {
 });
 $('heroB').addEventListener('click', function (e) { if (e.target.closest('[data-hist]')) $('importHist').click(); });
 $('cols').addEventListener('click', function (e) { var b = e.target.closest('[data-col]'); if (b) { S.cur = b.getAttribute('data-col'); shown = PAGE; sureDel = false; persist(); render(); fillForm(cur()); } });
-$('feed').addEventListener('click', function (e) {
+// A care tap logs at once; a second tap within two minutes asks first, so a double tap doesn't log twice
+function careTap(e) {
   var b = e.target.closest('[data-food]'); if (!b) return;
   var k = b.getAttribute('data-food'), f = careName(k);
   if (k === 'proteina') return openProt();
-  var id = addEv({ tipo: 'comida', que: k }); buzz();
-  toast(f[1] + ' apuntado', 'Deshacer', function () { delEv(id); });
-});
+  var last = evs(S.cur, 'comida').filter(function (x) { return x.que === k; })[0];
+  function log() { var id = addEv({ tipo: 'comida', que: k }); buzz(); toast(f[1] + ' apuntado', 'Deshacer', function () { delEv(id); }); }
+  if (last && Date.now() - last.t < 120000) return toast(f[1] + ' ya estaba apuntado hace un momento', 'Apuntar otra vez', log);
+  log();
+}
+$('feed').addEventListener('click', careTap);
+$('strip').addEventListener('click', careTap);
 // Protein asks where the insect came from, so mites or losses can later be traced back to it
 var protOrig = 'vivo';
 function drawProt() { $('protOrig').innerHTML = ORIGINS.map(function (o) { return '<button type="button" data-o="' + o[0] + '" aria-pressed="' + (o[0] === protOrig) + '">' + o[1] + '</button>'; }).join(''); }
@@ -801,6 +879,8 @@ $('countBtn').addEventListener('click', function () {
   else if (n.obreras != null) { pick.obreras = RANGES.length; f.obreras.value = n.obreras; }
   if (!n.rango && n.obreras == null) f.obreras.value = '';
   BROOD.forEach(function (k) { var l = lvl(n, k); if (l != null) pick[k] = l; });
+  // With the map, brood belongs to each zone, so the check keeps only what is about the whole colony
+  var map = isMap(cur()); $('broodPicks').hidden = map; $('broodNote').hidden = !map; if (map) BROOD.forEach(function (k) { delete pick[k]; });
   f.reinas.value = n.reinas == null ? '' : n.reinas; f.temp.value = ''; f.hum.value = '';
   drawPick(); $('countD').showModal();
 });
