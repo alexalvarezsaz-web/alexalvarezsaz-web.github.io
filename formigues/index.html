@@ -62,10 +62,11 @@ h1, h2, h3 { font-family: var(--display); line-height: 1.1; margin: 0; text-wrap
 .first button { min-height: 52px; border: 0; border-radius: 14px; background: var(--honey); color: #241706; font: 800 18px var(--display); }
 
 /* Census numbers */
-.tiles { display: grid; grid-template-columns: minmax(0, 1.35fr) repeat(3, minmax(0, 1fr)); gap: 8px; }
+.tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.tiles .tile:first-child { grid-column: 1 / -1; grid-template-columns: auto 1fr auto; align-items: baseline; gap: 10px; }
 .tile { padding: 11px 10px; background: var(--surface); border-radius: 14px; display: grid; gap: 1px; min-width: 0; }
 .tile b { font: 800 clamp(22px, 7vw, 30px)/1.05 var(--display); overflow-wrap: anywhere; }
-.tile b.word { font-size: clamp(16px, 4.6vw, 21px); padding-top: 4px; }
+.tile b.word { font-size: clamp(17px, 5vw, 22px); padding-top: 4px; overflow-wrap: normal; }
 .tile span { font-size: 12.5px; color: var(--muted); }
 .tile i { font-style: normal; font-size: 12px; font-weight: 800; color: var(--leaf); }
 
@@ -146,6 +147,20 @@ dialog.sheet::backdrop { background: rgba(20, 12, 6, .55); }
 .sh-b .ok { border: 0; background: var(--acc); color: var(--acc-ink); }
 .sh-b .no { border: 1px solid var(--line); background: transparent; }
 .pic { max-height: 200px; border-radius: 12px; object-fit: cover; }
+
+/* Setup map */
+#setup { display: block; width: 100%; height: auto; }
+#setup text, .mapbig text { font-family: var(--body); }
+[data-mod], [data-zone], [data-point] { cursor: pointer; }
+[data-mod]:focus-visible, [data-zone]:focus-visible, [data-point]:focus-visible { outline: 3px solid var(--honey); }
+.mapbig { display: block; width: 100%; height: auto; max-height: 52dvh; border-radius: 14px; background: #2c2117; }
+.mapbig [data-zone]:hover > :first-child { stroke: var(--honey); stroke-width: 3; }
+.zlist { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.zlist button { width: 100%; min-height: 48px; padding: 8px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); text-align: left; display: grid; gap: 1px; }
+.zlist b { font-size: 15px; }
+.zlist span { font-size: 13px; color: var(--muted); }
+.zlist .due { border-color: var(--honey); }
+.zlist .late { border-color: var(--warn); }
 </style>
 
 <main class="wrap">
@@ -169,6 +184,7 @@ dialog.sheet::backdrop { background: rgba(20, 12, 6, .55); }
       <g id="brood"></g>
       <g id="workers"></g>
     </svg>
+    <svg viewBox="0 0 1000 360" id="setup" hidden role="group" aria-label="Tu montaje visto desde arriba. Toca una parte para ver qué hay o apuntarlo"></svg>
     <div class="hero-b" id="heroB"></div>
   </section>
 
@@ -217,6 +233,7 @@ dialog.sheet::backdrop { background: rgba(20, 12, 6, .55); }
         <button type="button" class="ghost" id="newCol">＋ Otra colonia</button>
         <button type="button" class="ghost" id="export">Descargar copia</button>
         <button type="button" class="ghost" id="importHist" hidden>Añadir mi historial de abril a julio</button>
+        <button type="button" class="ghost" id="useMap" hidden>Usar el mapa de mi montaje</button>
         <button type="button" class="ghost danger" id="delCol">Borrar esta colonia</button>
       </div>
       <p class="small" id="sync"></p>
@@ -247,6 +264,7 @@ dialog.sheet::backdrop { background: rgba(20, 12, 6, .55); }
   <div class="counts">
     <label>Reinas<input name="reinas" type="number" min="0" inputmode="numeric"></label>
     <label>Temperatura (°C)<input name="temp" type="text" inputmode="decimal" placeholder="Opcional"></label>
+    <label>Humedad (%)<input name="hum" type="number" min="0" max="100" inputmode="numeric" placeholder="Opcional"></label>
   </div>
   <div class="sh-b"><button type="button" class="no" data-close>Cancelar</button><button class="ok">Guardar</button></div>
 </form></dialog>
@@ -259,6 +277,8 @@ dialog.sheet::backdrop { background: rgba(20, 12, 6, .55); }
   <label class="ghost" id="notePicL" style="display:inline-flex;align-items:center;justify-self:start" hidden>Añadir foto<input type="file" accept="image/*" id="noteFile" hidden></label>
   <div class="sh-b"><button type="button" class="no" data-close>Cancelar</button><button class="ok">Guardar</button></div>
 </form></dialog>
+
+<dialog class="sheet" id="modD" aria-label="Parte del montaje"><div class="sh" id="modBody"></div></dialog>
 
 <dialog class="sheet" id="whenD" aria-label="Cambiar fecha"><form class="sh" method="dialog" id="whenF">
   <h2>¿Cuándo fue?</h2>
@@ -331,6 +351,186 @@ function renderNest(c, n) {
   $('workers').innerHTML = out;
 }
 
+// ---------- The setup map: Alex's shelf seen from above, traced from photos of 6 Nov 2026 (layout 'v1') ----------
+var ZONES = {
+  tubo: 'Tubo de ensayo', 'ac.forr': 'AntCrilic · forrajeo', 'ac.izq': 'AntCrilic · arriba izquierda', 'ac.gran': 'AntCrilic · granero, junto al depósito', 'ac.centro': 'AntCrilic · centro', 'ac.abajo': 'AntCrilic · abajo',
+  'ni.c1': 'Nidus · arriba izquierda', 'ni.seta': 'Nidus · la seta', 'ni.c3': 'Nidus · arriba centro', 'ni.c4': 'Nidus · arriba derecha', 'ni.c5': 'Nidus · lóbulo derecho', 'ni.c6': 'Nidus · derecha', 'ni.c7': 'Nidus · abajo derecha', 'ni.c8': 'Nidus · abajo centro', 'ni.c9': 'Nidus · abajo izquierda',
+  cinis: 'Cinis, el basurero', v1: 'Forrajeo V1', 'fg.izq': 'Forrajeo grande · corteza', 'fg.der': 'Forrajeo grande · arena'
+};
+var MODS = { tubo: ['Tubo de ensayo', ['tubo']], antcrilic: ['AntCrilic', ['ac.izq', 'ac.gran', 'ac.centro', 'ac.abajo', 'ac.forr'], ['deposito']], nidus: ['Nidus V1', ['ni.c1', 'ni.seta', 'ni.c3', 'ni.c4', 'ni.c5', 'ni.c6', 'ni.c7', 'ni.c8', 'ni.c9'], ['hydra']], cinis: ['Cinis', ['cinis'], ['cinis']], v1: ['Forrajeo V1', ['v1']], fg: ['Forrajeo grande', ['fg.izq', 'fg.der']] };
+var POINTS = [['hydra', 'Hydra', '💧'], ['deposito', 'Depósito AntCrilic', '💧'], ['cinis', 'Vaciar Cinis', '🗑️']];
+CADA.hydra = 12; CADA.deposito = 14; CADA.cinis = 30;
+var ZFIELDS = [['hormigas', 'Hormigas', ['Ninguna', 'Pocas', 'Bastantes', 'Muchas']], ['huevos', 'Huevos'], ['larvas', 'Larvas'], ['pupas', 'Pupas'], ['semillas', 'Semillas'], ['basura', 'Basura']];
+var QUEEN = [['', 'No'], ['?', 'Puede'], ['si', 'Sí, la he visto']];
+// What the photos showed on 6 Nov 2026
+var INIT_ZONES = { tubo: { hormigas: 2, semillas: 2, reina: '?' }, 'ac.forr': { hormigas: 2 }, 'ac.gran': { semillas: 3, hormigas: 1 }, 'ac.izq': { hormigas: 1 }, 'ac.centro': { hormigas: 1 }, 'ac.abajo': { hormigas: 1 },
+  'ni.c1': { hormigas: 1 }, 'ni.c4': { hormigas: 1 }, 'ni.c5': { hormigas: 1 }, 'ni.c6': { hormigas: 3 }, 'ni.c7': { hormigas: 3 }, 'ni.c8': { hormigas: 3 }, 'ni.c9': { hormigas: 2 },
+  cinis: { basura: 2 }, v1: { hormigas: 1, semillas: 1 }, 'fg.izq': { hormigas: 1, semillas: 1 }, 'fg.der': { hormigas: 1 } };
+// Shapes in each module's own space: [cx, cy, rx, ry]
+var NIDUS = { 'ni.c1': [40, 75, 23, 37], 'ni.seta': [142, 113, 48, 37], 'ni.c3': [223, 35, 43, 19], 'ni.c4': [304, 54, 28, 24], 'ni.c5': [329, 113, 25, 19], 'ni.c6': [324, 179, 35, 27], 'ni.c7': [314, 249, 38, 24], 'ni.c8': [203, 220, 35, 40], 'ni.c9': [86, 236, 48, 40] };
+var NIDUS_TUNNELS = ['M0 139 C40 139 70 145 100 148', 'M165 80 C175 60 190 48 200 42', 'M98 100 C80 92 70 88 58 86', 'M186 128 C210 140 228 146 243 150', 'M243 150 C262 112 282 82 300 66', 'M243 150 L308 118', 'M243 150 C262 160 280 168 292 174', 'M243 150 C232 168 222 182 214 190', 'M170 226 L132 234', 'M236 236 C252 240 266 244 278 246'];
+var ACRIL = { 'ac.izq': [52, 205, 40, 26], 'ac.gran': [152, 210, 38, 28], 'ac.centro': [100, 272, 72, 24], 'ac.abajo': [100, 330, 82, 18] };
+
+function isMap(c) { return c && c.montaje === 'v1'; }
+function careList(c) { return FOOD.filter(function (f) { return !(isMap(c) && f[0] === 'agua'); }).concat(isMap(c) ? POINTS : []); }
+function careName(k) { var f = FOOD.concat(POINTS).filter(function (x) { return x[0] === k; })[0]; return f || ['', k, '•']; }
+function zone(c, id) { return (c.zonas || {})[id] || {}; }
+function zoneWords(z) {
+  var out = [];
+  if (z.reina) out.push(z.reina === 'si' ? 'la reina está aquí' : 'puede que esté la reina');
+  ZFIELDS.forEach(function (f) { var v = z[f[0]]; if (v) out.push(f[1].toLowerCase() + ': ' + (f[2] || LEVELS)[v].toLowerCase()); });
+  if (z.moho) out.push('moho o algo raro');
+  return out.length ? out.join(' · ') : 'Vacía';
+}
+// How a care point is doing: days since last time, and ok / due / late
+function pointState(c, k) {
+  var every = cada(c)[k], last = evs(c.id, 'comida').filter(function (e) { return e.que === k; })[0], d = last ? daysAgo(last.t) : null;
+  var st = c.hiberna || !every || d == null ? '' : d >= every * 2 ? 'late' : d >= every ? 'due' : 'ok';
+  return { d: d, st: st, every: every, txt: last ? ago(last.t) : 'sin apuntar' };
+}
+var ST_COLOR = { ok: '#7cc46a', due: '#f2c04e', late: '#ef6b5b', '': '#9a8f80' };
+// Dots for what is in a zone, scattered inside its ellipse
+function marks(id, z, cx, cy, rx, ry, k) {
+  var r = rng(id), out = '', i, p, sh = [cx, cy, rx * .78, ry * .7], s = k || 1;
+  function dots(n, color, size) { for (i = 0; i < n; i++) { p = inCh(sh, r); out += '<circle cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="' + size * s + '" fill="' + color + '"/>'; } }
+  dots([0, 4, 9, 16][z.semillas || 0], '#8a5a2b', 1.9);
+  dots([0, 3, 6, 10][z.basura || 0], '#7d7d7d', 1.7);
+  dots([0, 3, 6, 10][(z.huevos || 0)] + [0, 2, 5, 8][(z.larvas || 0)] + [0, 2, 4, 7][(z.pupas || 0)], '#fffaf0', 1.6);
+  dots([0, 3, 7, 14][z.hormigas || 0], '#1b120b', 2.2);
+  if (z.reina) out += '<text x="' + cx + '" y="' + (cy + 6 * s) + '" text-anchor="middle" font-size="' + 17 * s + '">' + (z.reina === 'si' ? '👑' : '❔') + '</text>';
+  if (z.moho) out += '<text x="' + (cx + rx * .6) + '" y="' + (cy - ry * .4) + '" text-anchor="middle" font-size="' + 13 * s + '">⚠️</text>';
+  return out;
+}
+function zoneEl(c, id, shape, inner) { return '<g data-zone="' + id + '" role="button" tabindex="0" aria-label="' + esc(ZONES[id] + ': ' + zoneWords(zone(c, id))) + '">' + shape + inner + '</g>'; }
+function ellZone(c, id, e, fill, k) { return zoneEl(c, id, '<ellipse cx="' + e[0] + '" cy="' + e[1] + '" rx="' + e[2] + '" ry="' + e[3] + '" fill="' + fill + '" stroke="rgba(0,0,0,.25)"/>', marks(id, zone(c, id), e[0], e[1], e[2], e[3], k)); }
+function pointEl(c, k, x, y, rr, label, fs) {
+  var p = pointState(c, k); fs = fs || 11;
+  return '<g data-point="' + k + '" role="button" tabindex="0" aria-label="' + esc(careName(k)[1] + ': ' + p.txt) + '"><circle cx="' + x + '" cy="' + y + '" r="' + rr + '" fill="#a9d8f2" stroke="' + ST_COLOR[p.st] + '" stroke-width="4"/>' +
+    (label ? '<text x="' + x + '" y="' + (y + rr + fs + 4) + '" text-anchor="middle" font-size="' + fs + '" font-weight="800" fill="#f5e9d6">' + label + '</text>' : '') + '</g>';
+}
+// Each module drawn in its own space, used big in the sheet and scaled down on the shelf
+function nidusSvg(c, k) {
+  return '<rect width="420" height="300" rx="10" fill="#e9dfcc"/>' + NIDUS_TUNNELS.map(function (d) { return '<path d="' + d + '" fill="none" stroke="#c4b393" stroke-width="10" stroke-linecap="round"/>'; }).join('') +
+    Object.keys(NIDUS).map(function (id) { return ellZone(c, id, NIDUS[id], '#cdbd9c', k); }).join('') + '<ellipse cx="132" cy="102" rx="22" ry="16" fill="#e9dfcc"/>' +
+    '<rect x="410" y="132" width="10" height="36" rx="3" fill="#a9d8f2"/>';
+}
+function acrilSvg(c, k) {
+  return zoneEl(c, 'ac.forr', '<rect x="4" y="4" width="192" height="146" rx="8" fill="#dbe9ee" stroke="#b9cfd8" stroke-width="3"/>', marks('ac.forr', zone(c, 'ac.forr'), 100, 70, 90, 60, k)) +
+    '<rect x="0" y="158" width="200" height="200" rx="8" fill="#b3122e"/>' + Object.keys(ACRIL).map(function (id) { return ellZone(c, id, ACRIL[id], '#e7b8c1', k); }).join('') +
+    [[34, 182], [86, 302], [156, 290]].map(function (d) { return '<circle cx="' + d[0] + '" cy="' + d[1] + '" r="8" fill="#fff"/>'; }).join('') + pointEl(c, 'deposito', 100, 156, 17);
+}
+function fgSvg(c, k) {
+  return zoneEl(c, 'fg.izq', '<rect width="150" height="220" fill="#7a4a2e"/>', marks('fg.izq', zone(c, 'fg.izq'), 75, 120, 70, 90, k)) +
+    zoneEl(c, 'fg.der', '<rect x="150" width="150" height="220" fill="#e8d9b5"/>', marks('fg.der', zone(c, 'fg.der'), 225, 110, 70, 90, k)) +
+    '<path d="M150 0 V96 M150 124 V220" stroke="#cfe3ea" stroke-width="4"/>' +
+    '<g pointer-events="none"><path d="M10 20 L70 14 L78 70 L20 84Z" fill="#8c8f94"/><circle cx="42" cy="48" r="20" fill="#111"/><circle cx="42" cy="48" r="13" fill="#2b2b2b"/>' +
+    '<rect x="78" y="112" width="44" height="24" rx="3" fill="#151515"/><circle cx="118" cy="178" r="9" fill="#b9b9b9"/><circle cx="166" cy="196" r="9" fill="#b9b9b9"/>' +
+    '<path d="M228 26 L290 22 L292 74 L222 78Z" fill="#7b8794"/><rect x="242" y="34" width="28" height="26" rx="3" fill="#f4f4f4"/>' +
+    '<ellipse cx="226" cy="150" rx="30" ry="20" fill="#b7b9b4"/><path d="M164 40 C176 70 168 100 186 116" stroke="#b49a77" stroke-width="9" fill="none" stroke-linecap="round"/><rect x="206" y="4" width="10" height="9" rx="2" fill="#e7d7b5"/></g>';
+}
+function overviewSvg(c) {
+  var lr = lastCount(c.id) ? evs(c.id, 'recuento').filter(function (e) { return e.temp != null || e.hum != null; })[0] : null;
+  var tube = 'stroke="#d9eef5" stroke-opacity=".75" stroke-width="7" fill="none" stroke-linecap="round"';
+  var cross = function (x, y) { return '<rect x="' + (x - 9) + '" y="' + (y - 9) + '" width="18" height="18" rx="3" fill="#f2efe8"/>'; };
+  return '<rect width="1000" height="360" fill="#2c2117"/><rect x="0" y="0" width="652" height="360" fill="#3a2d21"/><rect x="668" y="0" width="332" height="360" fill="#3a2d21"/>' +
+    '<rect x="20" y="4" width="612" height="5" rx="2" fill="#ff3b3b"/><rect x="20" y="2" width="612" height="12" rx="6" fill="#ff3b3b" opacity=".25"/><text x="326" y="34" text-anchor="middle" font-size="20" font-weight="800" fill="#ff8a8a">LED rojos para mirar de noche</text>' +
+    // tubes first, under the modules
+    '<path d="M120 150 H150" ' + tube + '/><path d="M240 150 H285 V215 M285 150 C305 150 315 110 335 110 M285 215 V255 M285 215 H322 Q332 215 332 226 V258 H345 M505 258 C560 258 548 340 600 340 H690 C708 340 712 300 712 290" ' + tube + '/>' +
+    cross(285, 150) + cross(285, 215) + '<rect x="560" y="333" width="10" height="16" fill="#111"/><rect x="630" y="333" width="10" height="16" fill="#111"/>' +
+    // tube in its wooden box
+    '<g data-mod="tubo" role="button" tabindex="0" aria-label="Tubo de ensayo, en la caja de madera: ' + esc(zoneWords(zone(c, 'tubo'))) + '"><rect x="18" y="104" width="112" height="92" rx="6" fill="#c9a77a"/><path d="M30 104 V196" stroke="#a8875c" stroke-width="3"/>' +
+    '<rect x="34" y="140" width="88" height="20" rx="10" fill="#e9f3f6" fill-opacity=".55" stroke="#fff"/>' + marks('tubo', zone(c, 'tubo'), 80, 150, 40, 9, .7) + '<text x="74" y="228" text-anchor="middle" font-size="24" font-weight="800" fill="#f5e9d6">Tubo</text></g>' +
+    // thermo-hygrometer
+    '<rect x="34" y="250" width="96" height="84" rx="12" fill="#eef1f2"/><text x="82" y="286" text-anchor="middle" font-size="26" font-weight="800" fill="#222">' + (lr && lr.temp != null ? String(lr.temp).replace('.', ',') + '°' : '–°') + '</text><text x="82" y="318" text-anchor="middle" font-size="22" font-weight="700" fill="#444">' + (lr && lr.hum != null ? lr.hum + '%' : '–%') + '</text>' +
+    '<g data-mod="antcrilic" role="button" tabindex="0" aria-label="AntCrilic: toca para ver sus zonas"><g transform="translate(150 30) scale(.45)">' + acrilSvg(c, 1.6) + '</g><text x="195" y="230" text-anchor="middle" font-size="24" font-weight="800" fill="#f5e9d6">AntCrilic</text></g>' +
+    '<g data-mod="nidus" role="button" tabindex="0" aria-label="Nidus V1: toca para ver sus cámaras"><rect x="328" y="40" width="194" height="149" rx="8" fill="#4f7a3e"/><g transform="translate(335 47) scale(.4286)">' + nidusSvg(c, 1.8) + '</g><text x="425" y="218" text-anchor="middle" font-size="24" font-weight="800" fill="#f5e9d6">Nidus V1</text></g>' +
+    '<path d="M522 115 C532 112 540 104 548 96" stroke="#c9b78f" stroke-width="5" fill="none"/>' + pointEl(c, 'hydra', 562, 78, 24, 'Hydra', 22) +
+    '<g data-mod="cinis" role="button" tabindex="0" aria-label="Cinis, el basurero: ' + esc(zoneWords(zone(c, 'cinis'))) + '"><rect x="255" y="255" width="62" height="62" rx="5" fill="#efe9dd"/><circle cx="292" cy="294" r="13" fill="#8c8c8c"/>' + marks('cinis', zone(c, 'cinis'), 286, 286, 26, 26, .8) + pointEl(c, 'cinis', 310, 262, 7) + '<text x="286" y="346" text-anchor="middle" font-size="24" font-weight="800" fill="#f5e9d6">Cinis</text></g>' +
+    '<g data-mod="v1" role="button" tabindex="0" aria-label="Forrajeo V1: ' + esc(zoneWords(zone(c, 'v1'))) + '"><rect x="345" y="226" width="160" height="82" rx="6" fill="#6f8597"/><rect x="353" y="234" width="144" height="66" rx="3" fill="#5a4636"/><circle cx="455" cy="268" r="17" fill="#4a3a2c"/>' + marks('v1', zone(c, 'v1'), 425, 267, 70, 30, .8) + '<text x="425" y="334" text-anchor="middle" font-size="24" font-weight="800" fill="#f5e9d6">Forrajeo V1</text></g>' +
+    '<g data-mod="fg" role="button" tabindex="0" aria-label="Forrajeo grande: toca para ver sus dos partes"><g transform="translate(700 70) scale(.9333)">' + fgSvg(c, 1) + '</g><text x="840" y="306" text-anchor="middle" font-size="24" font-weight="800" fill="#f5e9d6">Forrajeo grande</text></g>' +
+    '<circle cx="962" cy="44" r="18" fill="none" stroke="#e8e8e8" stroke-width="5"/>' + queenBadge(c);
+}
+// A big crown on the module where the queen was last marked, since the zone marks are tiny on the shelf view
+var BADGE = { tubo: [112, 116], antcrilic: [236, 46], nidus: [508, 64], cinis: [312, 270], v1: [494, 240], fg: [968, 100] };
+function queenBadge(c) {
+  var zs = c.zonas || {}, id = Object.keys(zs).filter(function (k) { return zs[k].reina; })[0]; if (!id) return '';
+  var mod = Object.keys(MODS).filter(function (m) { return MODS[m][1].indexOf(id) >= 0; })[0], p = BADGE[mod]; if (!p) return '';
+  return '<g pointer-events="none"><circle cx="' + p[0] + '" cy="' + p[1] + '" r="20" fill="#f2c04e"/><text x="' + p[0] + '" y="' + (p[1] + 9) + '" text-anchor="middle" font-size="24">' + (zs[id].reina === 'si' ? '👑' : '❔') + '</text></g>';
+}
+var modView = null;
+function openMod(k) { modView = { mod: k }; drawMod(); if (!$('modD').open) $('modD').showModal(); }
+function openZone(id, from) { modView = { mod: from, zone: id, z: Object.assign({}, zone(cur(), id)) }; drawMod(); if (!$('modD').open) $('modD').showModal(); }
+function openPoint(k, from) { modView = { mod: from, point: k }; drawMod(); if (!$('modD').open) $('modD').showModal(); }
+function drawMod() {
+  var c = cur(), v = modView, el = $('modBody'), back = v.mod && MODS[v.mod][1].length > 1;
+  if (v.zone) {
+    var z = v.z, saved = zone(c, v.zone);
+    el.innerHTML = '<h2>' + esc(ZONES[v.zone]) + '</h2><p class="small" style="margin-top:-8px">' + (saved.t ? 'Lo apuntaste ' + ago(saved.t) + '.' : 'Aún no has apuntado nada aquí.') + ' A ojo, como lo veas ahora.</p>' +
+      '<div class="pick"><span class="lab">Reina</span><div class="kinds" data-zf="reina">' + QUEEN.map(function (q) { return '<button type="button" data-v="' + q[0] + '" aria-pressed="' + ((z.reina || '') === q[0]) + '">' + q[1] + '</button>'; }).join('') + '</div></div>' +
+      ZFIELDS.map(function (f) { return '<div class="pick"><span class="lab">' + f[1] + '</span><div class="kinds" data-zf="' + f[0] + '">' + (f[2] || LEVELS).map(function (l, i) { return '<button type="button" data-v="' + i + '" aria-pressed="' + ((z[f[0]] || 0) === i) + '">' + l + '</button>'; }).join('') + '</div></div>'; }).join('') +
+      '<div class="kinds" data-zf="moho"><button type="button" data-v="1" aria-pressed="' + !!z.moho + '">⚠️ Moho o algo raro</button></div>' +
+      '<div class="sh-b"><button type="button" class="no" data-act="back">' + (back ? 'Volver' : 'Cancelar') + '</button><button type="button" class="ok" data-act="saveZone">Guardar</button></div>';
+    return;
+  }
+  if (v.point) {
+    var p = pointState(c, v.point), n = careName(v.point);
+    el.innerHTML = '<h2>' + n[2] + ' ' + esc(n[1]) + '</h2><p class="small" style="margin-top:-8px">Última vez: ' + p.txt + '.' + (p.st === 'due' ? ' Toca hoy.' : p.st === 'late' ? ' Se ha pasado de fecha.' : '') + '</p>' +
+      '<button type="button" class="s-btn" data-act="did" style="min-height:56px;border:0;border-radius:14px;background:var(--acc);color:var(--acc-ink);font:800 18px var(--display)">' + (v.point === 'cinis' ? 'Lo he vaciado ahora' : 'Lo he rellenado ahora') + '</button>' +
+      '<label style="display:grid;gap:4px;font-size:13px;font-weight:700;color:var(--muted)">Avisar cada cuántos días (0, no avisar)<input type="number" min="0" max="120" inputmode="numeric" id="pEvery" value="' + (p.every || 0) + '" style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:18px"></label>' +
+      '<div class="sh-b"><button type="button" class="no" data-act="back">' + (v.mod && MODS[v.mod][1].length > 1 ? 'Volver' : 'Cerrar') + '</button><button type="button" class="ok" data-act="close">Hecho</button></div>';
+    return;
+  }
+  var m = MODS[v.mod], body = v.mod === 'nidus' ? ['0 0 420 300', nidusSvg(c, 1)] : v.mod === 'antcrilic' ? ['0 0 200 360', acrilSvg(c, 1)] : ['0 0 300 220', fgSvg(c, 1)];
+  el.innerHTML = '<h2>' + esc(m[0]) + '</h2><p class="small" style="margin-top:-8px">Toca una zona para apuntar qué hay.' + (v.mod === 'nidus' ? ' Hydra está a la derecha.' : '') + '</p>' +
+    '<svg class="mapbig" viewBox="' + body[0] + '" role="group" aria-label="' + esc(m[0]) + ' por dentro">' + body[1] + '</svg>' +
+    '<ul class="zlist">' + m[1].map(function (id) { var z = zone(c, id); return '<li><button type="button" data-zone="' + id + '"><b>' + (z.reina === 'si' ? '👑 ' : z.reina ? '❔ ' : '') + esc(ZONES[id].replace(/^.*· /, '')) + '</b><span>' + esc(zoneWords(z)) + (z.t ? ' · ' + ago(z.t) : '') + '</span></button></li>'; }).join('') +
+    (m[2] || []).map(function (k) { var p = pointState(c, k), n = careName(k); return '<li><button type="button" class="' + p.st + '" data-point="' + k + '"><b>' + n[2] + ' ' + esc(n[1]) + '</b><span>' + p.txt + '</span></button></li>'; }).join('') + '</ul>' +
+    '<div class="sh-b" style="grid-template-columns:1fr"><button type="button" class="no" data-act="close">Cerrar</button></div>';
+}
+$('setup').addEventListener('click', function (e) {
+  var p = e.target.closest('[data-point]'), m = e.target.closest('[data-mod]');
+  if (p) return openPoint(p.getAttribute('data-point'), m ? m.getAttribute('data-mod') : null);
+  if (!m) return;
+  var k = m.getAttribute('data-mod');
+  if (MODS[k][1].length === 1) openZone(MODS[k][1][0], k); else openMod(k);
+});
+$('setup').addEventListener('keydown', function (e) { if ((e.key === 'Enter' || e.key === ' ') && e.target.closest('[data-mod],[data-point]')) { e.preventDefault(); e.target.dispatchEvent(new MouseEvent('click', { bubbles: true })); } });
+$('modBody').addEventListener('click', function (e) {
+  var v = modView, c = cur(), b;
+  if ((b = e.target.closest('[data-zf] [data-v]'))) {
+    var f = b.parentNode.getAttribute('data-zf'), val = b.getAttribute('data-v');
+    if (f === 'reina') v.z.reina = val || undefined; else if (f === 'moho') v.z.moho = !v.z.moho || undefined; else v.z[f] = +val;
+    var y = $('modD').scrollTop; drawMod(); $('modD').scrollTop = y; return;
+  }
+  if ((b = e.target.closest('[data-zone]'))) return openZone(b.getAttribute('data-zone'), v.mod);
+  if ((b = e.target.closest('[data-point]'))) return openPoint(b.getAttribute('data-point'), v.mod);
+  if (!(b = e.target.closest('[data-act]'))) return;
+  var act = b.getAttribute('data-act');
+  if (act === 'close') return $('modD').close();
+  if (act === 'back') { if (v.mod && MODS[v.mod][1].length > 1) return openMod(v.mod); return $('modD').close(); }
+  if (act === 'saveZone') {
+    var zs = Object.assign({}, c.zonas), nz = {};
+    Object.keys(v.z).forEach(function (k) { if (v.z[k] != null && k !== 't') nz[k] = v.z[k]; });
+    nz.t = Date.now();
+    if (nz.reina) Object.keys(zs).forEach(function (k) { if (k !== v.zone && zs[k].reina) { zs[k] = Object.assign({}, zs[k]); delete zs[k].reina; } });
+    zs[v.zone] = nz; setCol({ zonas: zs });
+    var copy = Object.assign({}, nz); delete copy.t; addEv({ tipo: 'zona', zona: v.zone, z: copy }); buzz();
+    toast('Apuntado en ' + ZONES[v.zone].replace(/^.*· /, ''));
+    if (v.mod && MODS[v.mod][1].length > 1) openMod(v.mod); else $('modD').close();
+  }
+  if (act === 'did') { var id = addEv({ tipo: 'comida', que: v.point }); buzz(); drawMod(); toast(careName(v.point)[1] + ': apuntado', 'Deshacer', function () { delEv(id); if ($('modD').open) drawMod(); }); }
+});
+$('modBody').addEventListener('change', function (e) {
+  if (e.target.id !== 'pEvery') return; var n = parseInt(e.target.value, 10); if (!(n >= 0)) return;
+  var cd = cada(cur()); cd[modView.point] = n; setCol({ cada: cd }); drawMod();
+});
+$('modD').addEventListener('close', function () { modView = null; });
+function useMap() {
+  var c = cur(), ch = { montaje: 'v1' }, now = Date.now(), zs = {};
+  if (!c.zonas) { Object.keys(INIT_ZONES).forEach(function (k) { zs[k] = Object.assign({ t: now }, INIT_ZONES[k]); }); ch.zonas = zs; }
+  setCol(ch);
+}
+
 // ---------- Render ----------
 function lastCount(cid) { var r = evs(cid, 'recuento'); return r[0] || null; }
 // The latest known value of each thing, even if each came from a different check
@@ -361,11 +561,14 @@ function render() {
     (c.hiberna ? '<span class="hiber">' + hiberText(c) + '</span>' : '');
   $('heroB').textContent = lc ? 'Última revisión: ' + ago(lc.t) + (lc.temp != null ? ' · ' + String(lc.temp).replace('.', ',') + ' °C' : '') + '.' : 'Haz una revisión y el hormiguero se llenará con lo que veas.';
   renderNest(c, n);
+  // SVG elements have no hidden property, so the attribute is set directly
+  $('nest').toggleAttribute('hidden', isMap(c)); $('setup').toggleAttribute('hidden', !isMap(c));
+  if (isMap(c)) { $('setup').innerHTML = overviewSvg(c); $('heroB').textContent += ' Toca una parte del montaje para ver o apuntar qué hay.'; if (modView) drawMod(); }
   var up = prev && n.obreras > prev.n.obreras;
   $('census').innerHTML = '<div class="tile"><span>Obreras</span><b class="num' + (n.rango ? ' word' : '') + '">' + esc(workersTxt(n)) + '</b>' + (up ? '<i>↑ desde ' + esc(workersTxt(prev.n)) + '</i>' : '') + '</div>' +
     BROOD.map(function (k, i) { var l = lvl(n, k); return '<div class="tile"><span>' + STAGES[i + 1][1] + '</span><b class="word">' + (l == null ? '–' : LEVELS[l]) + '</b></div>'; }).join('');
   var cd = cada(c), food = evs(c.id, 'comida');
-  $('feed').innerHTML = FOOD.filter(function (f) { return f[0] !== 'semillas' || cd[f[0]] > 0 || food.some(function (e) { return e.que === f[0]; }); }).map(function (f) {
+  $('feed').innerHTML = careList(c).filter(function (f) { return f[0] !== 'semillas' || cd[f[0]] > 0 || food.some(function (e) { return e.que === f[0]; }); }).map(function (f) {
     var last = food.filter(function (e) { return e.que === f[0]; })[0], every = cd[f[0]], d = last ? daysAgo(last.t) : null, st = '', note;
     if (c.hiberna || !every) note = every ? 'En pausa' : 'Sin aviso';
     else if (d == null) { note = 'Cada ' + every + ' días'; }
@@ -382,13 +585,15 @@ function render() {
   $('logEmpty').hidden = all.length > 0; $('more').hidden = all.length <= shown;
   $('log').innerHTML = all.slice(0, shown).map(function (e) {
     var ic, txt;
-    if (e.tipo === 'comida') { var f = FOOD.filter(function (x) { return x[0] === e.que; })[0] || ['', e.que, '•']; ic = f[2]; txt = '<b>' + esc(f[1]) + '</b>'; }
+    if (e.tipo === 'comida') { var f = careName(e.que); ic = f[2]; txt = '<b>' + esc(f[1]) + '</b>'; }
+    else if (e.tipo === 'zona') { ic = '📍'; txt = '<b>' + esc(ZONES[e.zona] || e.zona) + '</b><p>' + esc(zoneWords(e.z || {})) + '</p>'; }
     else if (e.tipo === 'recuento') {
       ic = '🔍'; var parts = [];
       if (e.n.reinas != null) parts.push(nf(e.n.reinas) + (e.n.reinas === 1 ? ' reina' : ' reinas'));
       if (e.n.obreras != null) parts.push(workersTxt(e.n) + ' obreras');
       BROOD.forEach(function (k) { var l = lvl(e.n, k); if (l != null) parts.push(k + ': ' + LEVELS[l].toLowerCase()); });
       if (e.temp != null) parts.push(String(e.temp).replace('.', ',') + ' °C');
+      if (e.hum != null) parts.push(e.hum + ' % de humedad');
       txt = '<b>Revisión</b><p>' + esc(parts.join(' · ')) + '</p>';
     }
     else { ic = KINDS[e.kind] || KINDS.obs; txt = '<p>' + esc(e.texto || '') + '</p>' + (e.foto ? '<img src="/_blob/' + esc(e.foto) + '" alt="Foto de la nota" loading="lazy">' : ''); }
@@ -396,6 +601,7 @@ function render() {
   }).join('');
   if (document.activeElement && document.activeElement.closest && !document.activeElement.closest('details')) fillForm(c);
   $('importHist').hidden = Object.keys(S.ev).some(function (k) { return S.ev[k].hist; });
+  $('useMap').hidden = isMap(c);
   var ps = Object.keys(S.pend).length + Object.keys(S.del).length;
   $('sync').textContent = !db ? 'Guardado en este móvil.' : ps ? 'Guardado en este móvil · ' + ps + ' por subir.' : 'Guardado en tu cuenta. Lo ves igual en el móvil y en el ordenador.';
 }
@@ -463,7 +669,7 @@ $('heroB').addEventListener('click', function (e) { if (e.target.closest('[data-
 $('cols').addEventListener('click', function (e) { var b = e.target.closest('[data-col]'); if (b) { S.cur = b.getAttribute('data-col'); shown = PAGE; sureDel = false; persist(); render(); fillForm(cur()); } });
 $('feed').addEventListener('click', function (e) {
   var b = e.target.closest('[data-food]'); if (!b) return;
-  var k = b.getAttribute('data-food'), f = FOOD.filter(function (x) { return x[0] === k; })[0], id = addEv({ tipo: 'comida', que: k }); buzz();
+  var k = b.getAttribute('data-food'), f = careName(k), id = addEv({ tipo: 'comida', que: k }); buzz();
   toast(f[1] + ' apuntado', 'Deshacer', function () { delEv(id); });
 });
 $('log').addEventListener('click', function (e) {
@@ -507,7 +713,9 @@ $('importHist').addEventListener('click', function () {
   HISTORY.forEach(function (h, i) {
     var id = uid('e'); S.ev[id] = Object.assign({ col: S.cur, t: new Date(h[0] + 'T12:00').getTime() + i * 60000, hist: true }, h[1]); touch('eventos/' + id);
   });
-  saved(); fillForm(cur()); toast('Historial añadido: ' + HISTORY.length + ' entradas');
+  saved(); if (!isMap(cur())) useMap(); fillForm(cur()); toast('Historial y mapa añadidos');
+});
+$('useMap').addEventListener('click', function () { useMap(); toast('Mapa puesto con lo que se veía en las fotos del 6 de noviembre');
 });
 $('log').addEventListener('click', function (e) {
   var b = e.target.closest('[data-when]'); if (!b) return;
@@ -546,7 +754,7 @@ $('countBtn').addEventListener('click', function () {
   else if (n.obreras != null) { pick.obreras = RANGES.length; f.obreras.value = n.obreras; }
   if (!n.rango && n.obreras == null) f.obreras.value = '';
   BROOD.forEach(function (k) { var l = lvl(n, k); if (l != null) pick[k] = l; });
-  f.reinas.value = n.reinas == null ? '' : n.reinas; f.temp.value = '';
+  f.reinas.value = n.reinas == null ? '' : n.reinas; f.temp.value = ''; f.hum.value = '';
   drawPick(); $('countD').showModal();
 });
 $('countF').addEventListener('click', function (e) {
@@ -561,8 +769,8 @@ $('countF').addEventListener('submit', function () {
   if (pick.obreras === RANGES.length) { var v = parseInt(f.obreras.value, 10); if (v >= 0) n.obreras = v; }
   else if (pick.obreras != null) { n.obreras = RANGES[pick.obreras][0]; n.rango = RANGES[pick.obreras][1]; }
   BROOD.forEach(function (k) { if (pick[k] != null) n[k] = pick[k]; });
-  var t = parseFloat(String(f.temp.value).replace(',', '.')), ev = { tipo: 'recuento', n: n }; if (!isNaN(t)) ev.temp = t;
-  if (Object.keys(n).length === 1 && ev.temp == null) return;
+  var t = parseFloat(String(f.temp.value).replace(',', '.')), h = parseInt(f.hum.value, 10), ev = { tipo: 'recuento', n: n }; if (!isNaN(t)) ev.temp = t; if (h >= 0 && h <= 100) ev.hum = h;
+  if (Object.keys(n).length === 1 && ev.temp == null && ev.hum == null) return;
   var id = addEv(ev); toast('Revisión guardada', 'Deshacer', function () { delEv(id); });
 });
 $('noteBtn').addEventListener('click', function () {
