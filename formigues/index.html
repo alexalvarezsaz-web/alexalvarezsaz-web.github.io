@@ -62,9 +62,10 @@ h1, h2, h3 { font-family: var(--display); line-height: 1.1; margin: 0; text-wrap
 .first button { min-height: 52px; border: 0; border-radius: 14px; background: var(--honey); color: #241706; font: 800 18px var(--display); }
 
 /* Census numbers */
-.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.tiles { display: grid; grid-template-columns: minmax(0, 1.35fr) repeat(3, minmax(0, 1fr)); gap: 8px; }
 .tile { padding: 11px 10px; background: var(--surface); border-radius: 14px; display: grid; gap: 1px; min-width: 0; }
-.tile b { font: 800 clamp(22px, 7vw, 30px)/1.05 var(--display); }
+.tile b { font: 800 clamp(22px, 7vw, 30px)/1.05 var(--display); overflow-wrap: anywhere; }
+.tile b.word { font-size: clamp(16px, 4.6vw, 21px); padding-top: 4px; }
 .tile span { font-size: 12.5px; color: var(--muted); }
 .tile i { font-style: normal; font-size: 12px; font-weight: 800; color: var(--leaf); }
 
@@ -101,6 +102,9 @@ h1, h2, h3 { font-family: var(--display); line-height: 1.1; margin: 0; text-wrap
 .gal img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 10px; background: var(--bg); }
 .kinds { display: flex; flex-wrap: wrap; gap: 8px; }
 .kinds button { min-height: 44px; padding: 0 14px; border-radius: 22px; border: 1px solid var(--line); background: var(--bg); font-weight: 700; }
+.pick { display: grid; gap: 6px; }
+.pick .kinds { gap: 6px; }
+.pick .kinds button { min-height: 42px; padding: 0 12px; }
 .kinds button[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
 .log .x { width: 40px; height: 40px; border: 0; background: transparent; color: var(--muted); font-size: 20px; border-radius: 10px; }
 .linkb { min-height: 44px; border: 0; background: transparent; color: var(--muted); font-weight: 700; text-decoration: underline; padding: 0; justify-self: start; }
@@ -149,7 +153,7 @@ dialog.sheet::backdrop { background: rgba(20, 12, 6, .55); }
 
   <section class="hero" aria-label="Tu colonia">
     <div class="hero-t" id="heroT"></div>
-    <svg viewBox="0 0 360 210" role="img" id="nest" aria-label="El hormiguero por dentro, con lo que contaste en el último recuento">
+    <svg viewBox="0 0 360 210" role="img" id="nest" aria-label="El hormiguero por dentro, con lo que viste en la última revisión">
       <defs>
         <linearGradient id="soil" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7a5435"/><stop offset="1" stop-color="#3b2616"/></linearGradient>
         <g id="ant"><g stroke="currentColor" stroke-width=".9" fill="none" stroke-linecap="round"><path d="M1 0 L-2 -5 M1 0 L-2 5 M2 0 L3.5 -5 M2 0 L3.5 5 M1.5 0 L.5 -5.5 M1.5 0 L.5 5.5 M6 -1 L9 -4 M6 1 L9 4"/></g><ellipse cx="-4.5" rx="3.6" ry="2.6" fill="currentColor"/><ellipse cx="1.5" rx="2.2" ry="1.3" fill="currentColor"/><circle cx="5.3" r="1.9" fill="currentColor"/></g>
@@ -189,7 +193,7 @@ dialog.sheet::backdrop { background: rgba(20, 12, 6, .55); }
     <section class="sect" style="margin-top:14px">
       <h2>Diario</h2>
       <ul class="log" id="log"></ul>
-      <p class="small" id="logEmpty">Aquí irá todo lo que apuntes: comidas, recuentos y notas.</p>
+      <p class="small" id="logEmpty">Aquí irá todo lo que apuntes: cuidados, revisiones y notas.</p>
       <button type="button" class="linkb" id="more" hidden>Ver más</button>
     </section>
 
@@ -212,6 +216,7 @@ dialog.sheet::backdrop { background: rgba(20, 12, 6, .55); }
       <div class="row">
         <button type="button" class="ghost" id="newCol">＋ Otra colonia</button>
         <button type="button" class="ghost" id="export">Descargar copia</button>
+        <button type="button" class="ghost" id="importHist" hidden>Añadir mi historial de abril a julio</button>
         <button type="button" class="ghost danger" id="delCol">Borrar esta colonia</button>
       </div>
       <p class="small" id="sync"></p>
@@ -226,20 +231,22 @@ dialog.sheet::backdrop { background: rgba(20, 12, 6, .55); }
 
 <div class="toast" id="toast" role="status" hidden></div>
 <div class="bar" id="bar" hidden><div class="bar-in">
-  <button type="button" class="b-main" id="countBtn">＋ Recuento</button>
+  <button type="button" class="b-main" id="countBtn">＋ Revisión</button>
   <button type="button" class="b-alt" id="noteBtn">＋ Nota</button>
 </div></div>
 
-<dialog class="sheet" id="countD" aria-label="Recuento"><form class="sh" method="dialog" id="countF">
-  <h2>Recuento</h2>
-  <p class="small" style="margin-top:-8px">Vienen puestos los números del último. Cambia solo lo que haya cambiado.</p>
+<dialog class="sheet" id="countD" aria-label="Revisión"><form class="sh" method="dialog" id="countF">
+  <h2>Revisión</h2>
+  <p class="small" style="margin-top:-8px">A ojo, sin contar. Viene puesto lo de la última vez: toca solo lo que haya cambiado.</p>
+  <div class="pick"><span class="lab">Obreras</span><div class="kinds" id="pickObreras"></div>
+    <label id="exactL" hidden style="display:grid;gap:4px;font-size:13px;font-weight:700;color:var(--muted)">Cuántas exactamente<input name="obreras" type="number" min="0" inputmode="numeric" style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:18px"></label>
+  </div>
+  <div class="pick"><span class="lab">Huevos</span><div class="kinds" data-lvl="huevos"></div></div>
+  <div class="pick"><span class="lab">Larvas</span><div class="kinds" data-lvl="larvas"></div></div>
+  <div class="pick"><span class="lab">Pupas</span><div class="kinds" data-lvl="pupas"></div></div>
   <div class="counts">
     <label>Reinas<input name="reinas" type="number" min="0" inputmode="numeric"></label>
-    <label>Obreras<input name="obreras" type="number" min="0" inputmode="numeric"></label>
-    <label>Huevos<input name="huevos" type="number" min="0" inputmode="numeric"></label>
-    <label>Larvas<input name="larvas" type="number" min="0" inputmode="numeric"></label>
-    <label>Pupas<input name="pupas" type="number" min="0" inputmode="numeric"></label>
-    <label>Temperatura (°C)<input name="temp" type="number" step="0.5" inputmode="decimal" placeholder="Opcional"></label>
+    <label>Temperatura (°C)<input name="temp" type="text" inputmode="decimal" placeholder="Opcional"></label>
   </div>
   <div class="sh-b"><button type="button" class="no" data-close>Cancelar</button><button class="ok">Guardar</button></div>
 </form></dialog>
@@ -264,7 +271,13 @@ var DAY = 86400000, LS = 'formigues-v1', PAGE = 30;
 var FOOD = [['azucar', 'Azúcar', '🍯'], ['proteina', 'Proteína', '🦗'], ['semillas', 'Semillas', '🌾'], ['agua', 'Agua', '💧'], ['limpieza', 'Limpieza', '🧹']];
 var CADA = { azucar: 5, proteina: 3, semillas: 0, agua: 10, limpieza: 30 };
 var KINDS = { obs: '📝', hito: '⭐', problema: '⚠️' };
-var STAGES = [['obreras', 'Obreras'], ['huevos', 'Huevos'], ['larvas', 'Larvas'], ['pupas', 'Pupas']];
+var STAGES = [['obreras', 'Obreras'], ['huevos', 'Huevos'], ['larvas', 'Larvas'], ['pupas', 'Pupas']], BROOD = ['huevos', 'larvas', 'pupas'];
+// Workers are estimated by eye: each range keeps a middle value for the drawing and the chart
+var RANGES = [[5, '1–10'], [18, '10–25'], [38, '25–50'], [75, '50–100'], [175, '100–250'], [375, '250–500'], [750, '500–1.000'], [1500, 'Más de 1.000']];
+var LEVELS = ['Nada', 'Poca', 'Bastante', 'Mucha'], LEVEL_DOTS = [0, 6, 16, 32];
+function workersTxt(n) { return n.rango || (n.obreras == null ? '–' : nf(n.obreras)); }
+// Brood is a level 0–3; older entries may hold a plain number
+function lvl(n, k) { var v = n[k]; if (v == null) return null; return n.niv ? v : v === 0 ? 0 : v < 5 ? 1 : v < 20 ? 2 : 3; }
 var S = { col: {}, ev: {}, cur: '', pend: {}, del: {} }, db = null, assets = null, shown = PAGE, sureDel = false, notePhoto = '', noteKind = 'obs', whenId = '';
 try { var raw = JSON.parse(localStorage.getItem(LS) || 'null'); if (raw) S = Object.assign(S, raw); } catch (e) {}
 function persist() { try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) {} }
@@ -300,9 +313,10 @@ function renderNest(c, n) {
   $('chambers').innerHTML = Object.keys(CH).map(function (k) { var h = CH[k]; return '<ellipse cx="' + h[0] + '" cy="' + h[1] + '" rx="' + h[2] + '" ry="' + h[3] + '"/>'; }).join('');
   var r = rng(c ? c.id : 'x'), out = '', i, p;
   n = n || {};
-  for (i = 0; i < Math.min(n.huevos || 0, 40); i++) { p = inCh(CH.huevos, r); out += '<ellipse cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" rx="1.7" ry="1.2" fill="#fbf6e8"/>'; }
-  for (i = 0; i < Math.min(n.larvas || 0, 30); i++) { p = inCh(CH.larvas, r); out += '<ellipse cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" rx="2.8" ry="2" fill="#efe0bf" transform="rotate(' + Math.round(r() * 180) + ' ' + p[0].toFixed(1) + ' ' + p[1].toFixed(1) + ')"/>'; }
-  for (i = 0; i < Math.min(n.pupas || 0, 25); i++) { p = inCh(CH.pupas, r); out += '<ellipse cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" rx="3.4" ry="1.8" fill="#d2a565" transform="rotate(' + Math.round(r() * 180) + ' ' + p[0].toFixed(1) + ' ' + p[1].toFixed(1) + ')"/>'; }
+  var dots = {}; BROOD.forEach(function (k) { dots[k] = LEVEL_DOTS[lvl(n, k) || 0]; });
+  for (i = 0; i < dots.huevos; i++) { p = inCh(CH.huevos, r); out += '<ellipse cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" rx="1.7" ry="1.2" fill="#fbf6e8"/>'; }
+  for (i = 0; i < dots.larvas; i++) { p = inCh(CH.larvas, r); out += '<ellipse cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" rx="2.8" ry="2" fill="#efe0bf" transform="rotate(' + Math.round(r() * 180) + ' ' + p[0].toFixed(1) + ' ' + p[1].toFixed(1) + ')"/>'; }
+  for (i = 0; i < dots.pupas; i++) { p = inCh(CH.pupas, r); out += '<ellipse cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" rx="3.4" ry="1.8" fill="#d2a565" transform="rotate(' + Math.round(r() * 180) + ' ' + p[0].toFixed(1) + ' ' + p[1].toFixed(1) + ')"/>'; }
   $('brood').innerHTML = out;
   out = '';
   var q = Math.min(n.reinas == null ? (c ? 1 : 0) : n.reinas, 3);
@@ -319,6 +333,16 @@ function renderNest(c, n) {
 
 // ---------- Render ----------
 function lastCount(cid) { var r = evs(cid, 'recuento'); return r[0] || null; }
+// The latest known value of each thing, even if each came from a different check
+function state(cid) {
+  var s = { niv: true };
+  evs(cid, 'recuento').reverse().forEach(function (e) {
+    if (e.n.reinas != null) s.reinas = e.n.reinas;
+    if (e.n.obreras != null) { s.obreras = e.n.obreras; s.rango = e.n.rango; }
+    BROOD.forEach(function (k) { var l = lvl(e.n, k); if (l != null) s[k] = l; });
+  });
+  return s;
+}
 function render() {
   var cs = cols(), c = cur();
   $('cols').hidden = cs.length < 2;
@@ -326,21 +350,20 @@ function render() {
   $('body').hidden = !c; $('bar').hidden = !c;
   if (!c) {
     $('heroT').innerHTML = '<h1>Tu hormiguero</h1><span class="sp">Apunta lo que comen y cómo crece la colonia.</span>';
-    $('heroB').innerHTML = '<form class="first" id="firstF"><label>Cómo la llamas<input name="nombre" maxlength="40" required placeholder="La de la cocina"></label><label>Especie<input name="especie" list="species" maxlength="60" placeholder="Messor barbarus"></label><label>Con reina desde<input name="reina" type="date" value="' + today() + '"></label><button>Empezar</button></form>';
+    $('heroB').innerHTML = '<form class="first" id="firstF"><label>Cómo la llamas<input name="nombre" maxlength="40" required placeholder="La de la cocina"></label><label>Especie<input name="especie" list="species" maxlength="60" placeholder="Messor barbarus"></label><label>Con reina desde<input name="reina" type="date" value="' + today() + '"></label><button>Empezar</button><button type="button" data-hist style="background:transparent;color:#fbf1e3;border:1px solid #e3cba8;font:700 15px var(--body);min-height:46px">Empezar con mi Messor y su historial</button></form>';
     renderNest(null, {}); $('heroB').style.padding = '0'; return;
   }
   $('heroB').style.padding = '';
-  var lc = lastCount(c.id), n = lc ? lc.n : {}, prev = evs(c.id, 'recuento')[1];
+  var lc = lastCount(c.id), n = state(c.id), ws = evs(c.id, 'recuento').filter(function (e) { return e.n.obreras != null; }), prev = ws[1];
   var age = c.reina ? Math.max(0, daysAgo(new Date(c.reina + 'T12:00').getTime())) : null;
   $('heroT').innerHTML = '<h1>' + esc(c.nombre || 'Sin nombre') + '</h1>' + (c.especie ? '<span class="sp">' + esc(c.especie) + (c.casa ? ' · <span style="font-style:normal">' + esc(c.casa) + '</span>' : '') + '</span>' : '') +
     (age != null ? '<div class="age num">' + nf(age) + '<small>' + (age === 1 ? 'día' : 'días') + ' con reina</small></div>' + (age >= 60 ? '<span class="sp" style="font-style:normal">' + span(age) + '</span>' : '') : '') +
     (c.hiberna ? '<span class="hiber">' + hiberText(c) + '</span>' : '');
-  $('heroB').textContent = lc ? 'Último recuento: ' + ago(lc.t) + (lc.temp != null ? ' · ' + String(lc.temp).replace('.', ',') + ' °C' : '') + '.' : 'Haz un recuento y el hormiguero se llenará con lo que cuentes.';
+  $('heroB').textContent = lc ? 'Última revisión: ' + ago(lc.t) + (lc.temp != null ? ' · ' + String(lc.temp).replace('.', ',') + ' °C' : '') + '.' : 'Haz una revisión y el hormiguero se llenará con lo que veas.';
   renderNest(c, n);
-  $('census').innerHTML = STAGES.map(function (s) {
-    var v = n[s[0]], d = prev && v != null && prev.n[s[0]] != null ? v - prev.n[s[0]] : 0;
-    return '<div class="tile"><span>' + s[1] + '</span><b class="num">' + (v == null ? '–' : nf(v)) + '</b>' + (s[0] === 'obreras' && d > 0 ? '<i>+' + nf(d) + '</i>' : '') + '</div>';
-  }).join('');
+  var up = prev && n.obreras > prev.n.obreras;
+  $('census').innerHTML = '<div class="tile"><span>Obreras</span><b class="num' + (n.rango ? ' word' : '') + '">' + esc(workersTxt(n)) + '</b>' + (up ? '<i>↑ desde ' + esc(workersTxt(prev.n)) + '</i>' : '') + '</div>' +
+    BROOD.map(function (k, i) { var l = lvl(n, k); return '<div class="tile"><span>' + STAGES[i + 1][1] + '</span><b class="word">' + (l == null ? '–' : LEVELS[l]) + '</b></div>'; }).join('');
   var cd = cada(c), food = evs(c.id, 'comida');
   $('feed').innerHTML = FOOD.filter(function (f) { return f[0] !== 'semillas' || cd[f[0]] > 0 || food.some(function (e) { return e.que === f[0]; }); }).map(function (f) {
     var last = food.filter(function (e) { return e.que === f[0]; })[0], every = cd[f[0]], d = last ? daysAgo(last.t) : null, st = '', note;
@@ -360,11 +383,19 @@ function render() {
   $('log').innerHTML = all.slice(0, shown).map(function (e) {
     var ic, txt;
     if (e.tipo === 'comida') { var f = FOOD.filter(function (x) { return x[0] === e.que; })[0] || ['', e.que, '•']; ic = f[2]; txt = '<b>' + esc(f[1]) + '</b>'; }
-    else if (e.tipo === 'recuento') { ic = '🔢'; txt = '<b>Recuento</b><p>' + [['reinas', 'reina', 'reinas']].concat(STAGES.map(function (s) { return [s[0], s[1].toLowerCase().replace(/s$/, ''), s[1].toLowerCase()]; })).filter(function (s) { return e.n[s[0]] != null; }).map(function (s) { return nf(e.n[s[0]]) + ' ' + (e.n[s[0]] === 1 ? s[1] : s[2]); }).join(' · ') + (e.temp != null ? ' · ' + String(e.temp).replace('.', ',') + ' °C' : '') + '</p>'; }
+    else if (e.tipo === 'recuento') {
+      ic = '🔍'; var parts = [];
+      if (e.n.reinas != null) parts.push(nf(e.n.reinas) + (e.n.reinas === 1 ? ' reina' : ' reinas'));
+      if (e.n.obreras != null) parts.push(workersTxt(e.n) + ' obreras');
+      BROOD.forEach(function (k) { var l = lvl(e.n, k); if (l != null) parts.push(k + ': ' + LEVELS[l].toLowerCase()); });
+      if (e.temp != null) parts.push(String(e.temp).replace('.', ',') + ' °C');
+      txt = '<b>Revisión</b><p>' + esc(parts.join(' · ')) + '</p>';
+    }
     else { ic = KINDS[e.kind] || KINDS.obs; txt = '<p>' + esc(e.texto || '') + '</p>' + (e.foto ? '<img src="/_blob/' + esc(e.foto) + '" alt="Foto de la nota" loading="lazy">' : ''); }
     return '<li class="' + esc(e.kind || '') + '"><span class="ic" aria-hidden="true">' + ic + '</span><div><button type="button" class="when" data-when="' + esc(e.id) + '" aria-label="Cambiar la fecha: ' + fmtT(e.t) + '">' + fmtT(e.t) + '</button>' + txt + '</div><button type="button" class="x" data-del="' + esc(e.id) + '" aria-label="Borrar">×</button></li>';
   }).join('');
   if (document.activeElement && document.activeElement.closest && !document.activeElement.closest('details')) fillForm(c);
+  $('importHist').hidden = Object.keys(S.ev).some(function (k) { return S.ev[k].hist; });
   var ps = Object.keys(S.pend).length + Object.keys(S.del).length;
   $('sync').textContent = !db ? 'Guardado en este móvil.' : ps ? 'Guardado en este móvil · ' + ps + ' por subir.' : 'Guardado en tu cuenta. Lo ves igual en el móvil y en el ordenador.';
 }
@@ -374,13 +405,13 @@ function renderGrowth(c) {
   var W = 340, H = 130, L = 34, R = 10, T = 12, B = 22, t0 = pts[0].t, t1 = pts[pts.length - 1].t, mx = Math.max.apply(null, pts.map(function (p) { return p.n.obreras; })) || 1;
   var X = function (t) { return L + (t1 > t0 ? (t - t0) / (t1 - t0) : .5) * (W - L - R); }, Y = function (v) { return T + (1 - v / mx) * (H - T - B); };
   var line = pts.map(function (p) { return X(p.t).toFixed(1) + ',' + Y(p.n.obreras).toFixed(1); }).join(' ');
-  $('growth').innerHTML = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Obreras en cada recuento, de ' + pts[0].n.obreras + ' a ' + pts[pts.length - 1].n.obreras + '">' +
+  $('growth').innerHTML = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Obreras en cada revisión, de ' + esc(workersTxt(pts[0].n)) + ' a ' + esc(workersTxt(pts[pts.length - 1].n)) + '">' +
     '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(0) + '" y2="' + Y(0) + '" stroke="var(--line)"/><line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(mx) + '" y2="' + Y(mx) + '" stroke="var(--line)" stroke-dasharray="3 4"/>' +
     '<text x="' + (L - 6) + '" y="' + (Y(mx) + 4) + '" text-anchor="end" font-size="11" fill="var(--muted)">' + nf(mx) + '</text><text x="' + (L - 6) + '" y="' + (Y(0) + 4) + '" text-anchor="end" font-size="11" fill="var(--muted)">0</text>' +
     '<polyline points="' + line + '" fill="none" stroke="var(--acc)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>' +
-    pts.map(function (p) { return '<circle cx="' + X(p.t).toFixed(1) + '" cy="' + Y(p.n.obreras).toFixed(1) + '" r="3.5" fill="var(--acc)"><title>' + fmtD(p.t) + ': ' + p.n.obreras + ' obreras</title></circle>'; }).join('') +
+    pts.map(function (p) { return '<circle cx="' + X(p.t).toFixed(1) + '" cy="' + Y(p.n.obreras).toFixed(1) + '" r="3.5" fill="var(--acc)"><title>' + fmtD(p.t) + ': ' + esc(workersTxt(p.n)) + ' obreras</title></circle>'; }).join('') +
     '<text x="' + L + '" y="' + (H - 5) + '" font-size="11" fill="var(--muted)">' + fmtD(t0) + '</text><text x="' + (W - R) + '" y="' + (H - 5) + '" text-anchor="end" font-size="11" fill="var(--muted)">' + fmtD(t1) + '</text></svg>' +
-    '<p class="small">Obreras en cada recuento.</p>';
+    '<p class="small">Obreras en cada revisión. Si apuntaste un rango, el punto va en su valor medio.</p>';
 }
 function fillForm(c) {
   var cd = cada(c);
@@ -428,6 +459,7 @@ $('heroB').addEventListener('submit', function (e) {
   e.preventDefault(); var f = e.target;
   newCol({ nombre: f.nombre.value.trim(), especie: f.especie.value.trim(), reina: f.reina.value });
 });
+$('heroB').addEventListener('click', function (e) { if (e.target.closest('[data-hist]')) $('importHist').click(); });
 $('cols').addEventListener('click', function (e) { var b = e.target.closest('[data-col]'); if (b) { S.cur = b.getAttribute('data-col'); shown = PAGE; sureDel = false; persist(); render(); fillForm(cur()); } });
 $('feed').addEventListener('click', function (e) {
   var b = e.target.closest('[data-food]'); if (!b) return;
@@ -452,6 +484,31 @@ $('export').addEventListener('click', function () {
   a.download = 'formigues-' + (c.nombre || 'colonia').toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + today() + '.json'; a.click();
   setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
 });
+// What Alex logged with the Messor colony before this app existed (2026), added once
+var HISTORY = [
+  ['2026-04-21', { tipo: 'nota', kind: 'hito', texto: 'Llega el kit AntCrilic de Anthouse: reina, unas 10 obreras y cría. Hay una obrera grande, quizá una major.' }],
+  ['2026-04-21', { tipo: 'recuento', n: { niv: true, reinas: 1, obreras: 10 } }],
+  ['2026-05-21', { tipo: 'nota', kind: 'obs', texto: 'Siguen sobre todo en el tubo conectado. Hay cría y reservas de semillas.' }],
+  ['2026-07-06', { tipo: 'recuento', n: { niv: true, reinas: 1, obreras: 38, rango: '25–50' } }],
+  ['2026-07-06', { tipo: 'nota', kind: 'obs', texto: 'Unas 30–40 obreras. Siguen en el tubo y tienen agua en el hormiguero.' }],
+  ['2026-07-14', { tipo: 'recuento', n: { niv: true, reinas: 1, obreras: 75, rango: '50–100' } }],
+  ['2026-07-14', { tipo: 'nota', kind: 'obs', texto: 'Más de 50, quizá unas 70. La reina y los huevos siguen en el tubo, aunque el agua visible del tubo se ha acabado.' }],
+  ['2026-07-19', { tipo: 'nota', kind: 'obs', texto: 'Calor en la habitación: 31–31,6 °C de 14 a 20 h, media 29,9 °C, humedad mínima 42–43 %. Es el ambiente, no dentro de las cámaras.' }],
+  ['2026-07-25', { tipo: 'recuento', n: { niv: true, reinas: 1, larvas: 3 } }],
+  ['2026-07-25', { tipo: 'nota', kind: 'obs', texto: 'Mucha cría y muchas semillas. La cría sigue en el tubo.' }]
+];
+$('importHist').addEventListener('click', function () {
+  if (!cur()) newCol({ nombre: 'Messor', reina: '2026-04-21' });
+  var c = cur(), ch = {};
+  if (!c.especie) ch.especie = 'Messor barbarus';
+  if (!c.casa) ch.casa = 'AntCrilic 10×20';
+  if (!c.reina || c.reina > '2026-04-21') ch.reina = '2026-04-21';
+  if (Object.keys(ch).length) setCol(ch);
+  HISTORY.forEach(function (h, i) {
+    var id = uid('e'); S.ev[id] = Object.assign({ col: S.cur, t: new Date(h[0] + 'T12:00').getTime() + i * 60000, hist: true }, h[1]); touch('eventos/' + id);
+  });
+  saved(); fillForm(cur()); toast('Historial añadido: ' + HISTORY.length + ' entradas');
+});
 $('log').addEventListener('click', function (e) {
   var b = e.target.closest('[data-when]'); if (!b) return;
   whenId = b.getAttribute('data-when'); $('whenF').t.value = toLocal(S.ev[whenId].t); $('whenD').showModal();
@@ -474,17 +531,39 @@ $('delCol').addEventListener('click', function () {
 // Sheets
 document.querySelectorAll('[data-close]').forEach(function (b) { b.addEventListener('click', function () { b.closest('dialog').close(); }); });
 document.querySelectorAll('dialog.sheet').forEach(function (d) { d.addEventListener('click', function (e) { if (e.target === d) d.close(); }); });
+// The census sheet: workers as a range (or an exact number while there are few), brood as a level
+var pick = {};
+function chips(el, labels, sel) { el.innerHTML = labels.map(function (l, i) { return '<button type="button" data-i="' + i + '" aria-pressed="' + (i === sel) + '">' + esc(l) + '</button>'; }).join(''); }
+function drawPick() {
+  chips($('pickObreras'), RANGES.map(function (r) { return r[1]; }).concat('Exacto'), pick.obreras);
+  $('exactL').hidden = pick.obreras !== RANGES.length;
+  document.querySelectorAll('#countF [data-lvl]').forEach(function (el) { chips(el, LEVELS, pick[el.getAttribute('data-lvl')]); });
+}
 $('countBtn').addEventListener('click', function () {
-  var lc = lastCount(S.cur), n = lc ? lc.n : { reinas: 1 }, f = $('countF');
-  ['reinas', 'obreras', 'huevos', 'larvas', 'pupas'].forEach(function (k) { f[k].value = n[k] == null ? '' : n[k]; }); f.temp.value = '';
-  $('countD').showModal();
+  var n = lastCount(S.cur) ? state(S.cur) : { reinas: 1 }, f = $('countF');
+  pick = {};
+  if (n.rango) pick.obreras = RANGES.map(function (r) { return r[1]; }).indexOf(n.rango);
+  else if (n.obreras != null) { pick.obreras = RANGES.length; f.obreras.value = n.obreras; }
+  if (!n.rango && n.obreras == null) f.obreras.value = '';
+  BROOD.forEach(function (k) { var l = lvl(n, k); if (l != null) pick[k] = l; });
+  f.reinas.value = n.reinas == null ? '' : n.reinas; f.temp.value = '';
+  drawPick(); $('countD').showModal();
+});
+$('countF').addEventListener('click', function (e) {
+  var b = e.target.closest('[data-i]'); if (!b) return;
+  var box = b.parentNode, key = box.id === 'pickObreras' ? 'obreras' : box.getAttribute('data-lvl'), i = +b.getAttribute('data-i');
+  pick[key] = pick[key] === i ? undefined : i; drawPick();
+  if (key === 'obreras' && i === RANGES.length) this.obreras.focus();
 });
 $('countF').addEventListener('submit', function () {
-  var f = this, n = {};
-  ['reinas', 'obreras', 'huevos', 'larvas', 'pupas'].forEach(function (k) { var v = parseInt(f[k].value, 10); if (v >= 0) n[k] = v; });
+  var f = this, n = { niv: true }, r = parseInt(f.reinas.value, 10);
+  if (r >= 0) n.reinas = r;
+  if (pick.obreras === RANGES.length) { var v = parseInt(f.obreras.value, 10); if (v >= 0) n.obreras = v; }
+  else if (pick.obreras != null) { n.obreras = RANGES[pick.obreras][0]; n.rango = RANGES[pick.obreras][1]; }
+  BROOD.forEach(function (k) { if (pick[k] != null) n[k] = pick[k]; });
   var t = parseFloat(String(f.temp.value).replace(',', '.')), ev = { tipo: 'recuento', n: n }; if (!isNaN(t)) ev.temp = t;
-  if (!Object.keys(n).length) return;
-  var id = addEv(ev); toast('Recuento guardado', 'Deshacer', function () { delEv(id); });
+  if (Object.keys(n).length === 1 && ev.temp == null) return;
+  var id = addEv(ev); toast('Revisión guardada', 'Deshacer', function () { delEv(id); });
 });
 $('noteBtn').addEventListener('click', function () {
   $('noteF').texto.value = ''; notePhoto = ''; $('notePic').hidden = true; noteKind = 'obs';
