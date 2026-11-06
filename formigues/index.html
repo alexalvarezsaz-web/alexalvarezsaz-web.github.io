@@ -156,7 +156,7 @@ dialog.sheet::backdrop { background: rgba(20, 12, 6, .55); }
 .mapwrap { overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; background: #2c2117; }
 .mapwrap::-webkit-scrollbar { display: none; }
 #setup { display: block; width: max(100%, 820px); height: auto; }
-.hero.map .hero-t { padding-bottom: 12px; }
+.hero.map .hero-t { padding-bottom: 12px; padding-right: 118px; }
 .hsum { padding: 4px 18px 2px; font-size: 15px; line-height: 1.5; color: #fbf1e3; }
 .hsum b { color: #f2c04e; }
 .strip { display: flex; gap: 8px; overflow-x: auto; padding: 10px 18px 16px; scrollbar-width: none; }
@@ -168,12 +168,49 @@ dialog.sheet::backdrop { background: rgba(20, 12, 6, .55); }
 .strip .due { color: #f2c04e; } .strip .late { color: #ef6b5b; }
 .strip b { font-size: 14px; color: #fbf1e3; }
 .strip small { font-size: 12px; color: #cbbba5; }
+/* Life on the map */
+.wig { animation: wig 2.8s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes wig { 0%, 100% { transform: translate(0, 0) rotate(0); } 25% { transform: translate(1.6px, -1px) rotate(14deg); } 50% { transform: translate(-1.2px, 1.4px) rotate(-10deg); } 75% { transform: translate(1px, 1.2px) rotate(22deg); } }
+.led { animation: led 4s ease-in-out infinite; }
+@keyframes led { 50% { opacity: .55; } }
+.mapwrap.night #setup { filter: brightness(.55) saturate(.7); }
+.mapwrap.night .veil { opacity: .55; }
+.veil { opacity: 0; transition: opacity .6s; mix-blend-mode: multiply; pointer-events: none; }
+.mapwrap.night .ledglow { opacity: .9; }
+.ledglow { opacity: .35; transition: opacity .6s; }
+.nightbtn { position: absolute; top: 14px; right: 14px; min-width: 44px; min-height: 44px; padding: 0 12px; border-radius: 22px; border: 1px solid #5a4636; background: #2c2117; color: #fbf1e3; font: 700 14px var(--body); }
+.nightbtn[aria-pressed="true"] { background: #7a1414; border-color: #ff5a5a; color: #ffd6d6; box-shadow: 0 0 18px rgba(255, 60, 60, .55); }
+.hero { position: relative; }
+/* Achievements */
+.badges { display: grid; grid-template-columns: repeat(auto-fill, minmax(98px, 1fr)); gap: 8px; }
+.badge { padding: 10px 8px; border-radius: 14px; background: var(--bg); text-align: center; display: grid; gap: 3px; align-content: start; }
+.badge .bi { font-size: 30px; line-height: 1.1; }
+.badge b { font-size: 13px; line-height: 1.2; }
+.badge span { font-size: 11.5px; color: var(--muted); line-height: 1.25; }
+.badge.lock .bi { filter: grayscale(1); opacity: .35; }
+.badge.lock b { color: var(--muted); }
+.badge.got { background: color-mix(in srgb, var(--honey) 22%, var(--bg)); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--honey) 60%, transparent); }
+.badge .pbar { height: 5px; border-radius: 3px; background: var(--line); overflow: hidden; margin-top: 3px; }
+.badge .pbar i { display: block; height: 100%; background: var(--honey); }
+.confetti { position: fixed; z-index: 30; pointer-events: none; width: 8px; height: 12px; border-radius: 2px; animation: fall 1.6s ease-out forwards; }
+@keyframes fall { from { transform: translate(0, 0) rotate(0); opacity: 1; } to { transform: translate(var(--dx), 70vh) rotate(var(--r)); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .wig, .led, .confetti { animation: none; } .confetti { display: none; } }
+/* Diary as folded day cards */
 .log > li.day { grid-template-columns: minmax(0, 1fr); }
+details.dayc > summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; align-items: center; min-height: 48px; }
+details.dayc > summary::-webkit-details-marker { display: none; }
+details.dayc > summary::after { content: "▾"; grid-row: 1 / span 3; grid-column: 2; color: var(--muted); transition: transform .2s; }
+details.dayc[open] > summary::after { transform: rotate(180deg); }
+details.dayc > summary > span { grid-column: 1; min-width: 0; }
+details.dayc > summary::after { grid-row: 1 / span 4; }
+.dayc .dt { font: 800 16px var(--body); }
+.dayc .ds { font-size: 13.5px; color: var(--muted); }
+.dayc .dn { font-size: 13.5px; font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dayc .icons { font-size: 12.5px; font-weight: 700; color: var(--muted); letter-spacing: .02em; }
 .day { border-top: 1px solid var(--line); padding: 10px 0; display: grid; gap: 6px; }
 .day:first-child { border-top: 0; }
 .day > h3 { font: 800 16px var(--body); }
 .day > p.small { margin: 0; }
-.day details summary { cursor: pointer; font-size: 13.5px; font-weight: 700; color: var(--muted); min-height: 32px; display: flex; align-items: center; }
 .day .log li:first-child { border-top: 1px solid var(--line); }
 #setup text, .mapbig text { font-family: var(--body); }
 [data-mod], [data-zone], [data-point] { cursor: pointer; }
@@ -187,6 +224,17 @@ dialog.sheet::backdrop { background: rgba(20, 12, 6, .55); }
 .zlist .due { border-color: var(--honey); }
 .zlist .late { border-color: var(--warn); }
 </style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <g id="ma"><g stroke="currentColor" stroke-width=".7" fill="none" stroke-linecap="round"><path d="M1 0 L-2 -4.5 M1 0 L-2 4.5 M2 0 L3.5 -4.5 M2 0 L3.5 4.5 M1.5 0 L.5 -5 M1.5 0 L.5 5 M6 -1 L9 -3.5 M6 1 L9 3.5"/></g><ellipse cx="-4.5" rx="3.4" ry="2.4" fill="currentColor"/><ellipse cx="1.5" rx="2" ry="1.2" fill="currentColor"/><circle cx="5.3" r="1.8" fill="currentColor"/></g>
+  <linearGradient id="gWood" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d8b88a"/><stop offset="1" stop-color="#b48f60"/></linearGradient>
+  <linearGradient id="gShelf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#43342a"/><stop offset="1" stop-color="#2e231b"/></linearGradient>
+  <linearGradient id="gGlare" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".45"/><stop offset=".35" stop-color="#fff" stop-opacity="0"/></linearGradient>
+  <linearGradient id="gWater" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bfe6fb"/><stop offset="1" stop-color="#5fb3e0"/></linearGradient>
+  <radialGradient id="gLamp"><stop offset="0" stop-color="#fffbe6" stop-opacity=".55"/><stop offset="1" stop-color="#fffbe6" stop-opacity="0"/></radialGradient>
+  <filter id="fShadow" x="-10%" y="-10%" width="130%" height="140%"><feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#000" flood-opacity=".45"/></filter>
+  <filter id="fGlow" x="-5%" y="-300%" width="110%" height="700%"><feGaussianBlur stdDeviation="6"/></filter>
+</defs></svg>
 
 <main class="wrap">
   <div class="cols" id="cols" hidden></div>
@@ -233,6 +281,11 @@ dialog.sheet::backdrop { background: rgba(20, 12, 6, .55); }
     <section class="sect" id="photosBox" style="margin-top:14px" hidden>
       <h2>Fotos</h2>
       <div class="gal" id="photos"></div>
+    </section>
+
+    <section class="sect" id="logrosBox" style="margin-top:14px" hidden>
+      <div class="sect-h"><h2>Logros</h2><span class="small" id="logrosN"></span></div>
+      <div class="badges" id="logros"></div>
     </section>
 
     <section class="sect" style="margin-top:14px">
@@ -439,7 +492,11 @@ function marks(id, z, cx, cy, rx, ry, k) {
   dots([0, 4, 9, 16][z.semillas || 0], '#8a5a2b', 1.9);
   dots([0, 3, 6, 10][z.basura || 0], '#7d7d7d', 1.7);
   dots([0, 3, 6, 10][(z.huevos || 0)] + [0, 2, 5, 8][(z.larvas || 0)] + [0, 2, 4, 7][(z.pupas || 0)], '#fffaf0', 1.6);
-  dots([0, 3, 7, 14][z.hormigas || 0], '#1b120b', 2.2);
+  // Workers as little ants fidgeting in place, each on its own beat
+  for (i = 0; i < [0, 3, 7, 14][z.hormigas || 0]; i++) {
+    p = inCh(sh, r);
+    out += '<g transform="translate(' + p[0].toFixed(1) + ' ' + p[1].toFixed(1) + ') rotate(' + Math.round(r() * 360) + ') scale(' + (.75 * s).toFixed(2) + ')"><g class="wig" style="animation-delay:-' + (r() * 2.8).toFixed(2) + 's;animation-duration:' + (2.2 + r() * 1.6).toFixed(2) + 's"><use href="#ma" color="#1b120b"/></g></g>';
+  }
   if (z.reina) out += '<text x="' + cx + '" y="' + (cy + 6 * s) + '" text-anchor="middle" font-size="' + 17 * s + '">' + (z.reina === 'si' ? '👑' : '❔') + '</text>';
   if (z.moho) out += '<text x="' + (cx + rx * .6) + '" y="' + (cy - ry * .4) + '" text-anchor="middle" font-size="' + 13 * s + '">⚠️</text>';
   return out;
@@ -471,27 +528,58 @@ function fgSvg(c, k) {
     '<path d="M228 26 L290 22 L292 74 L222 78Z" fill="#7b8794"/><rect x="242" y="34" width="28" height="26" rx="3" fill="#f4f4f4"/>' +
     '<ellipse cx="226" cy="150" rx="30" ry="20" fill="#b7b9b4"/><path d="M164 40 C176 70 168 100 186 116" stroke="#b49a77" stroke-width="9" fill="none" stroke-linecap="round"/><rect x="206" y="4" width="10" height="9" rx="2" fill="#e7d7b5"/></g>';
 }
+// The tubes between modules, named so ants can walk along them
+var TUBES = { t1: 'M122 150 H152', t2: 'M238 150 H285 C305 150 315 110 335 110', t3: 'M285 150 V256', t4: 'M285 215 H322 Q332 215 332 226 V258 H347', t5: 'M503 258 C560 258 548 340 600 340 H690 C708 340 712 300 712 292' };
+var REDUCED = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+// Ants walking the tubes: more workers, more traffic. Half go one way, half the other.
+function walkers(c) {
+  if (REDUCED) return '';
+  var n = state(c.id).obreras || 10, count = Math.max(3, Math.min(14, Math.round(n / 14))), keys = ['t2', 't5', 't4', 't1', 't3', 't2', 't5'], r = rng(c.id + 'walk'), out = '';
+  for (var i = 0; i < count; i++) {
+    var k = keys[i % keys.length], back = i % 2, dur = (k === 't5' ? 16 : 7) + r() * 5;
+    out += '<g><use href="#ma" color="#1b120b" transform="scale(1.15)"/><animateMotion dur="' + dur.toFixed(1) + 's" begin="-' + (r() * dur).toFixed(1) + 's" repeatCount="indefinite" rotate="' + (back ? 'auto-reverse' : 'auto') + '" keyPoints="' + (back ? '1;0' : '0;1') + '" keyTimes="0;1" calcMode="linear"><mpath href="#' + k + '"/></animateMotion></g>';
+  }
+  return out;
+}
+// Hydra drawn as its bottle, with the water going down over the ~2 weeks it lasts
+function hydraEl(c) {
+  var p = pointState(c, 'hydra'), life = 14, lvl = p.d == null ? .5 : Math.max(.04, 1 - p.d / life), top = 30 + (1 - lvl) * 76, wave = REDUCED ? '' : '<animateTransform attributeName="transform" type="translate" from="0 0" to="-24 0" dur="2.4s" repeatCount="indefinite"/>';
+  return '<g data-point="hydra" role="button" tabindex="0" aria-label="Hydra: ' + esc(p.d == null ? 'sin apuntar cuándo la rellenaste' : 'rellenada ' + p.txt + ', le queda más o menos un ' + Math.round(lvl * 100) + ' %') + '">' +
+    '<path d="M522 115 C532 112 540 104 548 104" stroke="#c9b78f" stroke-width="5" fill="none"/>' +
+    '<rect x="540" y="26" width="46" height="84" rx="16" fill="#e9f3f6" fill-opacity=".25" stroke="#e9f3f6" stroke-width="3"/>' +
+    '<clipPath id="hyClip"><rect x="542" y="28" width="42" height="80" rx="14"/></clipPath><g clip-path="url(#hyClip)"><rect x="540" y="' + top.toFixed(1) + '" width="48" height="90" fill="url(#gWater)"/>' +
+    '<path d="M532 ' + top.toFixed(1) + ' q6 -4 12 0 t12 0 t12 0 t12 0 t12 0 t12 0 v6 h-72z" fill="#d9f1fd">' + wave + '</path></g>' +
+    '<rect x="536" y="104" width="54" height="20" rx="5" fill="#f1efe9" stroke="' + ST_COLOR[p.st] + '" stroke-width="3"/>' +
+    '<text x="563" y="148" text-anchor="middle" font-size="22" font-weight="800" fill="#f5e9d6">Hydra</text>' +
+    (p.d != null ? '<text x="563" y="72" text-anchor="middle" font-size="15" font-weight="800" fill="#0d3a57">' + Math.round(lvl * 100) + '%</text>' : '') + '</g>';
+}
+var label = function (x, y, t) { return '<text x="' + x + '" y="' + y + '" text-anchor="middle" font-size="24" font-weight="800" fill="#f5e9d6" stroke="#2c2117" stroke-width="5" paint-order="stroke">' + t + '</text>'; };
 function overviewSvg(c) {
   var lr = lastCount(c.id) ? evs(c.id, 'recuento').filter(function (e) { return e.temp != null || e.hum != null; })[0] : null;
-  var tube = 'stroke="#d9eef5" stroke-opacity=".75" stroke-width="7" fill="none" stroke-linecap="round"';
-  var cross = function (x, y) { return '<rect x="' + (x - 9) + '" y="' + (y - 9) + '" width="18" height="18" rx="3" fill="#f2efe8"/>'; };
-  return '<rect width="1000" height="360" fill="#2c2117"/><rect x="0" y="0" width="652" height="360" fill="#3a2d21"/><rect x="668" y="0" width="332" height="360" fill="#3a2d21"/>' +
-    '<rect x="20" y="4" width="612" height="5" rx="2" fill="#ff3b3b"/><rect x="20" y="2" width="612" height="12" rx="6" fill="#ff3b3b" opacity=".25"/><text x="326" y="34" text-anchor="middle" font-size="20" font-weight="800" fill="#ff8a8a">LED rojos para mirar de noche</text>' +
-    // tubes first, under the modules
-    '<path d="M120 150 H150" ' + tube + '/><path d="M240 150 H285 V215 M285 150 C305 150 315 110 335 110 M285 215 V255 M285 215 H322 Q332 215 332 226 V258 H345 M505 258 C560 258 548 340 600 340 H690 C708 340 712 300 712 290" ' + tube + '/>' +
-    cross(285, 150) + cross(285, 215) + '<rect x="560" y="333" width="10" height="16" fill="#111"/><rect x="630" y="333" width="10" height="16" fill="#111"/>' +
+  var tube = 'stroke="#d9eef5" stroke-opacity=".55" stroke-width="9" fill="none" stroke-linecap="round"';
+  var cross = function (x, y) { return '<rect x="' + (x - 10) + '" y="' + (y - 10) + '" width="20" height="20" rx="4" fill="#f2efe8" filter="url(#fShadow)"/><circle cx="' + x + '" cy="' + (y - 13) + '" r="5" fill="#d8b98a"/>'; };
+  return '<rect width="1000" height="360" fill="#241a12"/><rect x="0" y="0" width="652" height="360" fill="url(#gShelf)"/><rect x="668" y="0" width="332" height="360" fill="url(#gShelf)"/>' +
+    '<path d="M0 356 H652 M668 356 H1000" stroke="#1a130d" stroke-width="8"/>' +
+    // red LED strip on the ceiling of the left bay
+    '<rect class="ledglow" x="10" y="0" width="632" height="26" fill="#ff2a2a" filter="url(#fGlow)"/><rect class="led" x="20" y="4" width="612" height="6" rx="3" fill="#ff4a4a"/>' +
+    // lamp over the big forage
+    '<circle cx="940" cy="60" r="90" fill="url(#gLamp)"/><circle cx="962" cy="44" r="18" fill="none" stroke="#f4f4f4" stroke-width="5"/>' +
+    // tubes, then the ants walking them, then the modules on top so ants disappear into them
+    Object.keys(TUBES).map(function (k) { return '<path id="' + k + '" d="' + TUBES[k] + '" ' + tube + '/>'; }).join('') +
+    '<g pointer-events="none">' + walkers(c) + '</g>' +
+    cross(285, 150) + cross(285, 215) + '<rect x="560" y="331" width="11" height="18" rx="2" fill="#111"/><rect x="630" y="331" width="11" height="18" rx="2" fill="#111"/>' +
     // tube in its wooden box
-    '<g data-mod="tubo" role="button" tabindex="0" aria-label="Tubo de ensayo, en la caja de madera: ' + esc(zoneWords(zone(c, 'tubo'))) + '"><rect x="18" y="104" width="112" height="92" rx="6" fill="#c9a77a"/><path d="M30 104 V196" stroke="#a8875c" stroke-width="3"/>' +
-    '<rect x="34" y="140" width="88" height="20" rx="10" fill="#e9f3f6" fill-opacity=".55" stroke="#fff"/>' + marks('tubo', zone(c, 'tubo'), 80, 150, 40, 9, .7) + '<text x="74" y="228" text-anchor="middle" font-size="24" font-weight="800" fill="#f5e9d6">Tubo</text></g>' +
+    '<g data-mod="tubo" role="button" tabindex="0" aria-label="Tubo de ensayo, en la caja de madera: ' + esc(zoneWords(zone(c, 'tubo'))) + '"><rect x="18" y="104" width="112" height="92" rx="6" fill="url(#gWood)" filter="url(#fShadow)"/><path d="M30 104 V196 M40 112 C70 108 100 116 122 110 M40 186 C70 182 96 190 122 184" stroke="#a8875c" stroke-width="2.5" fill="none"/>' +
+    '<rect x="34" y="138" width="90" height="24" rx="12" fill="#e9f3f6" fill-opacity=".6" stroke="#fff"/><rect x="38" y="141" width="12" height="18" rx="5" fill="#fff"/>' + marks('tubo', zone(c, 'tubo'), 84, 150, 36, 10, .7) + label(74, 228, 'Tubo') + '</g>' +
     // thermo-hygrometer
-    '<rect x="34" y="250" width="96" height="84" rx="12" fill="#eef1f2"/><text x="82" y="286" text-anchor="middle" font-size="26" font-weight="800" fill="#222">' + (lr && lr.temp != null ? String(lr.temp).replace('.', ',') + '°' : '–°') + '</text><text x="82" y="318" text-anchor="middle" font-size="22" font-weight="700" fill="#444">' + (lr && lr.hum != null ? lr.hum + '%' : '–%') + '</text>' +
-    '<g data-mod="antcrilic" role="button" tabindex="0" aria-label="AntCrilic: toca para ver sus zonas"><g transform="translate(150 30) scale(.45)">' + acrilSvg(c, 1.6) + '</g><text x="195" y="230" text-anchor="middle" font-size="24" font-weight="800" fill="#f5e9d6">AntCrilic</text></g>' +
-    '<g data-mod="nidus" role="button" tabindex="0" aria-label="Nidus V1: toca para ver sus cámaras"><rect x="328" y="40" width="194" height="149" rx="8" fill="#4f7a3e"/><g transform="translate(335 47) scale(.4286)">' + nidusSvg(c, 1.8) + '</g><text x="425" y="218" text-anchor="middle" font-size="24" font-weight="800" fill="#f5e9d6">Nidus V1</text></g>' +
-    '<path d="M522 115 C532 112 540 104 548 96" stroke="#c9b78f" stroke-width="5" fill="none"/>' + pointEl(c, 'hydra', 562, 78, 24, 'Hydra', 22) +
-    '<g data-mod="cinis" role="button" tabindex="0" aria-label="Cinis, el basurero: ' + esc(zoneWords(zone(c, 'cinis'))) + '"><rect x="255" y="255" width="62" height="62" rx="5" fill="#efe9dd"/><circle cx="292" cy="294" r="13" fill="#8c8c8c"/>' + marks('cinis', zone(c, 'cinis'), 286, 286, 26, 26, .8) + pointEl(c, 'cinis', 310, 262, 7) + '<text x="286" y="346" text-anchor="middle" font-size="24" font-weight="800" fill="#f5e9d6">Cinis</text></g>' +
-    '<g data-mod="v1" role="button" tabindex="0" aria-label="Forrajeo V1: ' + esc(zoneWords(zone(c, 'v1'))) + '"><rect x="345" y="226" width="160" height="82" rx="6" fill="#6f8597"/><rect x="353" y="234" width="144" height="66" rx="3" fill="#5a4636"/><circle cx="455" cy="268" r="17" fill="#4a3a2c"/>' + marks('v1', zone(c, 'v1'), 425, 267, 70, 30, .8) + '<text x="425" y="334" text-anchor="middle" font-size="24" font-weight="800" fill="#f5e9d6">Forrajeo V1</text></g>' +
-    '<g data-mod="fg" role="button" tabindex="0" aria-label="Forrajeo grande: toca para ver sus dos partes"><g transform="translate(700 70) scale(.9333)">' + fgSvg(c, 1) + '</g><text x="840" y="306" text-anchor="middle" font-size="24" font-weight="800" fill="#f5e9d6">Forrajeo grande</text></g>' +
-    '<circle cx="962" cy="44" r="18" fill="none" stroke="#e8e8e8" stroke-width="5"/>' + queenBadge(c);
+    '<g filter="url(#fShadow)"><rect x="34" y="250" width="96" height="84" rx="12" fill="#eef1f2"/></g><text x="82" y="286" text-anchor="middle" font-size="26" font-weight="800" fill="#222">' + (lr && lr.temp != null ? String(lr.temp).replace('.', ',') + '°' : '–°') + '</text><text x="82" y="318" text-anchor="middle" font-size="22" font-weight="700" fill="#444">' + (lr && lr.hum != null ? lr.hum + '%' : '–%') + '</text>' +
+    '<g data-mod="antcrilic" role="button" tabindex="0" aria-label="AntCrilic: toca para ver sus zonas"><g transform="translate(150 30) scale(.45)" filter="url(#fShadow)">' + acrilSvg(c, 1.6) + '<rect x="4" y="4" width="192" height="146" rx="8" fill="url(#gGlare)" pointer-events="none"/></g>' + label(195, 230, 'AntCrilic') + '</g>' +
+    '<g data-mod="nidus" role="button" tabindex="0" aria-label="Nidus V1: toca para ver sus cámaras"><rect x="328" y="40" width="194" height="149" rx="8" fill="#4f7a3e" filter="url(#fShadow)"/><g transform="translate(335 47) scale(.4286)">' + nidusSvg(c, 1.8) + '<rect width="420" height="300" rx="10" fill="url(#gGlare)" pointer-events="none"/></g>' + label(425, 218, 'Nidus V1') + '</g>' +
+    hydraEl(c) +
+    '<g data-mod="cinis" role="button" tabindex="0" aria-label="Cinis, el basurero: ' + esc(zoneWords(zone(c, 'cinis'))) + '"><rect x="255" y="255" width="62" height="62" rx="5" fill="#efe9dd" filter="url(#fShadow)"/><circle cx="292" cy="294" r="13" fill="#8c8c8c"/><circle cx="292" cy="294" r="13" fill="none" stroke="#6d6d6d" stroke-width="3" stroke-dasharray="3 3"/>' + marks('cinis', zone(c, 'cinis'), 286, 286, 26, 26, .8) + pointEl(c, 'cinis', 310, 262, 7) + label(286, 346, 'Cinis') + '</g>' +
+    '<g data-mod="v1" role="button" tabindex="0" aria-label="Forrajeo V1: ' + esc(zoneWords(zone(c, 'v1'))) + '"><rect x="345" y="226" width="160" height="82" rx="6" fill="#6f8597" filter="url(#fShadow)"/><rect x="353" y="234" width="144" height="66" rx="3" fill="#5a4636"/>' + [[372, 246], [392, 286], [478, 290], [470, 242], [410, 258]].map(function (s, i) { return '<circle cx="' + s[0] + '" cy="' + s[1] + '" r="' + (5 + i % 3 * 2) + '" fill="' + ['#b7a08a', '#8f7a66', '#c9b29a'][i % 3] + '"/>'; }).join('') + '<circle cx="455" cy="268" r="17" fill="#4a3a2c"/>' + marks('v1', zone(c, 'v1'), 425, 267, 70, 30, .8) + '<rect x="353" y="234" width="144" height="66" rx="3" fill="url(#gGlare)" pointer-events="none"/>' + label(425, 334, 'Forrajeo V1') + '</g>' +
+    '<g data-mod="fg" role="button" tabindex="0" aria-label="Forrajeo grande: toca para ver sus dos partes"><g transform="translate(700 70) scale(.9333)" filter="url(#fShadow)">' + fgSvg(c, 1) + '<rect width="300" height="220" fill="url(#gGlare)" pointer-events="none"/></g>' + label(840, 306, 'Forrajeo grande') + '</g>' +
+    queenBadge(c) + '<rect class="veil" width="1000" height="360" fill="#ff3030"/>';
 }
 // A big crown on the module where the queen was last marked, since the zone marks are tiny on the shelf view
 var BADGE = { tubo: [112, 116], antcrilic: [236, 46], nidus: [508, 64], cinis: [312, 270], v1: [494, 240], fg: [968, 100] };
@@ -604,7 +692,9 @@ function render() {
   var map = isMap(c);
   $('heroT').innerHTML = '<h1>' + esc(c.nombre || 'Sin nombre') + '</h1>' + (c.especie ? '<span class="sp">' + esc(c.especie) + (c.casa && !map ? ' · <span style="font-style:normal">' + esc(c.casa) + '</span>' : '') + (map && age != null ? ' · <span style="font-style:normal">' + nf(age) + ' días contigo' + (age >= 60 ? ', ' + span(age) : '') + '</span>' : '') + '</span>' : '') +
     (age != null && !map ? '<div class="age num">' + nf(age) + '<small>' + (age === 1 ? 'día' : 'días') + ' con reina</small></div>' + (age >= 60 ? '<span class="sp" style="font-style:normal">' + span(age) + '</span>' : '') : '') +
-    (c.hiberna ? '<span class="hiber">' + hiberText(c) + '</span>' : '');
+    (c.hiberna ? '<span class="hiber">' + hiberText(c) + '</span>' : '') +
+    (map ? '<button type="button" class="nightbtn" id="nightBtn" aria-pressed="' + night + '" aria-label="Encender los LED rojos del mapa">' + (night ? '🔴 LED' : '🌙 Noche') + '</button>' : '');
+  $('mapWrap').classList.toggle('night', map && night);
   $('heroB').textContent = map ? '' : lc ? 'Última revisión: ' + ago(lc.t) + (lc.temp != null ? ' · ' + String(lc.temp).replace('.', ',') + ' °C' : '') + '.' : 'Haz una revisión y el hormiguero se llenará con lo que veas.';
   $('heroB').hidden = map;
   renderNest(c, n);
@@ -633,6 +723,7 @@ function render() {
   var all = evs(c.id);
   $('logEmpty').hidden = all.length > 0; $('more').hidden = all.length <= shown;
   $('log').innerHTML = days(all.slice(0, shown));
+  renderLogros(c);
   renderTail(c);
 }
 // One line per entry, as it appears inside a day
@@ -655,22 +746,76 @@ function entry(e) {
     else { ic = KINDS[e.kind] || KINDS.obs; txt = '<p>' + esc(e.texto || '') + '</p>' + (e.foto ? '<img src="/_blob/' + esc(e.foto) + '" alt="Foto de la nota" loading="lazy">' : ''); }
     return '<li class="' + esc(e.kind || '') + '"><span class="ic" aria-hidden="true">' + ic + '</span><div><button type="button" class="when" data-when="' + esc(e.id) + '" aria-label="Cambiar la fecha: ' + fmtT(e.t) + '">' + fmtT(e.t) + '</button>' + txt + '</div><button type="button" class="x" data-del="' + esc(e.id) + '" aria-label="Borrar">×</button></li>';
 }
-// The diary by day: a summary of the visit, notes in full, and the rest folded away
+// The diary by day: each day folded into one line, open it to see every entry
 function days(list) {
   var groups = [], by = {};
   list.forEach(function (e) { var k = dayStart(e.t); if (!by[k]) { by[k] = []; groups.push([k, by[k]]); } by[k].push(e); });
   return groups.map(function (g) {
-    var es = g[1], notes = es.filter(function (e) { return e.tipo === 'nota'; }), rest = es.filter(function (e) { return e.tipo !== 'nota'; }), parts = [];
-    var zs = rest.filter(function (e) { return e.tipo === 'zona'; }).length, rv = rest.filter(function (e) { return e.tipo === 'recuento'; })[0], care = {};
-    if (rv) { var w = []; if (rv.n.obreras != null) w.push(workersTxt(rv.n) + ' obreras'); BROOD.forEach(function (k) { var l = lvl(rv.n, k); if (l) w.push(k + ' ' + LEVELS[l].toLowerCase()); }); if (rv.temp != null) w.push(String(rv.temp).replace('.', ',') + ' °C'); if (rv.hum != null) w.push(rv.hum + ' %'); parts.push('Revisión' + (w.length ? ': ' + w.join(', ') : '')); }
-    if (zs) parts.push(zs + (zs === 1 ? ' zona apuntada' : ' zonas apuntadas'));
-    rest.forEach(function (e) { if (e.tipo === 'comida') { var n = careName(e.que)[1]; care[n] = (care[n] || 0) + 1; } });
+    var es = g[1], parts = [], cnt = { zona: 0, comida: 0, nota: 0, recuento: 0 }, care = {};
+    es.forEach(function (e) { cnt[e.tipo] = (cnt[e.tipo] || 0) + 1; if (e.tipo === 'comida') { var n = careName(e.que)[1]; care[n] = (care[n] || 0) + 1; } });
+    var rv = es.filter(function (e) { return e.tipo === 'recuento'; })[0], note = es.filter(function (e) { return e.tipo === 'nota' && e.texto; }).pop();
+    if (rv) { var w = []; if (rv.n.obreras != null) w.push(workersTxt(rv.n) + ' obreras'); BROOD.forEach(function (k) { var l = lvl(rv.n, k); if (l) w.push(k + ' ' + LEVELS[l].toLowerCase()); }); if (rv.temp != null) w.push(String(rv.temp).replace('.', ',') + ' °C'); parts.push(w.length ? w.join(', ') : 'revisión'); }
     var cn = Object.keys(care); if (cn.length) parts.push(cn.map(function (k) { return k + (care[k] > 1 ? ' ×' + care[k] : ''); }).join(', '));
+    var icons = [cnt.recuento && '🔍', cnt.zona && '📍' + cnt.zona, cnt.comida && '🍯' + cnt.comida, cnt.nota && (es.some(function (e) { return e.kind === 'hito'; }) ? '⭐' : '📝') + cnt.nota].filter(Boolean).join('  ');
     var d = new Date(g[0]), title = daysAgo(g[0]) === 0 ? 'Hoy' : daysAgo(g[0]) === 1 ? 'Ayer' : d.getDate() + ' de ' + MONTHS_L[d.getMonth()] + (d.getFullYear() !== new Date().getFullYear() ? ' de ' + d.getFullYear() : '');
-    return '<li class="day"><h3>' + title + '</h3>' + (parts.length ? '<p class="small">' + esc(parts.join(' · ')) + '</p>' : '') +
-      (notes.length ? '<ul class="log">' + notes.map(entry).join('') + '</ul>' : '') +
-      (rest.length ? '<details><summary>Ver ' + (rest.length === 1 ? 'el apunte' : 'los ' + rest.length + ' apuntes') + '</summary><ul class="log">' + rest.map(entry).join('') + '</ul></details>' : '') + '</li>';
+    return '<li class="day"><details class="dayc"><summary><span class="dt">' + title + '</span>' + (parts.length ? '<span class="ds">' + esc(parts.join(' · ')) + '</span>' : '') +
+      (note ? '<span class="dn">«' + esc(note.texto) + '»</span>' : '') + '<span class="icons">' + icons + '</span></summary><ul class="log">' + es.map(entry).join('') + '</ul></details></li>';
   }).join('');
+}
+// ---------- Achievements: worked out from the diary, celebrated once ----------
+function lowB(n) { if (!n) return 0; if (n.rango) return parseInt(String(n.rango).replace(/\./g, '').replace(/^Más de /, ''), 10) || 0; return n.obreras || 0; }
+function logros(c) {
+  var all = evs(c.id), zs = c.zonas || {}, ids = Object.keys(zs), age = c.reina ? daysAgo(new Date(c.reina + 'T12:00').getTime()) : 0;
+  var most = all.filter(function (e) { return e.tipo === 'recuento'; }).reduce(function (a, e) { return Math.max(a, lowB(e.n)); }, 0);
+  var zev = all.filter(function (e) { return e.tipo === 'zona'; }), care = function (k, f) { return all.filter(function (e) { return e.tipo === 'comida' && e.que === k && (!f || f(e)); }).length; };
+  var weeks = {}; all.forEach(function (e) { if (e.tipo === 'zona' || e.tipo === 'recuento') weeks[Math.floor(dayStart(e.t) / (7 * DAY))] = 1; });
+  var mapped = Object.keys(ZONES).filter(function (k) { return zs[k] && zs[k].t; }).length, total = Object.keys(ZONES).length;
+  var L = [
+    ['50', '🐜', 'Primeras 50', 'Llegar a 50 obreras', most >= 50],
+    ['100', '💯', 'Centenaria', '100 obreras o más', most >= 100],
+    ['500', '🏙️', 'Ciudad', '500 obreras', most >= 500],
+    ['1000', '🏰', 'Imperio', 'Más de 1.000 obreras', most >= 1000],
+    ['d100', '🌱', '100 días', 'Cien días contigo', age >= 100, Math.min(1, age / 100)],
+    ['d182', '🎂', 'Medio año', 'Seis meses juntas', age >= 182, Math.min(1, age / 182)],
+    ['d365', '🏆', 'Un año', 'Un año entero contigo', age >= 365, Math.min(1, age / 365)],
+    ['nidus', '🏡', 'Mudanza', 'Muchas hormigas viviendo en Nidus', ids.some(function (k) { return k.indexOf('ni.') === 0 && (zs[k].hormigas || 0) >= 2; })],
+    ['reina', '👑', 'Reina a la vista', 'Verla y marcar dónde está', ids.some(function (k) { return zs[k].reina === 'si'; }) || zev.some(function (e) { return e.z && e.z.reina === 'si'; })],
+    ['mapa', '🗺️', 'Cartógrafa', 'Apuntar todas las zonas del mapa', mapped >= total, mapped / total],
+    ['granero', '🌾', 'Granero lleno', 'Mucha semilla guardada en algún sitio', ids.some(function (k) { return zs[k].semillas === 3; })],
+    ['caza', '🦗', 'Cazadora', '5 presas silvestres', care('proteina', function (e) { return e.origen === 'vivo' || e.origen === 'congelado'; }) >= 5, care('proteina', function (e) { return e.origen === 'vivo' || e.origen === 'congelado'; }) / 5],
+    ['hydra', '💧', 'Fuente', 'Rellenar Hydra 3 veces', care('hydra') >= 3, care('hydra') / 3],
+    ['cinis', '🗑️', 'Limpieza', 'Vaciar Cinis 3 veces', care('cinis') >= 3, care('cinis') / 3],
+    ['huevos', '🥚', 'Nueva generación', 'Ver huevos en alguna zona', ids.some(function (k) { return (zs[k].huevos || 0) >= 1; }) || zev.some(function (e) { return e.z && e.z.huevos; })],
+    ['fotos', '📸', 'Fotógrafa', '5 fotos en el diario', all.filter(function (e) { return e.foto; }).length >= 5, all.filter(function (e) { return e.foto; }).length / 5],
+    ['notas', '📝', 'Diario de campo', '10 notas', all.filter(function (e) { return e.tipo === 'nota'; }).length >= 10, all.filter(function (e) { return e.tipo === 'nota'; }).length / 10],
+    ['semanas', '🔥', 'Constancia', 'Mirarlas 4 semanas distintas', Object.keys(weeks).length >= 4, Object.keys(weeks).length / 4],
+    ['invierno', '❄️', 'Invierno', 'Pasar una hibernación', !!(c.hiberna || c.hibernaDesde)]
+  ];
+  return L;
+}
+var LK = 'formigues-logros-';
+function renderLogros(c) {
+  var L = logros(c), got = L.filter(function (l) { return l[4]; });
+  $('logrosBox').hidden = false; $('logrosN').textContent = got.length + ' de ' + L.length;
+  $('logros').innerHTML = got.concat(L.filter(function (l) { return !l[4]; })).map(function (l) {
+    var pr = l[5] != null && !l[4] ? '<div class="pbar"><i style="width:' + Math.round(Math.min(1, l[5]) * 100) + '%"></i></div>' : '';
+    return '<div class="badge ' + (l[4] ? 'got' : 'lock') + '"><span class="bi" aria-hidden="true">' + l[1] + '</span><b>' + esc(l[2]) + '</b><span>' + esc(l[3]) + '</span>' + pr + '</div>';
+  }).join('');
+  // Celebrate only what is new on this device; the first time just takes note of what was already there
+  var seen = null; try { seen = JSON.parse(localStorage.getItem(LK + c.id) || 'null'); } catch (e) {}
+  var ids = got.map(function (l) { return l[0]; }), fresh = seen ? got.filter(function (l) { return seen.indexOf(l[0]) < 0; }) : [];
+  try { localStorage.setItem(LK + c.id, JSON.stringify(ids)); } catch (e) {}
+  if (fresh.length && !celebrating) { celebrating = true; setTimeout(function () { celebrating = false; toast('🏅 Logro: ' + fresh.map(function (l) { return l[2]; }).join(', ')); confetti(); }, 300); }
+}
+var celebrating = false;
+function confetti() {
+  if (REDUCED) return;
+  var cols = ['#f2c04e', '#e0703a', '#7cc46a', '#5fb3e0', '#ef6b5b'];
+  for (var i = 0; i < 40; i++) {
+    var el = document.createElement('i'); el.className = 'confetti';
+    el.style.cssText = 'left:' + (10 + Math.random() * 80) + 'vw;top:' + (8 + Math.random() * 20) + 'vh;background:' + cols[i % cols.length] + ';--dx:' + (Math.random() * 120 - 60) + 'px;--r:' + Math.round(Math.random() * 720 - 360) + 'deg;animation-delay:' + (Math.random() * .3).toFixed(2) + 's';
+    document.body.appendChild(el); setTimeout(function (x) { x.remove(); }.bind(null, el), 2200);
+  }
 }
 var MONTHS_L = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 // The line under the map: how many, what brood, where the queen and the seeds are
@@ -767,6 +912,13 @@ function buzz() { try { if (navigator.vibrate) navigator.vibrate(25); } catch (e
 $('heroB').addEventListener('submit', function (e) {
   e.preventDefault(); var f = e.target;
   newCol({ nombre: f.nombre.value.trim(), especie: f.especie.value.trim(), reina: f.reina.value });
+});
+// Night mode: the red LEDs on, as when looking at them in the dark. Remembered on this device only.
+var night = false; try { night = localStorage.getItem('formigues-noche') === '1'; } catch (e) {}
+$('heroT').addEventListener('click', function (e) {
+  if (!e.target.closest('#nightBtn')) return;
+  night = !night; try { localStorage.setItem('formigues-noche', night ? '1' : '0'); } catch (x) {}
+  render();
 });
 $('heroB').addEventListener('click', function (e) { if (e.target.closest('[data-hist]')) $('importHist').click(); });
 $('cols').addEventListener('click', function (e) { var b = e.target.closest('[data-col]'); if (b) { S.cur = b.getAttribute('data-col'); shown = PAGE; sureDel = false; persist(); render(); fillForm(cur()); } });
