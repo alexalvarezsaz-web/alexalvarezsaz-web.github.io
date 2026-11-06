@@ -660,11 +660,18 @@ var flushing = false;
 async function flush() {
   if (!db || flushing || navigator.onLine === false) return;
   flushing = true;
+  var failed = false;
   try {
-    for (var p in S.pend) { var s = p.split('/'), d = s[0] === 'colonias' ? S.col[s[1]] : S.ev[s[1]]; if (d) await db.doc(p).set(d); delete S.pend[p]; persist(); }
+    // A change made while its upload is in flight stays pending, so the next pass sends it too
+    for (var p in S.pend) {
+      var s = p.split('/'), get = function () { return s[0] === 'colonias' ? S.col[s[1]] : S.ev[s[1]]; }, d = get(), sent = JSON.stringify(d);
+      if (d) await db.doc(p).set(d);
+      if (JSON.stringify(get()) === sent) { delete S.pend[p]; persist(); }
+    }
     for (var q in S.del) { await db.doc(q).delete(); delete S.del[q]; persist(); }
-  } catch (e) {}
+  } catch (e) { failed = true; }
   flushing = false; render();
+  if (!failed && Object.keys(S.pend).length) setTimeout(flush, 500);
 }
 window.addEventListener('online', flush); setInterval(flush, 30000);
 function touch(path) { delete S.del[path]; S.pend[path] = 1; }
