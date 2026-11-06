@@ -463,8 +463,21 @@ var INIT_ZONES = { tubo: { hormigas: 2, semillas: 2, reina: '?' }, 'ac.forr': { 
   'ni.c1': { hormigas: 1 }, 'ni.c4': { hormigas: 1 }, 'ni.c5': { hormigas: 1 }, 'ni.c6': { hormigas: 3 }, 'ni.c7': { hormigas: 3 }, 'ni.c8': { hormigas: 3 }, 'ni.c9': { hormigas: 2 },
   cinis: { basura: 2 }, v1: { hormigas: 1, semillas: 1 }, 'fg.izq': { hormigas: 1, semillas: 1 }, 'fg.der': { hormigas: 1 } };
 // Shapes in each module's own space: [cx, cy, rx, ry]
-var NIDUS = { 'ni.c1': [40, 75, 23, 37], 'ni.seta': [142, 113, 48, 37], 'ni.c3': [223, 35, 43, 19], 'ni.c4': [304, 54, 28, 24], 'ni.c5': [329, 113, 25, 19], 'ni.c6': [324, 179, 35, 27], 'ni.c7': [314, 249, 38, 24], 'ni.c8': [203, 220, 35, 40], 'ni.c9': [86, 236, 48, 40] };
-var NIDUS_TUNNELS = ['M0 139 C40 139 70 145 100 148', 'M165 80 C175 60 190 48 200 42', 'M98 100 C80 92 70 88 58 86', 'M186 128 C210 140 228 146 243 150', 'M243 150 C262 112 282 82 300 66', 'M243 150 L308 118', 'M243 150 C262 160 280 168 292 174', 'M243 150 C232 168 222 182 214 190', 'M170 226 L132 234', 'M236 236 C252 240 266 244 278 246'];
+// Traced from the photo of the carved Ytong (20 × 15 cm → 420 × 300). Each chamber: [cx, cy, rx, ry] for the marks, plus its outline.
+var NIDUS = {
+  'ni.c1': [48, 66, 26, 34, 'M30 36 C44 24 70 30 76 52 C82 74 76 98 58 104 C40 108 22 96 20 74 C18 58 20 44 30 36Z'],
+  'ni.seta': [176, 128, 46, 12, 'M107 68 C122 50 166 48 190 60 C216 70 246 88 249 114 C251 136 222 147 195 146 C164 147 126 147 104 132 C90 121 90 86 107 68Z'],
+  'ni.c3': [231, 46, 40, 16, 'M190 44 C196 30 232 26 258 30 C278 33 276 58 262 62 C240 66 210 66 196 60 C188 56 186 50 190 44Z'],
+  'ni.c4': [330, 55, 28, 20, 'M302 46 C310 32 344 30 358 42 C368 52 362 72 344 76 C326 80 306 74 300 62 C298 56 299 50 302 46Z'],
+  'ni.c5': [357, 109, 26, 15, 'M332 104 C338 92 370 90 382 100 C390 108 384 122 368 126 C352 129 334 122 331 114 C330 110 330 107 332 104Z'],
+  'ni.c6': [356, 183, 36, 26, 'M322 172 C330 152 372 150 388 164 C400 176 398 200 380 208 C360 216 330 210 322 196 C318 188 319 180 322 172Z'],
+  'ni.c7': [341, 254, 44, 22, 'M300 248 C304 232 350 228 376 236 C394 242 394 268 376 274 C352 282 316 280 302 268 C296 262 297 254 300 248Z'],
+  'ni.c8': [217, 233, 34, 40, 'M190 200 C200 186 236 186 248 202 C258 218 256 256 244 270 C232 282 204 282 192 268 C180 252 180 214 190 200Z'],
+  'ni.c9': [86, 236, 46, 38, 'M44 216 C52 196 96 192 118 204 C138 216 140 252 128 266 C114 280 76 282 56 270 C40 258 38 232 44 216Z']
+};
+// The mushroom: the chamber is a ring carved around an uncarved pillar in the middle
+var NIDUS_PIT = '<path d="M140 70 C152 56 186 58 196 74 C206 92 200 116 182 122 C164 128 142 120 136 104 C132 92 132 80 140 70Z" fill="#e9dfcc" stroke="rgba(0,0,0,.22)" stroke-width="1.5" pointer-events="none"/>';
+var NIDUS_TUNNELS = ['M0 148 C40 147 70 150 100 152 C150 158 200 156 250 140 L273 136', 'M74 86 L106 82', 'M196 58 L208 52', 'M273 136 C290 120 300 100 306 74', 'M292 124 C310 116 324 112 334 110', 'M273 136 C295 150 312 164 326 176', 'M270 140 C262 160 250 178 240 192', 'M186 236 L130 238', 'M250 218 C266 234 282 244 300 250'];
 var ACRIL = { 'ac.izq': [52, 205, 40, 26], 'ac.gran': [152, 210, 38, 28], 'ac.centro': [100, 272, 72, 24], 'ac.abajo': [100, 330, 82, 18] };
 
 function isMap(c) { return c && c.montaje === 'v1'; }
@@ -502,7 +515,10 @@ function marks(id, z, cx, cy, rx, ry, k) {
   return out;
 }
 function zoneEl(c, id, shape, inner) { return '<g data-zone="' + id + '" role="button" tabindex="0" aria-label="' + esc(ZONES[id] + ': ' + zoneWords(zone(c, id))) + '">' + shape + inner + '</g>'; }
-function ellZone(c, id, e, fill, k) { return zoneEl(c, id, '<ellipse cx="' + e[0] + '" cy="' + e[1] + '" rx="' + e[2] + '" ry="' + e[3] + '" fill="' + fill + '" stroke="rgba(0,0,0,.25)"/>', marks(id, zone(c, id), e[0], e[1], e[2], e[3], k)); }
+function ellZone(c, id, e, fill, k) {
+  var shape = e[4] ? '<path d="' + e[4] + '" fill="' + fill + '" stroke="rgba(0,0,0,.28)" stroke-width="1.5"/>' + (id === 'ni.seta' ? NIDUS_PIT : '') : '<ellipse cx="' + e[0] + '" cy="' + e[1] + '" rx="' + e[2] + '" ry="' + e[3] + '" fill="' + fill + '" stroke="rgba(0,0,0,.25)"/>';
+  return zoneEl(c, id, shape, marks(id, zone(c, id), e[0], e[1], e[2], e[3], k));
+}
 function pointEl(c, k, x, y, rr, label, fs) {
   var p = pointState(c, k); fs = fs || 11;
   return '<g data-point="' + k + '" role="button" tabindex="0" aria-label="' + esc(careName(k)[1] + ': ' + p.txt) + '"><circle cx="' + x + '" cy="' + y + '" r="' + rr + '" fill="#a9d8f2" stroke="' + ST_COLOR[p.st] + '" stroke-width="4"/>' +
@@ -510,8 +526,8 @@ function pointEl(c, k, x, y, rr, label, fs) {
 }
 // Each module drawn in its own space, used big in the sheet and scaled down on the shelf
 function nidusSvg(c, k) {
-  return '<rect width="420" height="300" rx="10" fill="#e9dfcc"/>' + NIDUS_TUNNELS.map(function (d) { return '<path d="' + d + '" fill="none" stroke="#c4b393" stroke-width="10" stroke-linecap="round"/>'; }).join('') +
-    Object.keys(NIDUS).map(function (id) { return ellZone(c, id, NIDUS[id], '#cdbd9c', k); }).join('') + '<ellipse cx="132" cy="102" rx="22" ry="16" fill="#e9dfcc"/>' +
+  return '<rect width="420" height="300" rx="10" fill="#e9dfcc"/>' + NIDUS_TUNNELS.map(function (d) { return '<path d="' + d + '" fill="none" stroke="#cdbd9c" stroke-width="14" stroke-linecap="round"/>'; }).join('') +
+    Object.keys(NIDUS).map(function (id) { return ellZone(c, id, NIDUS[id], '#cdbd9c', k); }).join('') +
     '<rect x="410" y="132" width="10" height="36" rx="3" fill="#a9d8f2"/>';
 }
 function acrilSvg(c, k) {
