@@ -102,10 +102,6 @@ tr.total td.g { font-size: 1rem; font-weight: 500; color: var(--muted); }
       <div class="row"><input id="n" inputmode="numeric" value="90"><span class="unit">caps</span></div>
     </div>
     <div class="field">
-      <label for="cap">Capacidad nº 4</label>
-      <div class="row"><input id="cap" inputmode="decimal" value="0,08"><span class="unit">g/cap</span></div>
-    </div>
-    <div class="field">
       <label for="ribo">Riboflavina</label>
       <div class="row"><input id="ribo" inputmode="decimal" value="0,021"><span class="unit">g total</span></div>
     </div>
@@ -126,6 +122,7 @@ tr.total td.g { font-size: 1rem; font-weight: 500; color: var(--muted); }
 </div>
 
 <script>
+const CAP = 0.08; // g por cápsula nº 4 (90 caps = 7,2 g)
 const ACTIVES = {
   min: { name: "Minoxidilo", chips: [0.5, 1, 2.5, 5], def: 1 },
   fin: { name: "Finasterida", chips: [0.5, 1], def: 1 },
@@ -170,8 +167,8 @@ function renderDoses() {
 let lastText = "";
 function calc() {
   const f = FORMULAS.find(x => x.id === formula);
-  const n = num($("n").value), cap = num($("cap").value), ribo = num($("ribo").value);
-  const ok = n > 0 && cap > 0 && ribo >= 0 && f.act.every(k => dose[k] >= 0);
+  const n = num($("n").value), cap = CAP, ribo = num($("ribo").value);
+  const ok = n > 0 && ribo >= 0 && f.act.every(k => dose[k] >= 0);
   if (!ok) { $("rows").innerHTML = ""; $("bar").innerHTML = ""; $("warn").hidden = false;
     $("warn").textContent = "Revisa los datos: hay un campo vacío o con un número no válido."; return; }
 
@@ -213,7 +210,7 @@ $("doses").addEventListener("input", e => {
   e.target.closest(".field").querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", +c.dataset.v === dose[k]));
   calc();
 });
-["n", "cap", "ribo"].forEach(id => $(id).addEventListener("input", calc));
+["n", "ribo"].forEach(id => $(id).addEventListener("input", calc));
 $("copy").addEventListener("click", async () => {
   const b = $("copy");
   try { await navigator.clipboard.writeText(lastText); b.textContent = "Copiado"; }
