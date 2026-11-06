@@ -278,6 +278,15 @@ dialog.sheet::backdrop { background: rgba(20, 12, 6, .55); }
   <div class="sh-b"><button type="button" class="no" data-close>Cancelar</button><button class="ok">Guardar</button></div>
 </form></dialog>
 
+<dialog class="sheet" id="protD" aria-label="Proteína"><form class="sh" method="dialog" id="protF">
+  <h2>🦗 Proteína</h2>
+  <div class="pick"><span class="lab">De dónde viene</span><div class="kinds" id="protOrig"></div></div>
+  <label style="display:grid;gap:4px;font-size:13px;font-weight:700;color:var(--muted)">Qué era (opcional)<input name="bicho" list="bichos" maxlength="40" placeholder="Efímera, mosca…" style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:16px"></label>
+  <p class="small">Si un día ves ácaros o bajas, aquí podrás mirar qué les diste antes.</p>
+  <div class="sh-b"><button type="button" class="no" data-close>Cancelar</button><button class="ok">Apuntar</button></div>
+</form></dialog>
+<datalist id="bichos"><option value="Efímera"><option value="Mosca"><option value="Mosquito"><option value="Polilla"><option value="Grillo"><option value="Tenebrio"></datalist>
+
 <dialog class="sheet" id="modD" aria-label="Parte del montaje"><div class="sh" id="modBody"></div></dialog>
 
 <dialog class="sheet" id="whenD" aria-label="Cambiar fecha"><form class="sh" method="dialog" id="whenF">
@@ -289,7 +298,9 @@ dialog.sheet::backdrop { background: rgba(20, 12, 6, .55); }
 <script>
 var DAY = 86400000, LS = 'formigues-v1', PAGE = 30;
 var FOOD = [['azucar', 'Azúcar', '🍯'], ['proteina', 'Proteína', '🦗'], ['semillas', 'Semillas', '🌾'], ['agua', 'Agua', '💧'], ['limpieza', 'Limpieza', '🧹']];
-var CADA = { azucar: 5, proteina: 3, semillas: 0, agua: 10, limpieza: 30 };
+// Protein has no reminder by default: Alex feeds it irregularly, and Messor need little of it outside the brood season
+var CADA = { azucar: 5, proteina: 0, semillas: 0, agua: 10, limpieza: 30 };
+var ORIGINS = [['vivo', 'Silvestre, vivo'], ['congelado', 'Silvestre, congelado antes'], ['comprado', 'Comprado o de cría']];
 var KINDS = { obs: '📝', hito: '⭐', problema: '⚠️' };
 var STAGES = [['obreras', 'Obreras'], ['huevos', 'Huevos'], ['larvas', 'Larvas'], ['pupas', 'Pupas']], BROOD = ['huevos', 'larvas', 'pupas'];
 // Workers are estimated by eye: each range keeps a middle value for the drawing and the chart
@@ -528,6 +539,8 @@ $('modD').addEventListener('close', function () { modView = null; });
 function useMap() {
   var c = cur(), ch = { montaje: 'v1' }, now = Date.now(), zs = {};
   if (!c.zonas) { Object.keys(INIT_ZONES).forEach(function (k) { zs[k] = Object.assign({ t: now }, INIT_ZONES[k]); }); ch.zonas = zs; }
+  // Colonies created before protein lost its default reminder still carry the old 3 days
+  if (cada(c).proteina === 3) ch.cada = Object.assign(cada(c), { proteina: 0 });
   setCol(ch);
 }
 
@@ -585,7 +598,10 @@ function render() {
   $('logEmpty').hidden = all.length > 0; $('more').hidden = all.length <= shown;
   $('log').innerHTML = all.slice(0, shown).map(function (e) {
     var ic, txt;
-    if (e.tipo === 'comida') { var f = careName(e.que); ic = f[2]; txt = '<b>' + esc(f[1]) + '</b>'; }
+    if (e.tipo === 'comida') {
+      var f = careName(e.que), o = ORIGINS.filter(function (x) { return x[0] === e.origen; })[0], det = [e.bicho, o && o[1].toLowerCase()].filter(Boolean).join(' · ');
+      ic = f[2]; txt = '<b>' + esc(f[1]) + '</b>' + (det ? '<p>' + esc(det) + '</p>' : '');
+    }
     else if (e.tipo === 'zona') { ic = '📍'; txt = '<b>' + esc(ZONES[e.zona] || e.zona) + '</b><p>' + esc(zoneWords(e.z || {})) + '</p>'; }
     else if (e.tipo === 'recuento') {
       ic = '🔍'; var parts = [];
@@ -669,8 +685,22 @@ $('heroB').addEventListener('click', function (e) { if (e.target.closest('[data-
 $('cols').addEventListener('click', function (e) { var b = e.target.closest('[data-col]'); if (b) { S.cur = b.getAttribute('data-col'); shown = PAGE; sureDel = false; persist(); render(); fillForm(cur()); } });
 $('feed').addEventListener('click', function (e) {
   var b = e.target.closest('[data-food]'); if (!b) return;
-  var k = b.getAttribute('data-food'), f = careName(k), id = addEv({ tipo: 'comida', que: k }); buzz();
+  var k = b.getAttribute('data-food'), f = careName(k);
+  if (k === 'proteina') return openProt();
+  var id = addEv({ tipo: 'comida', que: k }); buzz();
   toast(f[1] + ' apuntado', 'Deshacer', function () { delEv(id); });
+});
+// Protein asks where the insect came from, so mites or losses can later be traced back to it
+var protOrig = 'vivo';
+function drawProt() { $('protOrig').innerHTML = ORIGINS.map(function (o) { return '<button type="button" data-o="' + o[0] + '" aria-pressed="' + (o[0] === protOrig) + '">' + o[1] + '</button>'; }).join(''); }
+function openProt() {
+  var last = evs(S.cur, 'comida').filter(function (e) { return e.que === 'proteina' && e.origen; })[0];
+  protOrig = last ? last.origen : 'vivo'; $('protF').bicho.value = ''; drawProt(); $('protD').showModal();
+}
+$('protOrig').addEventListener('click', function (e) { var b = e.target.closest('[data-o]'); if (b) { protOrig = b.getAttribute('data-o'); drawProt(); } });
+$('protF').addEventListener('submit', function () {
+  var ev = { tipo: 'comida', que: 'proteina', origen: protOrig }, bicho = this.bicho.value.trim(); if (bicho) ev.bicho = bicho;
+  var id = addEv(ev); buzz(); toast('Proteína apuntada', 'Deshacer', function () { delEv(id); });
 });
 $('log').addEventListener('click', function (e) {
   var b = e.target.closest('[data-del]'); if (!b) return;
