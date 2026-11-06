@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Cracovia Fin de Año</title>
+<style>
+:root { color-scheme: dark; }
+body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #141a2e; color: #e9e6f5; font: 17px/1.5 system-ui, sans-serif; text-align: center; padding: 16px; box-sizing: border-box; }
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="../shared/firebase-config.js"></script>
+<script src="../shared/claude-firebase.js" data-app="cracovia"></script>
+</head>
+<body>
+<p id="msg">Cargando el plan…</p>
+<script>
+// The plan names the apartment and the trip dates, so it lives in Firestore (privado/pagina) and only loads for the owner
+(async function () {
+  var msg = document.getElementById('msg'), db = await window.claude.use('db');
+  if (!db) { msg.textContent = 'Este plan es privado.'; return; }
+  try {
+    var d = await db.doc('privado/pagina').get(), html = d.exists ? d.data().html : '';
+    if (!html) throw new Error('Sin plan');
+    // Firebase and the adapter are already running in this page
+    html = html.replace(/<script src="(https:\/\/www\.gstatic\.com\/firebasejs\/|\.\.\/shared\/)[^"]*"[^>]*><\/script>\s*/g, '');
+    document.open(); document.write(html); document.close();
+  } catch (e) { msg.textContent = 'No se ha podido cargar el plan. Comprueba la conexión y recarga la página.'; }
+})();
+</script>
+</body>
+</html>

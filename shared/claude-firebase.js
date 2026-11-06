@@ -121,7 +121,8 @@
   function scan(root) { if (root.nodeType !== 1) return; fix(root); root.querySelectorAll('[src*="/_blob/"],[style*="/_blob/"]').forEach(fix); }
   new MutationObserver(function (ms) {
     ms.forEach(function (m) { if (m.type === 'attributes') fix(m.target); else m.addedNodes.forEach(scan); });
-  }).observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['src', 'style'] });
+  // Observing the document itself survives document.open(), which the Cracovia loader uses
+  }).observe(document, { childList: true, subtree: true, attributes: true, attributeFilter: ['src', 'style'] });
   document.addEventListener('DOMContentLoaded', function () { scan(document.body); });
 
   window.claude = {

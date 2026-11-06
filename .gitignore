@@ -1,4 +1,6 @@
 # Personal data exported from claude.ai: imported into Firebase, never published
 _datos/
+# Cracovia's full plan (apartment, trip dates): edited here, uploaded to Firestore apps/cracovia/privado/pagina
+cracovia/pagina.html
 # Kept locally (names the owner's email); pasted into the Firebase console
 firestore.rules
