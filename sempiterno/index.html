@@ -1,0 +1,201 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="../shared/firebase-config.js"></script>
+<script src="../shared/claude-firebase.js" data-app="sempiterno"></script>
+</head><body>
+<title>Sempiterno</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;1,6..96,500;1,6..96,800&family=Karla:wght@400;500;700&display=swap">
+<style>
+/* Layout: one word, huge, like the sleeve of a record. Under it the meaning, the phrases and a bar of verse; tabs for review and your own words */
+:root {
+  --bg: #17122a; --panel: #231b3d; --ink: #f4eefb; --muted: #b0a6c9; --line: #3d3260;
+  --gold: #eab84d; --gold-ink: #231704; --rose: #ef8a99; --ok: #7fd6a8; --bad: #ef8a8a;
+  --display: "Bodoni Moda", "Didot", Georgia, serif; --body: "Karla", "Segoe UI", sans-serif; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 400 17px/1.5 var(--body); }
+button, input, textarea, select { font: inherit; color: inherit; }
+button { cursor: pointer; touch-action: manipulation; }
+:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.wrap { max-width: 680px; margin: 0 auto; display: grid; gap: 18px; padding-block: 12px 40px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.tabs { display: flex; gap: 4px; align-items: center; }
+.tabs b { font: italic 800 22px var(--display); margin-right: auto; color: var(--gold); }
+.tab { min-height: 42px; padding: 0 12px; border: 0; border-radius: 10px; background: transparent; color: var(--muted); font-weight: 700; }
+.tab[aria-pressed="true"] { background: var(--panel); color: var(--ink); }
+.tab i { font-style: normal; color: var(--gold); }
+.meta { display: flex; flex-wrap: wrap; gap: 4px 10px; color: var(--muted); font-size: 14.5px; }
+.meta .tag { color: var(--rose); font-weight: 700; }
+.word { margin: 0; font: italic 800 var(--size, 72px)/1 var(--display); letter-spacing: -.01em; overflow-wrap: anywhere; }
+.sol { color: var(--gold); font-weight: 700; font-size: 15px; }
+.syl { color: var(--muted); letter-spacing: .03em; }
+.def { margin: 0; font-size: clamp(20px, 5.4vw, 25px); line-height: 1.32; font-weight: 500; }
+.lab { font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--gold); }
+.block { display: grid; gap: 6px; }
+.block p { margin: 0; }
+.phr { display: grid; gap: 9px; margin: 0; padding: 0; list-style: none; }
+.phr li { font-size: 18px; }
+.phr mark { background: none; color: var(--gold); font-weight: 700; }
+.bar { padding: 15px 16px; border-radius: 14px; background: var(--panel); font: italic 500 clamp(20px, 5.4vw, 24px)/1.3 var(--display); }
+.note { padding: 11px 13px; border-radius: 10px; border: 1px solid var(--rose); font-size: 15.5px; }
+.syn { display: flex; flex-wrap: wrap; gap: 6px; }
+.syn span { padding: 3px 10px; border-radius: 99px; background: var(--panel); font-size: 15px; }
+.mine { display: grid; gap: 7px; }
+.mine textarea, .field { width: 100%; padding: 11px 13px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); font-size: 16px; }
+.mine textarea { min-height: 72px; resize: vertical; }
+::placeholder { color: var(--muted); }
+.acts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.btn { min-height: 54px; padding: 0 14px; border: 0; border-radius: 13px; background: var(--gold); color: var(--gold-ink); font-weight: 700; font-size: 16.5px; }
+.btn.ghost { background: var(--panel); color: var(--ink); }
+.btn.wide { grid-column: 1 / -1; }
+.btn[aria-pressed="true"] { background: var(--ok); color: #0d2318; }
+.opts { display: grid; gap: 8px; }
+.opt { min-height: 58px; padding: 10px 14px; border: 1px solid var(--line); border-radius: 13px; background: var(--panel); text-align: left; font-size: 16.5px; line-height: 1.3; }
+.opt.good { background: var(--ok); color: #0d2318; border-color: var(--ok); }
+.opt.bad { background: var(--bad); color: #2b0a0a; border-color: var(--bad); }
+.q { font: italic 500 clamp(24px, 7vw, 34px)/1.2 var(--display); margin: 0; }
+.prog { color: var(--muted); font-size: 15px; margin: 0; }
+.row { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: baseline; padding: 12px 2px; border: 0; border-bottom: 1px solid var(--line); background: transparent; text-align: left; }
+.row b { font: italic 800 23px var(--display); }
+.row small { display: block; color: var(--muted); font-size: 14.5px; overflow-wrap: anywhere; }
+.pips { color: var(--gold); letter-spacing: 2px; font-size: 13px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { min-height: 38px; padding: 0 12px; border: 1px solid var(--line); border-radius: 99px; background: transparent; font-size: 14.5px; font-weight: 700; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.empty { color: var(--muted); padding: 22px 0; text-align: center; margin: 0; }
+details { padding: 12px 14px; background: var(--panel); border-radius: 13px; }
+summary { font-weight: 700; cursor: pointer; min-height: 30px; }
+.add { display: grid; gap: 8px; margin-top: 8px; }
+.add .field { background: var(--bg); }
+</style>
+
+<main class="wrap">
+  <nav class="tabs" aria-label="Secciones">
+    <b>Sempiterno</b>
+    <button class="tab" type="button" data-tab="hoy">Hoy</button>
+    <button class="tab" type="button" data-tab="repaso">Repaso</button>
+    <button class="tab" type="button" data-tab="todas">Palabras</button>
+  </nav>
+  <div id="view" style="display:grid;gap:18px"></div>
+</main>
+
+<script>
+var DAYS = [1, 3, 7, 21, 60], LS = 'sempiterno-v1', S = { cat: [], est: {}, mias: {}, hoy: null, off: 0 }, db = null, tab = 'hoy', rev = null, filter = '', showId = null;
+try { var raw = JSON.parse(localStorage.getItem(LS) || 'null'); if (raw) S = Object.assign(S, raw); } catch (e) {}
+function persist() { try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) {} }
+function $(i) { return document.getElementById(i); }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function today() { var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function addDays(n) { var d = new Date(); d.setDate(d.getDate() + n); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function all() { return S.cat.concat(Object.keys(S.mias).map(function (k) { return S.mias[k]; })); }
+function byId(id) { return all().filter(function (w) { return w.id === id; })[0]; }
+function st(id) { return S.est[id] || {}; }
+function norm(s) { return String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); }
+function save(id) { persist(); if (db) (S.est[id] ? db.doc('estado/' + id).set(S.est[id]) : db.doc('estado/' + id).delete()).catch(function () {}); }
+function setSt(id, ch) { S.est[id] = Object.assign({}, st(id), ch); save(id); }
+function due() { var t = today(); return all().filter(function (w) { var e = st(w.id); return e.mia && (e.prox || t) <= t; }); }
+// Highlights the word or its inflected forms inside a phrase
+function stem(w) { return norm(w).replace(/[oa]r?$|e$|ar$|ía$/, '').slice(0, Math.max(4, norm(w).length - 2)); }
+function mark(ph, w) { var st0 = stem(w), out = ph.split(/(\s+)/).map(function (tok) { return norm(tok).indexOf(st0) === 0 || norm(tok).replace(/^[«¿¡]/, '').indexOf(st0) === 0 ? '<mark>' + esc(tok) + '</mark>' : esc(tok); }); return out.join(''); }
+function pickToday() {
+  if (S.hoy && S.hoy.fecha === today() && byId(S.hoy.id)) return byId(S.hoy.id);
+  var l = S.cat.filter(function (w) { return !st(w.id).visto; }); if (!l.length) l = S.cat; if (!l.length) return null; var sl = l.filter(function (w) { return w.c; }); if (sl.length) l = sl;
+  var d = Math.floor(Date.now() / 864e5), w = l[d % l.length]; S.hoy = { fecha: today(), id: w.id }; persist(); return w;
+}
+function next() {
+  var cur = S.hoy && S.hoy.id, l = S.cat.filter(function (w) { return !st(w.id).visto && w.id !== cur; }); if (!l.length) l = S.cat.filter(function (w) { return w.id !== cur; }); if (!l.length) return; var sl = l.filter(function (w) { return w.c; }); if (sl.length) l = sl;
+  var w = l[Math.floor(Math.random() * l.length)]; S.hoy = { fecha: today(), id: w.id }; persist(); render(); window.scrollTo(0, 0);
+}
+function sizeFor(w) { var n = w.length; return n <= 7 ? 'clamp(64px,20vw,104px)' : n <= 10 ? 'clamp(52px,15.5vw,88px)' : n <= 12 ? 'clamp(44px,12.5vw,76px)' : 'clamp(36px,10.5vw,64px)'; }
+function wordCard(w, back) {
+  var e = st(w.id);
+  return (back ? '<div><button class="tab" type="button" data-back>‹ Volver</button></div>' : '') +
+    '<div class="meta"><span class="tag">' + esc(w.t || 'Tuya') + '</span><span>' + esc(w.g || '') + '</span></div>' + (w.c ? '<div class="sol">Sale en Solitario: ' + esc(w.c) + '</div>' : '') +
+    '<h1 class="word" style="--size:' + sizeFor(w.w) + '">' + esc(w.w) + '</h1>' + (w.s ? '<div class="syl">' + esc(w.s) + '</div>' : '') +
+    '<p class="def">' + esc(w.d) + '</p>' +
+    ((w.f || []).length ? '<div class="block"><span class="lab">En una frase</span><ul class="phr">' + w.f.map(function (p) { return '<li>' + mark(p, w.w) + '</li>'; }).join('') + '</ul></div>' : '') +
+    (w.b ? '<div class="block"><span class="lab">En una barra</span><div class="bar">' + esc(w.b) + '</div></div>' : '') +
+    (w.n ? '<div class="note"><b>Ojo:</b> ' + esc(w.n) + '</div>' : '') +
+    (w.e ? '<div class="block"><span class="lab">De dónde viene</span><p>' + esc(w.e) + '</p></div>' : '') +
+    ((w.y || []).length ? '<div class="block"><span class="lab">Se parece a</span><div class="syn">' + w.y.map(function (x) { return '<span>' + esc(x) + '</span>'; }).join('') + '</div></div>' : '') +
+    '<div class="mine"><label class="lab" for="myPhrase">Tu frase o tu barra</label><textarea id="myPhrase" data-id="' + esc(w.id) + '" maxlength="240" placeholder="Úsala tú: así se queda">' + esc(e.frase || '') + '</textarea></div>' +
+    '<div class="acts"><button class="btn" type="button" data-keep="' + esc(w.id) + '" aria-pressed="' + !!e.mia + '">' + (e.mia ? '✓ Me la quedo' : 'Me la quedo') + '</button><button class="btn ghost" type="button" data-next="' + esc(w.id) + '">' + (back ? 'Ya la sabía' : 'Otra palabra') + '</button></div>';
+}
+// ---------- Review: three kinds of question, spaced further apart as you get them right ----------
+function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+function buildQ(w) {
+  var others = shuffle(all().filter(function (x) { return x.id !== w.id && x.d; })).slice(0, 3), kinds = ['def', 'word'];
+  if ((w.f || []).length) kinds.push('fill');
+  var k = kinds[Math.floor(Math.random() * kinds.length)], q, opts;
+  if (k === 'def') { q = '¿Qué significa <b>' + esc(w.w) + '</b>?'; opts = others.concat([w]).map(function (x) { return { id: x.id, t: x.d }; }); }
+  else if (k === 'word') { q = esc(w.d); opts = others.concat([w]).map(function (x) { return { id: x.id, t: x.w }; }); }
+  else { var ph = w.f[Math.floor(Math.random() * w.f.length)], st0 = stem(w.w); q = ph.split(/(\s+)/).map(function (tok) { return norm(tok).replace(/^[«¿¡]/, '').indexOf(st0) === 0 ? '____' : esc(tok); }).join(''); opts = others.concat([w]).map(function (x) { return { id: x.id, t: x.w }; }); }
+  return { w: w, q: q, opts: shuffle(opts), answered: null };
+}
+function startReview() { var d = shuffle(due()); rev = { left: d, done: 0, right: 0, cur: d.length ? buildQ(d[0]) : null }; }
+function answer(id) {
+  var c = rev.cur; if (c.answered) return; c.answered = id; var ok = id === c.w.id, e = st(c.w.id), lvl = ok ? Math.min((e.nivel || 0) + 1, DAYS.length - 1) : 0;
+  setSt(c.w.id, { nivel: lvl, prox: addDays(ok ? DAYS[lvl] : 1) }); rev.done++; if (ok) rev.right++; render();
+}
+function nextQ() { rev.left.shift(); rev.cur = rev.left.length ? buildQ(rev.left[0]) : null; render(); window.scrollTo(0, 0); }
+// ---------- Views ----------
+function render() {
+  Array.prototype.forEach.call(document.querySelectorAll('.tab[data-tab]'), function (b) { var k = b.getAttribute('data-tab'), n = k === 'repaso' ? due().length : 0; b.setAttribute('aria-pressed', k === tab); b.innerHTML = { hoy: 'Hoy', repaso: 'Repaso', todas: 'Palabras' }[k] + (n ? ' <i>' + n + '</i>' : ''); });
+  var v = $('view'), h = '';
+  if (tab === 'hoy') { var w = pickToday(); h = w ? wordCard(w) : '<p class="empty">Cargando tus palabras…</p>'; }
+  if (tab === 'repaso') {
+    if (!rev || (!rev.cur && due().length && !rev.done)) startReview();
+    var c = rev.cur;
+    if (c) {
+      var ok = c.answered === c.w.id;
+      h = '<p class="prog">Quedan ' + rev.left.length + '</p><p class="q">' + c.q + '</p><div class="opts">' + c.opts.map(function (o) { var cls = c.answered ? (o.id === c.w.id ? ' good' : o.id === c.answered ? ' bad' : '') : ''; return '<button class="opt' + cls + '" type="button" data-ans="' + esc(o.id) + '">' + esc(o.t) + '</button>'; }).join('') + '</div>' +
+        (c.answered ? '<div class="block"><p class="def"><b>' + esc(c.w.w) + ':</b> ' + esc(c.w.d) + '</p><p class="prog">' + (ok ? 'Bien. Volverá dentro de ' + DAYS[st(c.w.id).nivel || 0] + (DAYS[st(c.w.id).nivel || 0] === 1 ? ' día.' : ' días.') : 'Volverá mañana.') + '</p></div><button class="btn" type="button" data-nextq>Siguiente</button>' : '');
+    } else if (rev.done) { h = '<p class="q">' + rev.right + ' de ' + rev.done + '</p><p class="prog">Hecho por hoy. Las palabras volverán cuando toque.</p>'; }
+    else h = '<p class="empty">Hoy no te toca repasar nada. Pulsa «Me la quedo» en una palabra y aparecerá aquí cuando toque.</p>';
+  }
+  if (tab === 'todas') {
+    if (showId && byId(showId)) h = wordCard(byId(showId), true);
+    else {
+      var temas = []; all().forEach(function (x) { if (x.t && temas.indexOf(x.t) < 0) temas.push(x.t); });
+      var kept = all().filter(function (x) { return st(x.id).mia; }).length;
+      var l = all().filter(function (x) { return !filter || (filter === 'Mías' ? st(x.id).mia : filter === 'Solitario' ? x.c : x.t === filter); }).sort(function (a, b) { return norm(a.w).localeCompare(norm(b.w)); });
+      h = '<p class="prog">' + all().length + ' palabras · te has quedado ' + kept + '</p><div class="chips">' + [['', 'Todas'], ['Solitario', 'De Solitario'], ['Mías', 'Las mías']].concat(temas.map(function (t) { return [t, t]; })).map(function (x) { return '<button class="chip" type="button" data-f="' + esc(x[0]) + '" aria-pressed="' + (filter === x[0]) + '">' + esc(x[1]) + '</button>'; }).join('') + '</div>' +
+        '<details><summary>Añadir una palabra que has oído</summary><form class="add" id="addF"><input class="field" id="aW" maxlength="40" placeholder="La palabra" required aria-label="Palabra"><input class="field" id="aD" maxlength="200" placeholder="Qué significa" required aria-label="Significado"><input class="field" id="aF" maxlength="200" placeholder="Una frase o de qué canción la has sacado" aria-label="Frase"><button class="btn" type="submit">Añadir</button></form></details>' +
+        '<div>' + (l.map(function (x) { var e = st(x.id), lv = e.mia ? (e.nivel || 0) + 1 : 0; return '<button class="row" type="button" data-show="' + esc(x.id) + '"><span><b>' + esc(x.w) + '</b><small>' + esc(x.d) + '</small></span><span class="pips" aria-label="Nivel ' + lv + '">' + (e.mia ? '●'.repeat(lv) : '') + '</span></button>'; }).join('') || '<p class="empty">Nada por aquí todavía.</p>') + '</div>';
+    }
+  }
+  v.innerHTML = h;
+}
+document.addEventListener('click', function (e) {
+  var t;
+  if ((t = e.target.closest('[data-tab]'))) { tab = t.getAttribute('data-tab'); showId = null; if (tab === 'repaso') rev = null; render(); window.scrollTo(0, 0); return; }
+  if ((t = e.target.closest('[data-keep]'))) { var id = t.getAttribute('data-keep'), m = !st(id).mia; setSt(id, { mia: m, visto: true, prox: m ? addDays(1) : null, nivel: m ? 0 : null }); render(); return; }
+  if ((t = e.target.closest('[data-next]'))) { var nid = t.getAttribute('data-next'); setSt(nid, { visto: true }); if (showId) { showId = null; render(); } else next(); return; }
+  if ((t = e.target.closest('[data-ans]'))) { answer(t.getAttribute('data-ans')); return; }
+  if (e.target.closest('[data-nextq]')) { nextQ(); return; }
+  if ((t = e.target.closest('[data-f]'))) { filter = t.getAttribute('data-f'); render(); return; }
+  if ((t = e.target.closest('[data-show]'))) { showId = t.getAttribute('data-show'); render(); window.scrollTo(0, 0); return; }
+  if (e.target.closest('[data-back]')) { showId = null; render(); }
+});
+document.addEventListener('change', function (e) { if (e.target.id === 'myPhrase') setSt(e.target.getAttribute('data-id'), { frase: e.target.value.trim() }); });
+document.addEventListener('submit', function (e) {
+  if (e.target.id !== 'addF') return; e.preventDefault();
+  var w = $('aW').value.trim(), d = $('aD').value.trim(), f = $('aF').value.trim(); if (!w || !d) return;
+  var id = 'm' + Date.now().toString(36), o = { id: id, w: w, d: d, f: f ? [f] : [], t: 'Mías', g: '' };
+  S.mias[id] = o; setSt(id, { mia: true, visto: true, prox: addDays(1), nivel: 0 }); if (db) db.doc('mias/' + id).set(o).catch(function () {}); render();
+});
+render();
+if (window.claude && window.claude.use) (async function () {
+  try {
+    var d = await window.claude.use('db'); if (!d) return; db = d;
+    db.doc('config/palabras').onSnapshot(function (x) { if (x.exists) { S.cat = x.data().items || []; persist(); if (document.activeElement.id !== 'myPhrase') render(); } }, function () {});
+    db.collection('estado').onSnapshot(function (s) { if (s.metadata.fromCache && !s.size) return; var n = {}; s.docs.forEach(function (x) { n[x.id] = x.data(); }); S.est = n; persist(); if (document.activeElement.id !== 'myPhrase') render(); }, function () {});
+    db.collection('mias').onSnapshot(function (s) { if (s.metadata.fromCache && !s.size) return; var n = {}; s.docs.forEach(function (x) { n[x.id] = x.data(); }); S.mias = n; persist(); render(); }, function () {});
+  } catch (e) {}
+})();
+</script>
+
+</body></html>
