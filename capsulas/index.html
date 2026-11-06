@@ -123,12 +123,12 @@ tr.total td.g { font-size: 1rem; font-weight: 500; color: var(--muted); }
 
 <script>
 const CAP = 0.08; // g por cápsula nº 4 (90 caps = 7,2 g)
-// Every active offers 0,5 to 5 mg in steps of 0,5; dutasterida keeps 0,25 too
-const STEPS = [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5];
+// Every active offers the same round doses; any other goes in the "Otra" box
+const STEPS = [0.5, 1, 2, 3, 4, 5];
 const ACTIVES = {
   min: { name: "Minoxidilo", chips: STEPS, def: 1 },
   fin: { name: "Finasterida", chips: STEPS, def: 1 },
-  dut: { name: "Dutasterida", chips: [0.25, ...STEPS], def: 0.5 }
+  dut: { name: "Dutasterida", chips: STEPS, def: 0.5 }
 };
 const FORMULAS = [
   { id: "min", label: "Minoxidilo", act: ["min"] },
@@ -159,9 +159,9 @@ function renderDoses() {
   $("doses").innerHTML = f.act.map(k => {
     const a = ACTIVES[k];
     return `<div class="field">
-      <label for="d-${k}">${a.name} por cápsula</label>
-      <div class="row"><input id="d-${k}" data-k="${k}" inputmode="decimal" value="${String(dose[k]).replace(".", ",")}"><span class="unit">mg</span></div>
+      <label>${a.name} por cápsula</label>
       <div class="row">${a.chips.map(c => `<button type="button" class="chip" data-k="${k}" data-v="${c}" aria-pressed="${c === dose[k]}">${String(c).replace(".", ",")} mg</button>`).join("")}</div>
+      <div class="row"><label for="d-${k}" class="unit">Otra:</label><input id="d-${k}" data-k="${k}" inputmode="decimal" value="${String(dose[k]).replace(".", ",")}"><span class="unit">mg</span></div>
     </div>`;
   }).join("");
 }
