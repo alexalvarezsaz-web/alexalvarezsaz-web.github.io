@@ -19,16 +19,16 @@
 /* Layout: the nest in cross-section is the hero and fills with what the last census counted; feeding tiles follow, census and notes stay fixed at the bottom */
 :root {
   --bg: #efe7da; --surface: #faf6ef; --ink: #2a1d12; --muted: #6e5d4c; --line: #dccdb8;
-  --acc: #b4531f; --acc-ink: #fff6ef; --leaf: #4d7a3a; --honey: #c98a10; --warn: #c0392b;
+  --acc: #b4531f; --acc-ink: #fff6ef; --leaf: #4d7a3a; --hum: #2f6f9e; --honey: #c98a10; --warn: #c0392b;
   --display: "Fraunces", Georgia, serif; --body: "Figtree", "Segoe UI", sans-serif;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #17110c; --surface: #221a13; --ink: #f2e9dc; --muted: #b3a28e; --line: #3a2e23;
-  --acc: #ec8a52; --acc-ink: #241006; --leaf: #8fbf6e; --honey: #f2c04e; --warn: #ef6b5b; color-scheme: dark;
+  --acc: #ec8a52; --acc-ink: #241006; --leaf: #8fbf6e; --hum: #7db7e0; --honey: #f2c04e; --warn: #ef6b5b; color-scheme: dark;
 } }
 :root[data-theme="dark"] {
   --bg: #17110c; --surface: #221a13; --ink: #f2e9dc; --muted: #b3a28e; --line: #3a2e23;
-  --acc: #ec8a52; --acc-ink: #241006; --leaf: #8fbf6e; --honey: #f2c04e; --warn: #ef6b5b; color-scheme: dark;
+  --acc: #ec8a52; --acc-ink: #241006; --leaf: #8fbf6e; --hum: #7db7e0; --honey: #f2c04e; --warn: #ef6b5b; color-scheme: dark;
 }
 * { box-sizing: border-box; }
 body { background: var(--bg); color: var(--ink); font: 400 16px/1.45 var(--body); }
@@ -87,6 +87,10 @@ h1, h2, h3 { font-family: var(--display); line-height: 1.1; margin: 0; text-wrap
 /* Growth */
 .chart svg { display: block; width: 100%; height: auto; }
 .chart text { font-family: var(--body); }
+.rng button { min-height: 36px; padding: 0 12px; font-size: 13.5px; }
+.verdict { margin: 8px 0 4px; line-height: 1.4; }
+.tip { margin: 0 0 4px; min-height: 1.3em; font-size: 13.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.chart svg.cl { touch-action: pan-y; }
 
 /* Diary */
 .log { list-style: none; margin: 0; padding: 0; display: grid; }
@@ -278,6 +282,14 @@ details.dayc > summary::after { grid-row: 1 / span 4; }
       <div id="growth"></div>
     </section>
 
+    <section class="sect chart" id="climaBox" style="margin-top:14px" hidden>
+      <div class="sect-h"><h2>Temperatura y humedad</h2><div class="kinds rng" id="climaR"><button type="button" data-r="30" aria-pressed="true">30 días</button><button type="button" data-r="0" aria-pressed="false">Todo</button></div></div>
+      <p class="verdict" id="climaV"></p>
+      <p class="tip" id="climaTip" aria-live="polite"></p>
+      <div id="clima"></div>
+      <div class="row" style="margin-top:8px"><button type="button" class="ghost" id="climaAdd">Añadir CSV del termómetro</button><input type="file" accept=".csv,text/csv" id="climaFile" hidden></div>
+    </section>
+
     <section class="sect" id="photosBox" style="margin-top:14px" hidden>
       <h2>Fotos</h2>
       <div class="gal" id="photos"></div>
@@ -463,21 +475,22 @@ var INIT_ZONES = { tubo: { hormigas: 2, semillas: 2, reina: '?' }, 'ac.forr': { 
   'ni.c1': { hormigas: 1 }, 'ni.c4': { hormigas: 1 }, 'ni.c5': { hormigas: 1 }, 'ni.c6': { hormigas: 3 }, 'ni.c7': { hormigas: 3 }, 'ni.c8': { hormigas: 3 }, 'ni.c9': { hormigas: 2 },
   cinis: { basura: 2 }, v1: { hormigas: 1, semillas: 1 }, 'fg.izq': { hormigas: 1, semillas: 1 }, 'fg.der': { hormigas: 1 } };
 // Shapes in each module's own space: [cx, cy, rx, ry]
-// Traced from the photo of the carved Ytong (20 × 15 cm → 420 × 300). Each chamber: [cx, cy, rx, ry] for the marks, plus its outline.
+// Traced over Alex's photo of the freshly carved Ytong, without its lid (20 × 15 cm → 420 × 300, the photo turned a quarter clockwise
+// so Hydra's side is on the right). Each chamber: [cx, cy, rx, ry] for the marks, plus its outline.
 var NIDUS = {
-  'ni.c1': [48, 66, 26, 34, 'M30 36 C44 24 70 30 76 52 C82 74 76 98 58 104 C40 108 22 96 20 74 C18 58 20 44 30 36Z'],
-  'ni.seta': [176, 128, 46, 12, 'M107 68 C122 50 166 48 190 60 C216 70 246 88 249 114 C251 136 222 147 195 146 C164 147 126 147 104 132 C90 121 90 86 107 68Z'],
-  'ni.c3': [231, 46, 40, 16, 'M190 44 C196 30 232 26 258 30 C278 33 276 58 262 62 C240 66 210 66 196 60 C188 56 186 50 190 44Z'],
-  'ni.c4': [330, 55, 28, 20, 'M302 46 C310 32 344 30 358 42 C368 52 362 72 344 76 C326 80 306 74 300 62 C298 56 299 50 302 46Z'],
-  'ni.c5': [357, 109, 26, 15, 'M332 104 C338 92 370 90 382 100 C390 108 384 122 368 126 C352 129 334 122 331 114 C330 110 330 107 332 104Z'],
-  'ni.c6': [356, 183, 36, 26, 'M322 172 C330 152 372 150 388 164 C400 176 398 200 380 208 C360 216 330 210 322 196 C318 188 319 180 322 172Z'],
-  'ni.c7': [341, 254, 44, 22, 'M300 248 C304 232 350 228 376 236 C394 242 394 268 376 274 C352 282 316 280 302 268 C296 262 297 254 300 248Z'],
-  'ni.c8': [217, 233, 34, 40, 'M190 200 C200 186 236 186 248 202 C258 218 256 256 244 270 C232 282 204 282 192 268 C180 252 180 214 190 200Z'],
-  'ni.c9': [86, 236, 46, 38, 'M44 216 C52 196 96 192 118 204 C138 216 140 252 128 266 C114 280 76 282 56 270 C40 258 38 232 44 216Z']
+  'ni.c1': [58, 74, 27, 43, 'M84 72 C85 96 75 116 58 116 C41 117 31 102 31 76 C31 49 39 33 55 31 C70 31 83 49 84 72Z'],
+  'ni.seta': [170, 94, 33, 32, 'M202 102 C204 117 190 126 174 126 C157 125 142 117 140 102 C137 86 144 72 157 66 C168 62 185 62 193 72 C200 81 202 92 202 102Z'],
+  'ni.c3': [238, 46, 43, 21, 'M281 44 C282 59 267 68 250 68 C233 68 212 66 195 62 C198 52 212 39 226 33 C239 27 257 25 268 29 C277 33 281 38 281 44Z'],
+  'ni.c4': [339, 55, 33, 24, 'M373 59 C372 74 354 80 334 77 C316 75 306 62 308 48 C310 34 328 31 345 33 C362 35 373 46 373 59Z'],
+  'ni.c5': [350, 108, 35, 22, 'M386 106 C386 119 376 128 363 130 C345 131 325 129 315 125 C315 119 321 109 328 102 C339 93 352 86 368 88 C378 90 385 96 386 106Z'],
+  'ni.c6': [352, 185, 41, 30, 'M393 182 C393 202 380 215 361 214 C342 213 328 205 315 199 L311 195 C315 179 323 165 339 159 C352 155 373 156 385 165 C390 170 392 176 393 182Z'],
+  'ni.c7': [332, 253, 46, 22, 'M377 255 C378 268 366 276 349 275 C328 274 308 274 294 268 C286 263 286 249 291 240 C298 234 308 239 315 239 C323 239 335 231 349 231 C366 231 376 241 377 255Z'],
+  'ni.c8': [217, 233, 37, 41, 'M253 229 C254 252 243 272 222 273 C202 275 185 263 182 245 C180 229 183 209 193 199 C202 192 222 192 234 197 C246 202 253 215 253 229Z'],
+  'ni.c9': [103, 211, 41, 51, 'M142 222 C144 245 130 263 106 263 C82 263 65 245 63 222 C62 195 72 170 89 164 C103 160 113 175 121 189 C133 199 141 209 142 222Z']
 };
-// The mushroom: the chamber is a ring carved around an uncarved pillar in the middle
-var NIDUS_PIT = '<path d="M140 70 C152 56 186 58 196 74 C206 92 200 116 182 122 C164 128 142 120 136 104 C132 92 132 80 140 70Z" fill="#e9dfcc" stroke="rgba(0,0,0,.22)" stroke-width="1.5" pointer-events="none"/>';
-var NIDUS_TUNNELS = ['M0 148 C40 147 70 150 100 152 C150 158 200 156 250 140 L273 136', 'M74 86 L106 82', 'M196 58 L208 52', 'M273 136 C290 120 300 100 306 74', 'M292 124 C310 116 324 112 334 110', 'M273 136 C295 150 312 164 326 176', 'M270 140 C262 160 250 178 240 192', 'M186 236 L130 238', 'M250 218 C266 234 282 244 300 250'];
+// The galleries: a trunk from the entrance on the left, branching to every chamber; the arc over the mushroom is its cap
+var NIDUS_TUNNELS = ['M325 76 L319 96 L312 118 L303 133', 'M316 127 L299 136 L276 145 L258 151 L249 155', 'M312 194 L301 196 L305 215 L310 235', 'M301 196 L280 193 L262 184 L253 169 L249 155', 'M276 193 L251 208',
+  'M196 64 L222 71 L243 94 L252 122 L253 140 L249 155', 'M249 155 L221 152 L185 151 L148 153 L112 149 L80 151 L0 151', 'M195 62 L167 56 L134 61 L112 72 L113 105 L108 131 L100 149', 'M111 89 L93 88 L82 89', 'M182 229 L162 226 L141 231', 'M98 166 L103 151'];
 var ACRIL = { 'ac.izq': [52, 205, 40, 26], 'ac.gran': [152, 210, 38, 28], 'ac.centro': [100, 272, 72, 24], 'ac.abajo': [100, 330, 82, 18] };
 
 function isMap(c) { return c && c.montaje === 'v1'; }
@@ -516,7 +529,7 @@ function marks(id, z, cx, cy, rx, ry, k) {
 }
 function zoneEl(c, id, shape, inner) { return '<g data-zone="' + id + '" role="button" tabindex="0" aria-label="' + esc(ZONES[id] + ': ' + zoneWords(zone(c, id))) + '">' + shape + inner + '</g>'; }
 function ellZone(c, id, e, fill, k) {
-  var shape = e[4] ? '<path d="' + e[4] + '" fill="' + fill + '" stroke="rgba(0,0,0,.28)" stroke-width="1.5"/>' + (id === 'ni.seta' ? NIDUS_PIT : '') : '<ellipse cx="' + e[0] + '" cy="' + e[1] + '" rx="' + e[2] + '" ry="' + e[3] + '" fill="' + fill + '" stroke="rgba(0,0,0,.25)"/>';
+  var shape = e[4] ? '<path d="' + e[4] + '" fill="' + fill + '" stroke="rgba(0,0,0,.28)" stroke-width="1.5"/>' : '<ellipse cx="' + e[0] + '" cy="' + e[1] + '" rx="' + e[2] + '" ry="' + e[3] + '" fill="' + fill + '" stroke="rgba(0,0,0,.25)"/>';
   return zoneEl(c, id, shape, marks(id, zone(c, id), e[0], e[1], e[2], e[3], k));
 }
 function pointEl(c, k, x, y, rr, label, fs) {
@@ -526,9 +539,10 @@ function pointEl(c, k, x, y, rr, label, fs) {
 }
 // Each module drawn in its own space, used big in the sheet and scaled down on the shelf
 function nidusSvg(c, k) {
-  return '<rect width="420" height="300" rx="10" fill="#e9dfcc"/>' + NIDUS_TUNNELS.map(function (d) { return '<path d="' + d + '" fill="none" stroke="#cdbd9c" stroke-width="14" stroke-linecap="round"/>'; }).join('') +
+  return '<rect width="420" height="300" rx="10" fill="#e9dfcc"/>' + NIDUS_TUNNELS.map(function (d) { return '<path d="' + d + '" fill="none" stroke="#cdbd9c" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>'; }).join('') +
     Object.keys(NIDUS).map(function (id) { return ellZone(c, id, NIDUS[id], '#cdbd9c', k); }).join('') +
-    '<rect x="410" y="132" width="10" height="36" rx="3" fill="#a9d8f2"/>';
+    // Hydra plugs in where Alex drew it, between the two chambers on the right
+    '<rect x="410" y="215" width="10" height="36" rx="3" fill="#a9d8f2"/>';
 }
 function acrilSvg(c, k) {
   return zoneEl(c, 'ac.forr', '<rect x="4" y="4" width="192" height="146" rx="8" fill="#dbe9ee" stroke="#b9cfd8" stroke-width="3"/>', marks('ac.forr', zone(c, 'ac.forr'), 100, 70, 90, 60, k)) +
@@ -561,7 +575,7 @@ function walkers(c) {
 function hydraEl(c) {
   var p = pointState(c, 'hydra'), life = 14, lvl = p.d == null ? .5 : Math.max(.04, 1 - p.d / life), top = 30 + (1 - lvl) * 76, wave = REDUCED ? '' : '<animateTransform attributeName="transform" type="translate" from="0 0" to="-24 0" dur="2.4s" repeatCount="indefinite"/>';
   return '<g data-point="hydra" role="button" tabindex="0" aria-label="Hydra: ' + esc(p.d == null ? 'sin apuntar cuándo la rellenaste' : 'rellenada ' + p.txt + ', le queda más o menos un ' + Math.round(lvl * 100) + ' %') + '">' +
-    '<path d="M522 115 C532 112 540 104 548 104" stroke="#c9b78f" stroke-width="5" fill="none"/>' +
+    '<path d="M522 147 C536 147 550 136 556 124" stroke="#c9b78f" stroke-width="5" fill="none"/>' +
     '<rect x="540" y="26" width="46" height="84" rx="16" fill="#e9f3f6" fill-opacity=".25" stroke="#e9f3f6" stroke-width="3"/>' +
     '<clipPath id="hyClip"><rect x="542" y="28" width="42" height="80" rx="14"/></clipPath><g clip-path="url(#hyClip)"><rect x="540" y="' + top.toFixed(1) + '" width="48" height="90" fill="url(#gWater)"/>' +
     '<path d="M532 ' + top.toFixed(1) + ' q6 -4 12 0 t12 0 t12 0 t12 0 t12 0 t12 0 v6 h-72z" fill="#d9f1fd">' + wave + '</path></g>' +
@@ -571,7 +585,8 @@ function hydraEl(c) {
 }
 var label = function (x, y, t) { return '<text x="' + x + '" y="' + y + '" text-anchor="middle" font-size="24" font-weight="800" fill="#f5e9d6" stroke="#2c2117" stroke-width="5" paint-order="stroke">' + t + '</text>'; };
 function overviewSvg(c) {
-  var lr = lastCount(c.id) ? evs(c.id, 'recuento').filter(function (e) { return e.temp != null || e.hum != null; })[0] : null;
+  var lr = lastCount(c.id) ? evs(c.id, 'recuento').filter(function (e) { return e.temp != null || e.hum != null; })[0] : null, cl = climaRows(c.clima).slice(-1)[0];
+  if (cl && (!lr || cl.t > lr.t)) lr = cl;
   var tube = 'stroke="#d9eef5" stroke-opacity=".55" stroke-width="9" fill="none" stroke-linecap="round"';
   var cross = function (x, y) { return '<rect x="' + (x - 10) + '" y="' + (y - 10) + '" width="20" height="20" rx="4" fill="#f2efe8" filter="url(#fShadow)"/><circle cx="' + x + '" cy="' + (y - 13) + '" r="5" fill="#d8b98a"/>'; };
   return '<rect width="1000" height="360" fill="#241a12"/><rect x="0" y="0" width="652" height="360" fill="url(#gShelf)"/><rect x="668" y="0" width="332" height="360" fill="url(#gShelf)"/>' +
@@ -733,6 +748,7 @@ function render() {
     return '<button type="button" class="' + st + '" data-food="' + f[0] + '"><b>' + f[2] + ' ' + f[1] + '</b><span>' + (last ? ago(last.t) : 'Nunca') + '</span><small>' + note + '</small></button>';
   }).join('');
   renderGrowth(c);
+  renderClima(c);
   var pics = evs(c.id, 'nota').filter(function (e) { return e.foto; });
   $('photosBox').hidden = !pics.length;
   $('photos').innerHTML = pics.map(function (e) { return '<img src="/_blob/' + esc(e.foto) + '" alt="' + esc(fmtD(e.t) + (e.texto ? ': ' + e.texto : '')) + '" loading="lazy">'; }).join('');
@@ -876,6 +892,98 @@ function renderGrowth(c) {
     '<text x="' + L + '" y="' + (H - 5) + '" font-size="11" fill="var(--muted)">' + fmtD(t0) + '</text><text x="' + (W - R) + '" y="' + (H - 5) + '" text-anchor="end" font-size="11" fill="var(--muted)">' + fmtD(t1) + '</text></svg>' +
     '<p class="small">Obreras en cada revisión. Si apuntaste un rango, el punto va en su valor medio.</p>';
 }
+// ---------- Room climate, from the thermo-hygrometer's CSV export ----------
+// Stored on the colony as one string, 'yyMMddHHmm,temp,hum;…' in local time (Firestore has no nested arrays)
+var THERMO = '2607232146,26.4,29;2607240946,26.7,40;2607242146,26.6,30;2607250946,25.8,38;2607252146,26.9,34;2607260946,24.4,48;2607262146,25.3,45;2607270946,23.8,53;2607272146,26.0,46;2607280946,26.0,47;2607282146,27.4,46;2607290946,26.5,49;2607292146,27.0,42;2607300946,27.7,42;2607302146,26.7,39;2607310946,27.3,40;2607312146,28.3,33;2608010946,26.4,46;2608012146,26.2,46;2608020946,25.9,39;2608022146,26.1,44;2608030946,27.5,53;2608032146,26.3,43;2608040946,24.2,50;2608042146,24.7,46;2608050946,25.3,51;2608052146,25.8,47;2608060946,26.2,53;2608062146,25.6,61;2608070946,24.4,58;2608072146,25.0,46;2608080946,24.2,58;2608082146,25.5,47;2608090946,25.8,51;2608092146,25.4,40;2608100946,26.6,46;2608102146,27.5,45;2608110946,26.5,44;2608112146,26.1,52;2608120946,25.9,50;2608122146,25.1,40;2608130946,26.4,48;2608132146,25.8,48;2608140946,26.3,46;2608142146,26.4,45;2608150946,25.8,46;2608152146,24.0,58;2608160946,23.9,55;2608162146,24.5,48;2608170946,24.5,58;2608172146,28.0,55;2608180946,26.8,57;2608182146,29.5,53;2608190946,28.9,51;2608192146,31.2,48;2608200946,29.5,50;2608202146,30.3,47;2608210946,28.7,48;2608212146,26.2,55;2608220946,24.4,61;2608222146,24.8,39;2608230946,22.8,61;2608232146,25.7,51;2608240946,25.2,56;2608242146,23.9,42;2608250946,21.8,60;2608252146,25.6,44;2608260946,22.6,56;2608262146,26.2,49;2608270946,23.6,58;2608272146,24.7,41;2608280946,24.3,47;2608282146,25.9,33;2608290946,22.9,47;2608292146,26.4,36;2608300946,23.8,49;2608302146,27.3,40;2608310946,24.6,46;2608312146,26.5,44;2609010946,24.6,63;2609012146,27.0,55;2609020946,24.4,57;2609022146,25.5,44;2609030946,25.5,52;2609032146,25.6,35;2609040946,26.0,51;2609042146,28.2,43;2609050946,27.5,42;2609052146,26.6,30;2609060946,26.8,37;2609062146,27.6,35;2609070946,26.6,35;2609072146,27.9,37;2609080946,26.4,41;2609082146,26.6,37;2609090946,24.9,40;2609092146,25.2,52;2609100946,20.8,45;2609102146,24.9,40;2609110946,23.6,43;2609112146,26.5,37;2609120946,24.7,43;2609122146,27.6,41;2609130946,25.6,46;2609132146,27.9,37;2609140946,21.0,50;2609142146,25.6,40;2609150946,22.6,46;2609152146,25.3,34;2609160946,23.0,49;2609162146,25.9,43;2609170946,21.7,62;2609172146,24.6,41;2609180946,21.7,59;2609182146,24.5,39;2609190946,19.9,53;2609192146,25.1,40;2609200946,20.4,49;2609202146,26.0,36;2609210946,21.1,42;2609212146,25.0,39;2609220946,22.0,34;2609222146,25.8,40;2609230946,22.6,54;2609232146,27.2,32;2609240946,22.7,43;2609242146,25.6,36;2609250946,21.6,42;2609252146,26.0,30;2609260946,22.7,44;2609262146,26.9,46;2609270946,21.8,57;2609272146,24.4,43;2609280946,22.5,59;2609282146,24.9,51;2609290946,22.7,63;2609292146,23.4,68;2609300946,21.3,62;2609302146,23.3,66;2610010946,22.1,61;2610012146,22.9,52;2610020946,22.3,62;2610022146,22.6,67;2610030946,21.5,62;2610032146,22.4,63;2610040946,20.8,61;2610042146,22.5,65;2610050946,21.1,62;2610052146,22.9,64;2610060946,21.4,61;2610062146,21.2,71;2610070946,20.3,68;2610072146,21.9,58;2610080946,20.4,60;2610082146,21.2,31;2610090946,18.5,38;2610092146,19.9,42;2610100946,18.8,51;2610102146,20.2,49;2610110946,19.2,55;2610112146,20.6,54;2610120946,19.6,55;2610122146,21.3,60;2610130946,20.2,64;2610132146,21.2,69;2610140946,20.3,65;2610142146,22.5,57;2610150946,21.3,58;2610152146,23.7,61;2610160946,22.0,53;2610162146,23.3,58;2610170946,18.6,54;2610172146,20.9,63;2610180946,20.3,62;2610182146,19.6,63;2610190946,18.0,65;2610192146,18.7,71;2610200946,18.1,68;2610202146,18.3,68;2610210946,17.6,61;2610212146,19.4,56;2610220946,19.1,54;2610222146,20.6,52;2610230946,20.4,50;2610232146,21.8,51;2610240946,18.1,45;2610242146,19.1,56;2610250846,17.4,57;2610252046,19.3,52;2610260846,17.8,56;2610262046,19.9,57;2610270846,18.8,57;2610272046,20.4,59;2610280846,18.0,64;2610282046,20.5,60;2610290846,18.7,54;2610292046,20.0,60;2610300846,19.1,62;2610302046,20.8,56;2610310846,20.0,63;2610312046,20.5,53;2611010846,19.5,59;2611012046,20.5,55;2611020846,20.0,61;2611022046,19.8,52;2611030846,18.1,60;2611032046,19.0,57;2611040846,18.5,56;2611042046,19.3,54;2611050846,18.1,58;2611052046,19.1,54;2611060846,15.3,42;2611062046,19.2,52';
+var climaCache = { s: null, r: [] };
+function climaRows(s) {
+  if (!s) return [];
+  if (climaCache.s !== s) climaCache = { s: s, r: s.split(';').filter(Boolean).map(function (x) { var p = x.split(','), k = p[0]; return { k: k, t: new Date(2000 + +k.slice(0, 2), +k.slice(2, 4) - 1, +k.slice(4, 6), +k.slice(6, 8), +k.slice(8, 10)).getTime(), temp: +p[1], hum: +p[2] }; }) };
+  return climaCache.r;
+}
+// Adds what a CSV brings to what is already stored, keeping one reading per minute
+function climaMerge(old, csv) {
+  var by = {}, n = 0;
+  climaRows(old).forEach(function (r) { by[r.k] = r.k + ',' + r.temp + ',' + r.hum; });
+  csv.split(/\r?\n/).forEach(function (line) {
+    var m = line.match(/^"?(\d{4})-(\d\d)-(\d\d)[ T](\d\d):(\d\d)[^,]*"?\s*,\s*"?(-?[\d.]+)"?\s*,\s*"?([\d.]+)/); if (!m) return;
+    var k = m[1].slice(2) + m[2] + m[3] + m[4] + m[5]; if (!by[k]) n++; by[k] = k + ',' + (+m[6]) + ',' + Math.round(+m[7]);
+  });
+  return { s: Object.keys(by).sort().map(function (k) { return by[k]; }).join(';'), n: n };
+}
+var climaRange = 30, climaDays = [];
+var dec = function (v) { return String(Math.round(v * 10) / 10).replace('.', ','); };
+// Room temperature for a Messor: what it means now, as normal / to watch / to act on
+function climaVerdict(c, rows) {
+  var last = rows[rows.length - 1].t, wk = rows.filter(function (r) { return r.t > last - 7 * DAY; }), ts = wk.map(function (r) { return r.temp; });
+  var hi = Math.max.apply(null, ts), lo = Math.min.apply(null, ts), mean = ts.reduce(function (a, b) { return a + b; }, 0) / ts.length, v;
+  if (hi > 32) v = ['⚠️ Para intervenir', 'Más de 32 °C esta semana. Aparta el montaje del sol o de lo que dé calor, y mira que Hydra no se quede seca.'];
+  else if (hi > 30) v = ['👀 Para vigilar', 'Picos de más de 30 °C. Aguantan, pero vigila que el agua no se acabe antes de tiempo.'];
+  else if (lo < 10 && !c.hiberna) v = ['👀 Para vigilar', 'Por debajo de 10 °C sin estar en hibernación. Si no quieres que hibernen aún, súbelas de temperatura.'];
+  else if (mean < 20) v = ['✅ Normal', 'Otoño: por debajo de 20 °C la cría casi se para, así que es normal no ver huevos. Si quieres que sigan criando, una manta térmica en un lado del montaje; si no, déjalas ir hacia el invierno.'];
+  else if (mean < 24) v = ['✅ Normal', 'Templado: crían, pero más despacio que a 24–28 °C.'];
+  else v = ['✅ Normal', 'Buena temperatura para criar.'];
+  return '<b>' + v[0] + '</b> · últimos 7 días entre ' + dec(lo) + ' y ' + dec(hi) + ' °C, media ' + dec(mean) + ' °C. ' + v[1] + ' <span class="small">La humedad es la de la habitación; la que importa es la de dentro de las cámaras.</span>';
+}
+function renderClima(c) {
+  var all = climaRows(c.clima);
+  $('climaBox').hidden = !all.length; if (!all.length) return;
+  var end = all[all.length - 1].t, rows = climaRange ? all.filter(function (r) { return r.t > end - climaRange * DAY; }) : all, by = {};
+  climaDays = [];
+  rows.forEach(function (r) {
+    var k = dayStart(r.t), d = by[k];
+    if (!d) { d = by[k] = { t: k + DAY / 2, lo: r.temp, hi: r.temp, s: 0, n: 0, hlo: r.hum, hhi: r.hum }; climaDays.push(d); }
+    d.lo = Math.min(d.lo, r.temp); d.hi = Math.max(d.hi, r.temp); d.s += r.temp; d.n++; d.hlo = Math.min(d.hlo, r.hum); d.hhi = Math.max(d.hhi, r.hum);
+  });
+  climaDays.forEach(function (d) { d.m = d.s / d.n; });
+  $('climaV').innerHTML = climaVerdict(c, all);
+  $('climaTip').textContent = 'Desde ' + fmtD(rows[0].t) + ' · ' + all.length + ' lecturas. Toca la gráfica para ver cada día.';
+  $('clima').innerHTML = climaChart('temp') + climaChart('hum') +
+    '<p class="small">La banda va de la mínima a la máxima de cada día y la línea es su media. En la de temperatura, la franja verde es 24–28 °C, donde mejor crían.</p>';
+}
+var CL_W = 340, CL_L = 34, CL_R = 10;
+function climaX(t) { var a = climaDays[0].t, b = climaDays[climaDays.length - 1].t; return CL_L + (b > a ? (t - a) / (b - a) : .5) * (CL_W - CL_L - CL_R); }
+function climaChart(kind) {
+  var temp = kind === 'temp', H = temp ? 130 : 96, T = 10, B = temp ? 8 : 22, ds = climaDays;
+  var lo = Math.min.apply(null, ds.map(function (d) { return temp ? d.lo : d.hlo; })), hi = Math.max.apply(null, ds.map(function (d) { return temp ? d.hi : d.hhi; }));
+  lo = Math.floor((lo - (temp ? 1 : 3)) / (temp ? 2 : 10)) * (temp ? 2 : 10); hi = Math.ceil((hi + (temp ? 1 : 3)) / (temp ? 2 : 10)) * (temp ? 2 : 10);
+  var Y = function (v) { return T + (1 - (v - lo) / (hi - lo)) * (H - T - B); }, col = temp ? 'var(--acc)' : 'var(--hum)';
+  var top = ds.map(function (d) { return climaX(d.t).toFixed(1) + ',' + Y(temp ? d.hi : d.hhi).toFixed(1); }), bot = ds.slice().reverse().map(function (d) { return climaX(d.t).toFixed(1) + ',' + Y(temp ? d.lo : d.hlo).toFixed(1); });
+  var mid = (lo + hi) / 2, ticks = [hi, temp ? Math.round(mid) : Math.round(mid / 10) * 10, lo];
+  var band = temp && hi > 24 && lo < 28 ? '<rect x="' + CL_L + '" width="' + (CL_W - CL_L - CL_R) + '" y="' + Y(Math.min(28, hi)).toFixed(1) + '" height="' + (Y(Math.max(24, lo)) - Y(Math.min(28, hi))).toFixed(1) + '" fill="var(--leaf)" opacity=".13"/>' : '';
+  return '<svg class="cl" data-cl="' + kind + '" viewBox="0 0 ' + CL_W + ' ' + H + '" role="img" aria-label="' + (temp ? 'Temperatura' : 'Humedad') + ' de la habitación por día, de ' + fmtD(ds[0].t) + ' a ' + fmtD(ds[ds.length - 1].t) + '">' + band +
+    ticks.map(function (v) { return '<line x1="' + CL_L + '" x2="' + (CL_W - CL_R) + '" y1="' + Y(v).toFixed(1) + '" y2="' + Y(v).toFixed(1) + '" stroke="var(--line)"' + (v === lo ? '' : ' stroke-dasharray="3 4"') + '/><text x="' + (CL_L - 6) + '" y="' + (Y(v) + 4).toFixed(1) + '" text-anchor="end" font-size="11" fill="var(--muted)">' + v + (v === hi ? (temp ? '°' : '%') : '') + '</text>'; }).join('') +
+    '<polygon points="' + top.concat(bot).join(' ') + '" fill="' + col + '" opacity=".2"/>' +
+    '<polyline points="' + ds.map(function (d) { return climaX(d.t).toFixed(1) + ',' + Y(temp ? d.m : (d.hlo + d.hhi) / 2).toFixed(1); }).join(' ') + '" fill="none" stroke="' + col + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>' +
+    '<text x="' + (CL_L + 4) + '" y="' + (T + 10) + '" font-size="11.5" font-weight="700" fill="var(--ink)">' + (temp ? 'Temperatura' : 'Humedad') + '</text>' +
+    (temp ? '' : '<text x="' + CL_L + '" y="' + (H - 5) + '" font-size="11" fill="var(--muted)">' + fmtD(ds[0].t) + '</text><text x="' + (CL_W - CL_R) + '" y="' + (H - 5) + '" text-anchor="end" font-size="11" fill="var(--muted)">' + fmtD(ds[ds.length - 1].t) + '</text>') +
+    '<line class="xh" y1="' + T + '" y2="' + (H - B) + '" stroke="var(--ink)" stroke-width="1" opacity="0"/><rect x="' + CL_L + '" y="0" width="' + (CL_W - CL_L - CL_R) + '" height="' + H + '" fill="transparent"/></svg>';
+}
+// Touching either chart picks the nearest day in both, with a crosshair and its numbers above
+function climaPoint(e) {
+  var svg = e.target.closest('svg.cl'); if (!svg || !climaDays.length) return;
+  var b = svg.getBoundingClientRect(), x = (e.clientX - b.left) / b.width * CL_W, d = climaDays.reduce(function (a, d) { return Math.abs(climaX(d.t) - x) < Math.abs(climaX(a.t) - x) ? d : a; });
+  $('clima').querySelectorAll('.xh').forEach(function (l) { l.setAttribute('x1', climaX(d.t)); l.setAttribute('x2', climaX(d.t)); l.setAttribute('opacity', '.45'); });
+  $('climaTip').innerHTML = '<b style="color:var(--ink)">' + fmtD(d.t) + '</b> · ' + (d.lo === d.hi ? dec(d.lo) : dec(d.lo) + '–' + dec(d.hi)) + ' °C · ' + (d.hlo === d.hhi ? d.hlo : d.hlo + '–' + d.hhi) + ' % de humedad';
+}
+$('clima').addEventListener('pointermove', climaPoint);
+$('clima').addEventListener('pointerdown', climaPoint);
+$('clima').addEventListener('pointerleave', function (e) { if (e.pointerType === 'mouse') { $('clima').querySelectorAll('.xh').forEach(function (l) { l.setAttribute('opacity', '0'); }); } });
+$('climaR').addEventListener('click', function (e) {
+  var b = e.target.closest('[data-r]'); if (!b) return; climaRange = +b.getAttribute('data-r');
+  this.querySelectorAll('[data-r]').forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); renderClima(cur());
+});
+$('climaAdd').addEventListener('click', function () { $('climaFile').click(); });
+$('climaFile').addEventListener('change', function () {
+  var file = this.files && this.files[0]; this.value = ''; if (!file || !cur()) return;
+  file.text().then(function (txt) {
+    var m = climaMerge(cur().clima, txt);
+    if (!m.n) return toast('No había lecturas nuevas en ese archivo');
+    setCol({ clima: m.s }); toast(m.n + (m.n === 1 ? ' lectura nueva' : ' lecturas nuevas'));
+  });
+});
+// Alex's Messor gets the thermometer log they sent on 6 Nov 2026, once
+function seedClima() { var c = cur(); if (c && isMap(c) && !c.clima && /messor/i.test(c.especie || '')) setCol({ clima: THERMO }); }
 function fillForm(c) {
   var cd = cada(c);
   $('fName').value = c.nombre || ''; $('fSp').value = c.especie || ''; $('fQueen').value = c.reina || ''; $('fHome').value = c.casa || '';
@@ -1004,7 +1112,7 @@ function loadMessor() {
   if (!Object.keys(S.ev).some(function (k) { return S.ev[k].hist; })) HISTORY.forEach(function (h, i) {
     var id = uid('e'); S.ev[id] = Object.assign({ col: S.cur, t: new Date(h[0] + 'T12:00').getTime() + i * 60000, hist: true }, h[1]); touch('eventos/' + id);
   });
-  saved(); if (!isMap(cur())) useMap(); fillForm(cur());
+  saved(); if (!isMap(cur())) useMap(); seedClima(); fillForm(cur());
 }
 $('importHist').addEventListener('click', function () { loadMessor(); toast('Historial y mapa añadidos'); });
 $('seedBar').addEventListener('click', function (e) { if (e.target.closest('button')) { loadMessor(); toast('Tu Messor, su historial y el mapa ya están'); } });
@@ -1104,6 +1212,7 @@ if (window.claude && window.claude.use) (async function () {
         persist(); render(); var c = cur(); if (c && !document.activeElement.closest('details')) fillForm(c);
         // An account with no colony yet is Alex's first visit: start straight away with the Messor
         if (name === 'colonias' && !s.metadata.fromCache && !s.size && !Object.keys(S.col).length) loadMessor();
+        if (name === 'colonias' && !s.metadata.fromCache) seedClima();
       }, function () {});
     }
     sync('colonias', function () { return S.col; }); sync('eventos', function () { return S.ev; });
