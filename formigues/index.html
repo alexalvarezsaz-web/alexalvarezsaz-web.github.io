@@ -148,6 +148,10 @@ dialog.sheet::backdrop { background: rgba(20, 12, 6, .55); }
 .sh-b .no { border: 1px solid var(--line); background: transparent; }
 .pic { max-height: 200px; border-radius: 12px; object-fit: cover; }
 
+.seed { display: flex; gap: 12px; align-items: center; padding: 12px 14px; border-radius: 16px; background: var(--honey); color: #241706; font-size: 15px; }
+.seed span { flex: 1; min-width: 0; }
+.seed button { min-height: 46px; padding: 0 16px; border: 0; border-radius: 12px; background: #241706; color: #fbf1e3; font: 800 16px var(--display); }
+
 /* Setup map */
 #setup { display: block; width: 100%; height: auto; }
 #setup text, .mapbig text { font-family: var(--body); }
@@ -165,6 +169,8 @@ dialog.sheet::backdrop { background: rgba(20, 12, 6, .55); }
 
 <main class="wrap">
   <div class="cols" id="cols" hidden></div>
+
+  <div class="seed" id="seedBar" hidden><span><b>¿Es tu Messor?</b> Carga su historial de abril a julio y el mapa de tu montaje.</span><button type="button">Cargar</button></div>
 
   <section class="hero" aria-label="Tu colonia">
     <div class="hero-t" id="heroT"></div>
@@ -618,6 +624,7 @@ function render() {
   if (document.activeElement && document.activeElement.closest && !document.activeElement.closest('details')) fillForm(c);
   $('importHist').hidden = Object.keys(S.ev).some(function (k) { return S.ev[k].hist; });
   $('useMap').hidden = isMap(c);
+  $('seedBar').hidden = isMap(c);
   var ps = Object.keys(S.pend).length + Object.keys(S.del).length;
   $('sync').textContent = !db ? 'Guardado en este móvil.' : ps ? 'Guardado en este móvil · ' + ps + ' por subir.' : 'Guardado en tu cuenta. Lo ves igual en el móvil y en el ordenador.';
 }
@@ -733,18 +740,21 @@ var HISTORY = [
   ['2026-07-25', { tipo: 'recuento', n: { niv: true, reinas: 1, larvas: 3 } }],
   ['2026-07-25', { tipo: 'nota', kind: 'obs', texto: 'Mucha cría y muchas semillas. La cría sigue en el tubo.' }]
 ];
-$('importHist').addEventListener('click', function () {
+// Alex's Messor: its details, the April–July diary and the setup map, into the current colony (or a new one)
+function loadMessor() {
   if (!cur()) newCol({ nombre: 'Messor', reina: '2026-04-21' });
   var c = cur(), ch = {};
   if (!c.especie) ch.especie = 'Messor barbarus';
   if (!c.casa) ch.casa = 'AntCrilic 10×20';
   if (!c.reina || c.reina > '2026-04-21') ch.reina = '2026-04-21';
   if (Object.keys(ch).length) setCol(ch);
-  HISTORY.forEach(function (h, i) {
+  if (!Object.keys(S.ev).some(function (k) { return S.ev[k].hist; })) HISTORY.forEach(function (h, i) {
     var id = uid('e'); S.ev[id] = Object.assign({ col: S.cur, t: new Date(h[0] + 'T12:00').getTime() + i * 60000, hist: true }, h[1]); touch('eventos/' + id);
   });
-  saved(); if (!isMap(cur())) useMap(); fillForm(cur()); toast('Historial y mapa añadidos');
-});
+  saved(); if (!isMap(cur())) useMap(); fillForm(cur());
+}
+$('importHist').addEventListener('click', function () { loadMessor(); toast('Historial y mapa añadidos'); });
+$('seedBar').addEventListener('click', function (e) { if (e.target.closest('button')) { loadMessor(); toast('Tu Messor, su historial y el mapa ya están'); } });
 $('useMap').addEventListener('click', function () { useMap(); toast('Mapa puesto con lo que se veía en las fotos del 6 de noviembre');
 });
 $('log').addEventListener('click', function (e) {
@@ -837,6 +847,8 @@ if (window.claude && window.claude.use) (async function () {
         s.docs.forEach(function (x) { var p = name + '/' + x.id; seen[x.id] = 1; if (!S.pend[p] && !S.del[p]) store()[x.id] = x.data(); });
         if (!s.metadata.fromCache) Object.keys(store()).forEach(function (k) { if (!seen[k] && !S.pend[name + '/' + k]) delete store()[k]; });
         persist(); render(); var c = cur(); if (c && !document.activeElement.closest('details')) fillForm(c);
+        // An account with no colony yet is Alex's first visit: start straight away with the Messor
+        if (name === 'colonias' && !s.metadata.fromCache && !s.size && !Object.keys(S.col).length) loadMessor();
       }, function () {});
     }
     sync('colonias', function () { return S.col; }); sync('eventos', function () { return S.ev; });
