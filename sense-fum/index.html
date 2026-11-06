@@ -1,0 +1,507 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="../shared/firebase-config.js"></script>
+<script src="../shared/claude-firebase.js" data-app="sense-fum"></script>
+</head><body>
+<title>Sense Fum</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=Figtree:wght@400;600;800&display=swap">
+<style>
+/* Layout: one thumb-driven scroll. The climb up Pedraforca is the hero, numbers follow, and the two actions stay fixed at the bottom */
+:root {
+  --bg: #e4edf0; --surface: #f6fafb; --ink: #10232c; --muted: #4f6670; --line: #c6d5da;
+  --pine: #0f6b63; --pine-ink: #f2fbf9; --sun: #e8a200; --sos: #c8352b; --sos-ink: #fff5f3;
+  --sky1: #16324a; --sky2: #41708a; --sky3: #f0b35e; --rock1: #0f2230; --rock2: #1d3a4c; --on-sky: #f5fbff; --on-sky-2: #c7dbe6;
+  --display: "Bricolage Grotesque", "Trebuchet MS", sans-serif; --body: "Figtree", "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0c171d; --surface: #14242c; --ink: #e8f2f5; --muted: #9ab2bc; --line: #2a404a;
+  --pine: #4fc4b6; --pine-ink: #06211e; --sun: #f5bd3b; --sos: #ec5a4f; --sos-ink: #1f0604; color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --bg: #0c171d; --surface: #14242c; --ink: #e8f2f5; --muted: #9ab2bc; --line: #2a404a;
+  --pine: #4fc4b6; --pine-ink: #06211e; --sun: #f5bd3b; --sos: #ec5a4f; --sos-ink: #1f0604; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 400 16px/1.45 var(--body); }
+button, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; touch-action: manipulation; }
+:focus-visible { outline: 3px solid var(--sun); outline-offset: 2px; }
+h1, h2, h3 { font-family: var(--display); line-height: 1.1; margin: 0; text-wrap: balance; }
+.wrap { max-width: 620px; margin: 0 auto; display: grid; gap: 14px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 12px 118px; }
+.lab { font-size: 12px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
+.small { font-size: 13.5px; color: var(--muted); margin: 0; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* Hero: the climb */
+.hero { position: relative; overflow: hidden; border-radius: 20px; color: var(--on-sky); background: linear-gradient(180deg, var(--sky1), var(--sky2) 62%, var(--sky3)); }
+.hero-t { position: relative; z-index: 1; padding: 16px 18px 0; display: grid; gap: 2px; }
+.hero-t .lab { color: var(--on-sky-2); }
+.days { font: 800 clamp(70px, 24vw, 112px)/.92 var(--display); letter-spacing: -.03em; }
+.days small { font: 500 clamp(24px, 7vw, 34px)/1 var(--display); letter-spacing: 0; margin-left: 6px; }
+.clock { font-weight: 600; color: var(--on-sky-2); }
+.hero svg { display: block; width: 100%; height: auto; margin-top: -16px; }
+.hero text { font-family: var(--body); }
+.hero-b { padding: 10px 18px 14px; background: var(--rock1); font-size: 14.5px; display: grid; gap: 3px; }
+.hero-b b { color: var(--sun); }
+.pulse { animation: pulse 2.4s ease-in-out infinite; transform-origin: center; transform-box: fill-box; }
+@keyframes pulse { 50% { transform: scale(1.7); opacity: .25; } }
+
+.record { padding: 12px 16px; border-radius: 16px; background: var(--surface); font-weight: 600; }
+.record b { font-family: var(--display); font-size: 21px; color: var(--pine); }
+
+/* Numbers */
+.money { padding: 16px; border-radius: 18px; background: var(--pine); color: var(--pine-ink); display: grid; gap: 6px; }
+.money .lab { color: inherit; opacity: .8; }
+.money .big { font: 800 clamp(46px, 15vw, 66px)/1 var(--display); letter-spacing: -.02em; }
+.money .sub { font-size: 14px; opacity: .9; margin: 0; }
+.goal { display: grid; gap: 5px; margin-top: 6px; font-size: 14.5px; font-weight: 600; }
+.track { height: 9px; border-radius: 5px; background: color-mix(in srgb, currentColor 22%, transparent); overflow: hidden; }
+.track i { display: block; height: 100%; background: var(--sun); border-radius: 5px; }
+.tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.tile { padding: 13px 14px; background: var(--surface); border-radius: 16px; display: grid; gap: 3px; align-content: start; min-width: 0; }
+.tile b { font: 800 clamp(25px, 8vw, 34px)/1.05 var(--display); }
+.tile span { font-size: 13.5px; color: var(--muted); }
+
+.sect { padding: 16px; border-radius: 18px; background: var(--surface); display: grid; gap: 12px; }
+.sect h2 { font-size: 24px; font-weight: 800; }
+.proj { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; text-align: center; }
+.proj div { display: grid; gap: 2px; }
+.proj b { font: 800 clamp(19px, 6vw, 26px)/1.1 var(--display); color: var(--pine); }
+.proj span { font-size: 12.5px; color: var(--muted); }
+
+/* Health route */
+.route { list-style: none; margin: 0; padding: 0; display: grid; }
+.route li { position: relative; display: grid; gap: 2px; padding: 0 0 15px 26px; }
+.route li::before { content: ""; position: absolute; left: 6px; top: 6px; bottom: -6px; width: 2px; background: var(--line); }
+.route li:last-child::before { display: none; }
+.route li::after { content: ""; position: absolute; left: 0; top: 5px; width: 14px; height: 14px; border-radius: 50%; background: var(--surface); border: 2px solid var(--line); }
+.route li.done::after { background: var(--pine); border-color: var(--pine); }
+.route li.done::before { background: var(--pine); }
+.route li.now::after { background: var(--sun); border-color: var(--sun); }
+.route .when { font-size: 12.5px; font-weight: 800; color: var(--muted); }
+.route .done .when { color: var(--pine); }
+.route .now .when { color: var(--ink); }
+.route b { font-weight: 600; }
+.perks { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.perks li { padding: 10px 12px; border-radius: 12px; background: var(--bg); font-size: 14.5px; font-weight: 600; }
+
+/* Gum and cravings */
+.bars { display: grid; grid-template-columns: repeat(14, minmax(0, 1fr)); gap: 3px; align-items: end; height: 92px; }
+.bars div { display: flex; flex-direction: column; justify-content: end; align-items: center; gap: 2px; height: 100%; min-width: 0; }
+.bars i { display: block; width: 100%; min-height: 2px; border-radius: 3px 3px 0 0; background: var(--line); }
+.bars .on i { background: var(--pine); }
+.bars b { font-size: 11px; font-weight: 800; }
+.bars span { font-size: 10.5px; color: var(--muted); }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.ghost { min-height: 44px; padding: 0 14px; border-radius: 12px; border: 1px solid var(--line); background: transparent; font-weight: 700; }
+.linkb { min-height: 44px; border: 0; background: transparent; color: var(--muted); font-weight: 700; text-decoration: underline; padding: 0; }
+
+details.sect summary { cursor: pointer; font: 800 20px var(--display); list-style: none; display: flex; align-items: center; min-height: 28px; }
+details.sect summary::after { content: "▾"; margin-left: auto; color: var(--muted); }
+.fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 10px; }
+.fields label { display: grid; gap: 4px; font-size: 13px; font-weight: 700; color: var(--muted); min-width: 0; }
+.fields .w { grid-column: 1 / -1; }
+.fields input, .fields textarea { width: 100%; min-width: 0; padding: 10px 11px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font-size: 16px; font-weight: 500; }
+
+/* Reasons */
+.hoy { padding: 14px 16px 6px; border-radius: 16px; background: var(--surface); display: grid; gap: 4px; justify-items: start; }
+.hoy p { margin: 0; font: 500 clamp(20px, 5.6vw, 25px)/1.22 var(--display); text-wrap: pretty; }
+.why-foto { width: 100%; max-height: 300px; object-fit: cover; border-radius: 14px; background: var(--bg); }
+.quote { margin: 0; padding-left: 13px; border-left: 3px solid var(--sun); font-weight: 600; }
+.quote:empty { display: none; }
+.blocks { display: grid; gap: 14px; }
+.block { display: grid; gap: 7px; padding-top: 13px; border-top: 1px solid var(--line); }
+.block h3 { font-size: 20px; font-weight: 800; }
+.block p { margin: 0; }
+.bignum { display: grid; gap: 1px; }
+.bignum b { font: 800 clamp(32px, 10vw, 44px)/1.05 var(--display); color: var(--pine); }
+.bignum span { font-size: 13.5px; color: var(--muted); }
+.checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.checks li { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 8px; align-items: start; font-weight: 600; }
+.checks i { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line); display: grid; place-items: center; font-style: normal; font-size: 13px; font-weight: 900; }
+.checks .ok i { background: var(--pine); border-color: var(--pine); color: var(--pine-ink); }
+.checks small { display: block; font-weight: 500; font-size: 13.5px; color: var(--muted); }
+.s-foto { width: 100%; max-width: 420px; max-height: 26dvh; object-fit: cover; border-radius: 14px; }
+
+/* Fixed actions */
+.bar { position: fixed; z-index: 5; left: 0; right: 0; bottom: 0; background: var(--bg); border-top: 1px solid var(--line); padding: 8px max(12px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px)); }
+.bar-in { max-width: 620px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.bar button { min-height: 66px; border: 0; border-radius: 16px; font: 800 18px var(--display); }
+.b-sos { background: var(--pine); color: var(--pine-ink); }
+.b-gum { background: var(--surface); color: var(--ink); border: 2px solid var(--line) !important; }
+.b-gum small { display: block; font: 600 12.5px var(--body); color: var(--muted); }
+.toast { position: fixed; z-index: 6; left: max(12px, env(safe-area-inset-left, 0px)); right: max(12px, env(safe-area-inset-right, 0px)); bottom: calc(96px + env(safe-area-inset-bottom, 0px)); max-width: 596px; margin: 0 auto; padding: 8px 8px 8px 14px; border-radius: 14px; background: var(--ink); color: var(--bg); font-weight: 700; display: flex; align-items: center; gap: 10px; }
+.toast span { flex: 1; min-width: 0; }
+.toast button { min-height: 40px; padding: 0 12px; border: 1px solid currentColor; border-radius: 10px; background: transparent; color: inherit; font-weight: 800; }
+
+/* Breathing screen: always night, always calm */
+#sos { width: 100vw; max-width: none; height: 100dvh; max-height: none; margin: 0; border: 0; padding: 0; background: var(--sky1); color: var(--on-sky); }
+#sos[open] { display: flex; }
+#sos::backdrop { background: var(--sky1); }
+.s { flex: 1; min-width: 0; overflow-y: auto; display: grid; gap: 14px; align-content: start; justify-items: center; text-align: center; padding: calc(14px + env(safe-area-inset-top, 0px)) max(18px, env(safe-area-inset-right, 0px)) calc(18px + env(safe-area-inset-bottom, 0px)) max(18px, env(safe-area-inset-left, 0px)); }
+.s h2 { font-size: 28px; font-weight: 800; }
+.s p { margin: 0; max-width: 34em; }
+.s .soft { color: var(--on-sky-2); font-size: 15px; }
+.lung { width: 180px; height: 180px; border-radius: 50%; display: grid; place-items: center; position: relative; }
+.lung::before { content: ""; position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle, rgba(240,179,94,.55), rgba(240,179,94,.1)); animation: breathe 10s ease-in-out infinite; }
+@keyframes breathe { 0%, 100% { transform: scale(.55); } 40% { transform: scale(1); } }
+.lung div { position: relative; display: grid; gap: 0; }
+.lung b { font: 800 40px/1 var(--display); font-variant-numeric: tabular-nums; }
+.lung span { font-weight: 700; }
+.s-btn { width: 100%; max-width: 420px; min-height: 60px; border: 0; border-radius: 15px; font: 800 18px var(--display); background: var(--sun); color: #1d1503; }
+.s-alt { width: 100%; max-width: 420px; min-height: 52px; border: 1px solid var(--on-sky-2); border-radius: 14px; background: transparent; color: var(--on-sky); font-weight: 700; }
+.s-q { min-height: 44px; border: 0; background: transparent; color: var(--on-sky-2); font-weight: 700; text-decoration: underline; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 420px; }
+.chips button { min-height: 46px; padding: 0 15px; border-radius: 23px; border: 1px solid var(--on-sky-2); background: transparent; color: var(--on-sky); font-weight: 700; }
+@media (prefers-reduced-motion: reduce) { .pulse, .lung::before { animation: none; } .lung::before { transform: scale(.85); } }
+</style>
+
+<main class="wrap">
+  <section class="hero" aria-label="Días sin fumar">
+    <div class="hero-t">
+      <span class="lab">Sense fum · sin fumar desde el <span id="since"></span></span>
+      <div class="days num"><span id="days">0</span><small id="daysW">días</small></div>
+      <div class="clock num" id="clock"></div>
+    </div>
+    <svg viewBox="0 0 360 190" role="img" aria-label="Tu subida al Pedraforca: cada día subes un poco">
+      <defs><linearGradient id="rk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b5168"/><stop offset="1" stop-color="#0f2230"/></linearGradient></defs>
+      <path d="M0 150 L60 118 L108 138 L170 104 L225 140 L360 112 V190 H0Z" fill="#315e78" opacity=".55"/>
+      <path d="M0 190 V176 C50 172 84 160 112 142 C142 124 158 108 176 92 C198 72 216 50 236 26 L250 44 L262 68 L274 58 L286 34 L302 62 C322 92 340 130 360 150 V190Z" fill="url(#rk)"/>
+      <path d="M236 26 L250 44 L240 52 L228 40Z M286 34 L302 62 L288 56 L278 48Z" fill="#dfe9ee" opacity=".22"/>
+      <path id="routeAll" d="M6 176 C50 172 84 160 112 142 C142 124 158 108 176 92 C198 72 216 50 236 26" fill="none" stroke="#f5fbff" stroke-opacity=".35" stroke-width="2.5" stroke-dasharray="2 6" stroke-linecap="round"/>
+      <path id="routeDone" d="M6 176 C50 172 84 160 112 142 C142 124 158 108 176 92 C198 72 216 50 236 26" fill="none" stroke="#f5bd3b" stroke-width="4" stroke-linecap="round"/>
+      <g id="marks"></g>
+      <g id="me"><circle class="pulse" r="9" fill="#f5bd3b" opacity=".5"/><circle r="5.5" fill="#f5bd3b" stroke="#0f2230" stroke-width="2"/></g>
+    </svg>
+    <div class="hero-b"><span id="climb"></span><span class="small" style="color:var(--on-sky-2)" id="climb2"></span></div>
+  </section>
+
+  <div class="record" id="record"></div>
+
+  <div class="hoy" id="hoyBox" hidden>
+    <span class="lab" id="hoyLab">Hoy</span>
+    <p id="hoyTxt"></p>
+    <button type="button" class="linkb" id="hoyNext">Otra</button>
+  </div>
+
+  <section class="money" aria-label="Dinero ahorrado">
+    <span class="lab">Dinero que no has quemado</span>
+    <div class="big num" id="eur">0 €</div>
+    <p class="sub" id="eurSub"></p>
+    <div class="goal" id="goal"></div>
+  </section>
+
+  <div class="tiles">
+    <div class="tile"><span>Cigarrillos sin fumar</span><b class="num" id="tCig">0</b></div>
+    <div class="tile"><span>Veces sin ir a por tabaco</span><b class="num" id="tPack">0</b></div>
+    <div class="tile"><span>Tiempo que no has pasado fumando</span><b class="num" id="tTime">0</b></div>
+    <div class="tile"><span>Vida ganada, en estimación</span><b class="num" id="tLife">0</b></div>
+    <div class="tile"><span>Alquitrán que no ha entrado</span><b class="num" id="tTar">0</b></div>
+    <div class="tile"><span>Ratos parado a respirar</span><b class="num" id="tWin">0</b></div>
+  </div>
+
+  <section class="sect" id="whyBox">
+    <h2>Por qué lo dejé</h2>
+    <img class="why-foto" id="whyFoto" alt="Tu foto" hidden>
+    <blockquote class="quote" id="whyTxt"></blockquote>
+    <div class="blocks" id="whyBlocks"></div>
+  </section>
+
+  <section class="sect">
+    <h2>Si sigues así</h2>
+    <div class="proj">
+      <div><b class="num" id="p1"></b><span>en 1 año</span></div>
+      <div><b class="num" id="p5"></b><span>en 5 años</span></div>
+      <div><b class="num" id="p10"></b><span>en 10 años</span></div>
+    </div>
+  </section>
+
+  <section class="sect">
+    <h2>Lo que le pasa a tu cuerpo</h2>
+    <ol class="route" id="route"></ol>
+    <p class="small">Datos generales de la OMS y del NHS británico, no una medición tuya. Los chicles siguen dando nicotina, pero sin humo, así que estas mejoras del humo cuentan igual.</p>
+  </section>
+
+  <section class="sect">
+    <h2>Lo que ganas cada día</h2>
+    <ul class="perks">
+      <li>La ropa, el pelo y el coche ya no huelen a tabaco</li>
+      <li>La comida sabe más</li>
+      <li>Más aire subiendo al monte</li>
+      <li>Hueles el bosque y las setas</li>
+      <li>Mejor aliento</li>
+      <li>Dientes menos amarillos</li>
+      <li>Nada de salir a fumar con frío</li>
+      <li>Nunca más buscar un estanco abierto</li>
+    </ul>
+  </section>
+
+  <section class="sect">
+    <h2>Chicles de 2 mg</h2>
+    <p class="small" id="gumTxt"></p>
+    <div class="bars" id="gumBars"></div>
+    <p class="small">La idea es ir bajando poco a poco, sin prisa. Cuánto tiempo y cómo lo marca el prospecto, y en la farmacia te lo ajustan.</p>
+  </section>
+
+  <details class="sect">
+    <summary>Ajustes</summary>
+    <div class="fields">
+      <label>Último día que fumaste<input id="fQuit" type="date"></label>
+      <label>A qué hora, más o menos<input id="fHour" type="time"></label>
+      <label>Cigarrillos al día<input id="fCig" type="number" min="1" max="80" inputmode="numeric"></label>
+      <label>Gasto en tabaco cada 2 semanas (€)<input id="fPack" type="number" min="0" step="0.5" inputmode="decimal"></label>
+      <label>Precio de un chicle (€)<input id="fGum" type="number" min="0" step="0.01" inputmode="decimal"></label>
+      <label>Tu récord anterior (días)<input id="fRec" type="number" min="0" inputmode="numeric"></label>
+      <label class="w">Por qué lo dejé<textarea id="fWhy" rows="4" maxlength="400" placeholder="Escríbelo con tus palabras. Te saldrá en la pantalla de respirar."></textarea></label>
+      <label class="w">Frases de cada día, una por línea<textarea id="fFrases" rows="6" placeholder="Yesenia | Una frase tuya"></textarea></label>
+      <label class="w" id="fFotoL" hidden>Una foto que te recuerde por qué<input id="fFoto" type="file" accept="image/*"></label>
+    </div>
+    <p class="small" style="margin-top:10px" id="assume"></p>
+    <p class="small" id="slipsTxt" style="margin-top:6px"></p>
+    <button type="button" class="linkb" id="slipBtn">He fumado</button>
+    <p class="small" id="sync"></p>
+  </details>
+</main>
+
+<div class="toast" id="toast" role="status" hidden></div>
+<div class="bar"><div class="bar-in">
+  <button type="button" class="b-sos" id="sosBtn">Respirar</button>
+  <button type="button" class="b-gum" id="gumBtn">＋ Chicle<small id="gumToday"></small></button>
+</div></div>
+<dialog id="sos" aria-label="Respirar"><div class="s" id="sosBody"></div></dialog>
+
+<script>
+var DAY = 86400000, DEFAULTS = { quit: '2026-10-09', hora: '00:00', cig: 18, gasto: 18, gum: 0.25, record: 2, motivo: '' };
+var LS = 'sense-fum-v1', S = { p: Object.assign({}, DEFAULTS), ev: {}, pend: {}, del: {}, pPend: false, m: { bloques: [], frases: [] }, mPend: false }, db = null, assets = null, hoyOff = 0;
+try { var raw = JSON.parse(localStorage.getItem(LS) || 'null'); if (raw) { S.p = Object.assign({}, DEFAULTS, raw.p); S.ev = raw.ev || {}; S.pend = raw.pend || {}; S.del = raw.del || {}; S.pPend = !!raw.pPend; if (raw.m) S.m = raw.m; S.mPend = !!raw.mPend; } } catch (e) {}
+function persist() { try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) {} }
+function $(id) { return document.getElementById(id); }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function nf(n, d) { return Number(n).toLocaleString('de-DE', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 }); }
+var MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+function fmtD(d) { return d.getDate() + ' de ' + MONTHS[d.getMonth()]; }
+function quitAt() { var q = S.p.quit.split('-'), h = (S.p.hora || '00:00').split(':'); return new Date(+q[0], +q[1] - 1, +q[2], +h[0] || 0, +h[1] || 0); }
+function events(tipo) { return Object.keys(S.ev).map(function (k) { return S.ev[k]; }).filter(function (e) { return !tipo || e.tipo === tipo; }); }
+function dayKey(t) { var d = new Date(t); return d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate(); }
+function dur(mins) { if (mins < 60) return Math.round(mins) + ' min'; var h = mins / 60; if (h < 48) return nf(h, h < 10 ? 1 : 0) + ' h'; return nf(h / 24, 1) + ' días'; }
+
+// ---------- Numbers ----------
+function numbers(now) {
+  var since = Math.max(0, now - quitAt().getTime()), d = since / DAY, cigs = d * S.p.cig, perDay = S.p.gasto / 14;
+  var gums = events('chicle').length, gross = d * perDay, net = Math.max(0, gross - gums * S.p.gum);
+  return { since: since, d: d, whole: Math.floor(d), cigs: cigs, gums: gums, gross: gross, net: net, perDay: perDay, perYear: perDay * 365 };
+}
+// Rough prices, here only to make the savings tangible
+var GOALS = [[15, 'unas cañas y unas bravas'], [35, 'una cesta de mimbre y una navaja de setas'], [60, 'una buena cena para dos'], [130, 'unas botas de monte nuevas'], [250, 'un finde en un refugio del Pirineo'], [450, 'una escapada a Cracovia'], [900, 'una bici de montaña decente'], [1600, 'una semana de vacaciones por todo lo alto'], [3500, 'un viaje grande de verdad']];
+// Timings from the WHO and the NHS
+var HEALTH = [
+  [.5, '12 horas', 'El monóxido de carbono en sangre vuelve a la normalidad.'],
+  [2, '2 días', 'El olfato y el gusto empiezan a mejorar.'],
+  [3, '3 días', 'Respirar suele costar menos y tienes más energía.'],
+  [14, '2 semanas a 3 meses', 'Mejoran la circulación y la capacidad de los pulmones.', 84],
+  [30, '1 a 9 meses', 'Baja la tos y la falta de aire.', 274],
+  [365, '1 año', 'El riesgo de enfermedad coronaria baja a la mitad que el de un fumador.'],
+  [1825, '5 a 15 años', 'El riesgo de infarto cerebral llega al de quien no fuma.', 5475],
+  [3650, '10 años', 'El riesgo de morir de cáncer de pulmón baja a cerca de la mitad, y baja también el de boca, garganta y otros.'],
+  [5475, '15 años', 'El riesgo de enfermedad coronaria es como el de quien nunca ha fumado.']
+];
+var MARKS = [[7, ''], [30, '1 mes'], [90, '3 meses'], [180, '6 meses'], [365, 'Cima · 1 año']];
+var BASE_M = 1215, TOP_M = 2506;
+
+function renderClimb(n) {
+  var path = $('routeDone'), len = path.getTotalLength(), f = Math.min(1, n.d / 365), pt = path.getPointAtLength(len * f);
+  path.setAttribute('stroke-dasharray', (len * f) + ' ' + len);
+  $('me').setAttribute('transform', 'translate(' + pt.x + ' ' + pt.y + ')');
+  $('marks').innerHTML = MARKS.map(function (m) {
+    var q = path.getPointAtLength(len * m[0] / 365), done = n.d >= m[0], last = m[0] === 365;
+    return '<circle cx="' + q.x + '" cy="' + q.y + '" r="3.5" fill="' + (done ? '#f5bd3b' : '#0f2230') + '" stroke="#f5fbff" stroke-width="1.5"/>' +
+      (m[1] ? '<text x="' + (m[0] === 30 ? q.x - 3 : q.x - 6) + '" y="' + (m[0] === 30 ? q.y + 15 : q.y - 8) + '" text-anchor="' + (m[0] === 30 ? 'start' : 'end') + '" font-size="11" font-weight="700" fill="#f5fbff">' + m[1] + '</text>' : '');
+  }).join('');
+  var m = Math.round(BASE_M + f * (TOP_M - BASE_M)), next = MARKS.filter(function (x) { return x[0] > n.d; })[0], top = new Date(quitAt().getTime() + 365 * DAY);
+  $('climb').innerHTML = n.d >= 365 ? '<b>Cima.</b> Un año sin fumar: estás en los 2.506 m del Pedraforca.' : 'Subida al Pedraforca: vas por los <b>' + nf(m) + ' m</b> de 2.506.';
+  $('climb2').textContent = next ? 'Te faltan ' + Math.ceil(next[0] - n.d) + (Math.ceil(next[0] - n.d) === 1 ? ' día' : ' días') + ' para ' + (next[0] === 7 ? 'la primera semana' : next[0] === 365 ? 'la cima, el ' + fmtD(top) : 'llegar a ' + next[1]) + '.' : 'Desde aquí, todo lo que venga es de propina.';
+}
+function tick() {
+  var now = Date.now(), n = numbers(now), rest = n.since % DAY, h = Math.floor(rest / 3600000), mi = Math.floor(rest % 3600000 / 60000), s = Math.floor(rest % 60000 / 1000);
+  $('days').textContent = nf(n.whole); $('daysW').textContent = n.whole === 1 ? 'día' : 'días';
+  $('clock').textContent = h + ' h ' + String(mi).padStart(2, '0') + ' min ' + String(s).padStart(2, '0') + ' s';
+  $('eur').textContent = nf(n.net, 2) + ' €';
+  $('tCig').textContent = nf(Math.floor(n.cigs)); $('tPack').textContent = nf(Math.floor(n.d / 14));
+  $('tTime').textContent = dur(n.cigs * 7); $('tLife').textContent = dur(n.cigs * 11); $('tTar').textContent = nf(n.cigs * 10 / 1000, n.cigs < 1000 ? 1 : 0) + ' g';
+}
+function render() {
+  var now = Date.now(), n = numbers(now), q = quitAt();
+  $('since').textContent = fmtD(q) + ' de ' + q.getFullYear();
+  tick(); renderClimb(n);
+  var r = S.p.record, times = r > 0 ? n.d / r : 0;
+  $('record').innerHTML = r > 0 && n.d > r ? 'Antes no pasabas de ' + r + (r === 1 ? ' día' : ' días') + '. Ahora vas por <b>' + nf(times, times < 10 ? 1 : 0) + ' veces</b> tu récord.' : r > 0 ? 'Tu récord anterior: ' + r + (r === 1 ? ' día' : ' días') + '. Vas a por él.' : 'Cada día de estos es un día de récord.';
+  $('eurSub').textContent = n.gums ? nf(n.gross, 2) + ' € de tabaco menos ' + nf(n.gums * S.p.gum, 2) + ' € de ' + (n.gums === 1 ? 'chicle apuntado.' : 'los ' + n.gums + ' chicles apuntados.') : 'Con ' + nf(S.p.gasto) + ' € de tabaco de liar cada 2 semanas.';
+  var has = GOALS.filter(function (g) { return g[0] <= n.net; }).pop(), nx = GOALS.filter(function (g) { return g[0] > n.net; })[0];
+  $('goal').innerHTML = (has ? '<span>Ya te da para ' + esc(has[1]) + '.</span>' : '') + (nx ? '<span>A por ' + esc(nx[1]) + ': ' + nf(nx[0]) + ' €, a precio aproximado</span><div class="track"><i style="width:' + Math.min(100, n.net / nx[0] * 100) + '%"></i></div>' : '');
+  $('p1').textContent = nf(n.perYear) + ' €'; $('p5').textContent = nf(n.perYear * 5) + ' €'; $('p10').textContent = nf(n.perYear * 10) + ' €';
+  $('route').innerHTML = HEALTH.map(function (h) {
+    var end = h[3] || h[0], st = n.d >= end ? 'done' : n.d >= h[0] ? 'now' : '', lbl = st === 'done' ? 'Ya está · ' + h[1] : st === 'now' ? 'En marcha ahora · ' + h[1] : h[1];
+    return '<li class="' + st + '"><span class="when">' + lbl + '</span><b>' + h[2] + '</b></li>';
+  }).join('');
+  $('tWin').textContent = nf(events('respiro').length);
+  // Gum
+  var gumDays = {}, todayKey = dayKey(now); events('chicle').forEach(function (e) { var k = dayKey(e.t); gumDays[k] = (gumDays[k] || 0) + 1; });
+  var today = gumDays[todayKey] || 0, cells = [], mx = 1;
+  for (var i = 13; i >= 0; i--) { var dd = new Date(now - i * DAY), c = gumDays[dayKey(dd)] || 0; mx = Math.max(mx, c); cells.push([dd, c]); }
+  $('gumBars').innerHTML = cells.map(function (x) { return '<div class="' + (x[1] ? 'on' : '') + '"><b>' + (x[1] || '') + '</b><i style="height:' + (x[1] / mx * 66) + 'px"></i><span>' + x[0].getDate() + '</span></div>'; }).join('');
+  $('gumToday').textContent = today ? today + ' hoy' : 'ninguno hoy';
+  var wk = 0, wkOld = 0; events('chicle').forEach(function (e) { var ago = (now - e.t) / DAY; if (ago < 7) wk++; else if (ago < 14) wkOld++; });
+  $('gumTxt').textContent = !n.gums ? 'Toca «＋ Chicle» cada vez que masques uno y aquí verás cómo van bajando.' : wkOld && wk < wkOld ? 'Esta semana, ' + wk + '. La anterior, ' + wkOld + '. Vas bajando.' : 'Últimos 7 días: ' + wk + (wk === 1 ? ' chicle.' : ' chicles.');
+  renderWhy(n, now);
+  $('assume').textContent = 'Los euros y los cigarrillos salen de estos números, que puedes cambiar: ' + nf(n.perDay, 2) + ' € al día. Estimación de tiempo: 7 min por cigarrillo fumando. Vida: 11 min por cigarrillo (University College London, 2000). Alquitrán: unos 10 mg por cigarrillo, la referencia de los de cajetilla, y los de liar no tienen por qué dar menos.';
+  var sl = events('desliz').length; $('slipsTxt').textContent = sl ? 'Deslices apuntados: ' + sl + '. El contador sigue, porque un desliz no borra lo que llevas.' : '';
+  var ps = Object.keys(S.pend).length + Object.keys(S.del).length + (S.pPend ? 1 : 0);
+  $('sync').textContent = !db ? 'Guardado en este móvil.' : ps ? 'Guardado en este móvil · ' + ps + ' por subir.' : 'Guardado en tu cuenta. Lo ves igual en el móvil y en el ordenador.';
+}
+// ---------- Reasons: the person's own words, said in different ways ----------
+function phrases() { return (S.m.frases || []).map(function (l) { var p = String(l).split(' | '); return p.length > 1 ? { m: p[0].trim(), t: p.slice(1).join(' | ').trim() } : { m: '', t: String(l).trim() }; }).filter(function (x) { return x.t; }); }
+function fillIn(s, n) { return s.replace(/\{dias\}/g, nf(n.whole)).replace(/\{euros\}/g, nf(n.net)).replace(/\{vida\}/g, dur(n.cigs * 11)).replace(/\{horas\}/g, nf(S.p.cig * 11 / 60)); }
+function photoHtml(cls) { return S.p.foto ? '<img class="' + cls + '" src="/_blob/' + esc(S.p.foto) + '" alt="Tu foto" onerror="this.hidden=true">' : ''; }
+function gumState(now) { var g = events('chicle'), last = g.reduce(function (a, e) { return Math.max(a, e.t); }, 0), wk = g.filter(function (e) { return now - e.t < 7 * DAY; }).length; return { any: g.length, wk: wk, free: g.length > 0 && now - last >= 14 * DAY }; }
+function widget(kind, n, now) {
+  if (kind === 'diez') return '<div class="bignum"><b>+10 años</b><span>de vida, de media, en quienes lo dejan antes de los 35. Estudio con adultos de EE. UU. (Jha y otros, NEJM, 2013).</span></div>';
+  if (kind === 'juntos') return '<div class="bignum"><b>+' + esc(dur(n.cigs * 11)) + '</b><span>de vida hasta hoy, en estimación, y unas ' + nf(S.p.cig * 11 / 60) + ' horas más por cada día que sumas.</span></div>';
+  if (kind === 'sano') {
+    var g = gumState(now), done = g.free ? 3 : 2, row = function (ok, t, s) { return '<li class="' + (ok ? 'ok' : '') + '"><i>' + (ok ? '✓' : '') + '</i><span>' + t + (s ? '<small>' + s + '</small>' : '') + '</span></li>'; };
+    return '<div class="bignum"><b>' + done + ' de 3</b></div><ul class="checks">' + row(1, 'Sin beber') + row(1, 'Sin tabaco', nf(n.whole) + (n.whole === 1 ? ' día' : ' días')) +
+      row(g.free, g.free ? 'Sin chicles' : 'Sin chicles: el último paso', g.free ? 'Dos semanas sin ninguno.' : g.any ? g.wk + (g.wk === 1 ? ' chicle' : ' chicles') + ' en los últimos 7 días. A tu ritmo.' : 'Cuando los apuntes, aquí verás cómo bajan. A tu ritmo.') + '</ul>' + (done === 3 ? '<p><b>Sano del todo.</b></p>' : '');
+  }
+  return '';
+}
+function renderWhy(n, now) {
+  var ps = phrases(), blocks = S.m.bloques || [], hasWhy = S.p.motivo || blocks.length || S.p.foto;
+  $('hoyBox').hidden = !ps.length;
+  if (ps.length) { var p = ps[(Math.floor(now / DAY) + hoyOff) % ps.length]; $('hoyLab').textContent = p.m ? 'Hoy, por ' + p.m : 'Hoy'; $('hoyTxt').textContent = fillIn(p.t, n); }
+  $('whyBox').hidden = !hasWhy; $('whyTxt').textContent = S.p.motivo || '';
+  var im = $('whyFoto'); im.hidden = !S.p.foto; if (S.p.foto && im.getAttribute('src') !== '/_blob/' + S.p.foto) im.src = '/_blob/' + S.p.foto;
+  $('whyBlocks').innerHTML = blocks.map(function (b) { return '<div class="block"><h3>' + esc(b.titulo) + '</h3><p>' + esc(fillIn(b.texto || '', n)) + '</p>' + widget(b.kind, n, now) + '</div>'; }).join('');
+}
+$('hoyNext').addEventListener('click', function () { hoyOff++; render(); });
+function fillForm() { var p = S.p; $('fQuit').value = p.quit; $('fHour').value = p.hora; $('fCig').value = p.cig; $('fPack').value = p.gasto; $('fGum').value = p.gum; $('fRec').value = p.record; if (document.activeElement !== $('fWhy')) $('fWhy').value = p.motivo; if (document.activeElement !== $('fFrases')) $('fFrases').value = (S.m.frases || []).join('\n'); }
+
+// ---------- Store: on the phone first, synced when there is signal ----------
+var flushing = false;
+async function flush() {
+  if (!db || flushing || navigator.onLine === false) return;
+  flushing = true;
+  try {
+    if (S.pPend) { await db.doc('config/perfil').set(S.p); S.pPend = false; persist(); }
+    if (S.mPend) { await db.doc('config/motivos').set(S.m); S.mPend = false; persist(); }
+    for (var id in S.pend) { if (S.ev[id]) await db.doc('eventos/' + id).set(S.ev[id]); delete S.pend[id]; persist(); }
+    for (var d in S.del) { await db.doc('eventos/' + d).delete(); delete S.del[d]; persist(); }
+  } catch (e) {}
+  flushing = false; render();
+}
+window.addEventListener('online', flush); setInterval(flush, 30000);
+function addEv(tipo, extra) { var id = 'e' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); S.ev[id] = Object.assign({ tipo: tipo, t: Date.now() }, extra || {}); S.pend[id] = 1; persist(); render(); flush(); return id; }
+function delEv(id) { delete S.ev[id]; if (S.pend[id]) delete S.pend[id]; else S.del[id] = 1; persist(); render(); flush(); }
+function setP(ch) { Object.assign(S.p, ch); S.pPend = true; persist(); render(); flush(); }
+
+// ---------- Actions ----------
+var toastT = null;
+function toast(msg, label, fn) {
+  var el = $('toast'); clearTimeout(toastT); el.hidden = false;
+  el.innerHTML = '<span>' + esc(msg) + '</span>' + (label ? '<button type="button" id="toastB">' + esc(label) + '</button>' : '');
+  if (label) $('toastB').onclick = function () { el.hidden = true; fn(); };
+  toastT = setTimeout(function () { el.hidden = true; }, 5000);
+}
+function buzz() { try { if (navigator.vibrate) navigator.vibrate(25); } catch (e) {} }
+function gum() { var id = addEv('chicle'); buzz(); return id; }
+$('gumBtn').addEventListener('click', function () { var id = gum(); toast('Chicle apuntado', 'Deshacer', function () { delEv(id); }); });
+[['fQuit', 'quit'], ['fHour', 'hora']].forEach(function (x) { $(x[0]).addEventListener('change', function () { if (this.value) { var c = {}; c[x[1]] = this.value; setP(c); } }); });
+[['fCig', 'cig'], ['fPack', 'gasto'], ['fGum', 'gum'], ['fRec', 'record']].forEach(function (x) { $(x[0]).addEventListener('change', function () { var v = parseFloat(this.value); if (v >= 0) { var c = {}; c[x[1]] = v; setP(c); } }); });
+$('fWhy').addEventListener('change', function () { setP({ motivo: this.value.trim() }); });
+$('fFrases').addEventListener('change', function () { S.m = Object.assign({}, S.m, { frases: this.value.split('\n').map(function (l) { return l.trim(); }).filter(Boolean) }); S.mPend = true; persist(); render(); flush(); });
+$('fFoto').addEventListener('change', async function () {
+  var file = this.files && this.files[0]; this.value = ''; if (!file || !assets) return;
+  toast('Subiendo la foto…');
+  try {
+    var bl = await new Promise(function (res, rej) { var im = new Image(), url = URL.createObjectURL(file); im.onload = function () { var k = Math.min(1, 1400 / Math.max(im.width, im.height)), c = document.createElement('canvas'); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(url); c.toBlob(function (b) { if (b) res(b); else rej(); }, 'image/jpeg', .85); }; im.onerror = function () { URL.revokeObjectURL(url); rej(); }; im.src = url; });
+    var r = await assets.upload(bl, { type: 'image/jpeg' }), old = S.p.foto;
+    setP({ foto: r.id }); toast('Foto puesta');
+    if (old) assets.delete(old).catch(function () {});
+  } catch (e) { toast('No se ha podido subir. Prueba con cobertura.'); }
+});
+
+// ---------- Breathing screen ----------
+var sosT = null, sosEnd = 0, sosStep = 'timer', sure = false, TIPS = ['Bebe un vaso de agua fría.', 'Levántate y anda hasta que acabe el contador.', 'Cambia de sitio, aunque sea de habitación.', 'Si te toca chicle, mastícalo despacio y déjalo un rato en la encía.'];
+function sosOpen() { sosStep = 'timer'; sosEnd = Date.now() + 5 * 60000; sure = false; sosRender(); if (!$('sos').open) $('sos').showModal(); clearInterval(sosT); sosT = setInterval(sosTick, 500); sosTick(); }
+function sosClose() { clearInterval(sosT); $('sos').close(); }
+function sosTick() {
+  if (sosStep !== 'timer') return;
+  var left = Math.max(0, sosEnd - Date.now()), m = Math.floor(left / 60000), s = Math.floor(left % 60000 / 1000), ph = (Date.now() % 10000) / 10000;
+  var t = $('sosT'), w = $('sosW'); if (!t) return;
+  t.textContent = m + ':' + String(s).padStart(2, '0'); w.textContent = left ? (ph < .4 ? 'Coge aire' : 'Suéltalo') : '¿Ya?';
+  var ps = phrases(), step = Math.floor((Date.now() - sosEnd + 300000) / 20000);
+  $('sosTip').textContent = ps.length && step % 2 ? fillIn(ps[(Math.floor(step / 2) + Math.floor(Date.now() / DAY)) % ps.length].t, numbers(Date.now())) : TIPS[Math.floor(step / 2) % TIPS.length];
+}
+function sosRender() {
+  var n = numbers(Date.now()), el = $('sosBody');
+  if (sosStep === 'timer') {
+    el.innerHTML = '<h2>5 minutos de aire</h2>' + photoHtml('s-foto') +
+      '<div class="lung"><div><b id="sosT">5:00</b><span id="sosW">Coge aire</span></div></div>' +
+      '<p class="soft" id="sosTip"></p>' +
+      '<p><b>Llevas ' + nf(n.whole) + (n.whole === 1 ? ' día' : ' días') + ' y ' + nf(n.net) + ' € sin quemar.</b></p>' +
+      (S.p.motivo ? '<p>«' + esc(S.p.motivo) + '»</p>' : '') +
+      '<button type="button" class="s-btn" data-s="won">Ya estoy</button>' +
+      '<button type="button" class="s-alt" data-s="gum">Masco un chicle</button>' +
+      '<button type="button" class="s-q" data-s="close">Cerrar</button>';
+  } else if (sosStep === 'slip') {
+    el.innerHTML = '<h2>Vale. Un cigarrillo no borra ' + nf(n.whole) + (n.whole === 1 ? ' día' : ' días') + '</h2><p class="soft">Lo importante es el siguiente, y el siguiente no tiene por qué caer. Tira lo que te quede y sigue.</p>' +
+      '<button type="button" class="s-btn" data-s="slipKeep">Lo apunto y sigo contando</button>' +
+      '<button type="button" class="s-alt" data-s="slipReset">' + (sure ? 'Toca otra vez para empezar desde hoy' : 'He vuelto a fumar: empezar de nuevo') + '</button>' +
+      '<button type="button" class="s-q" data-s="timer">Volver</button>';
+  }
+  sosTick();
+}
+$('sosBody').addEventListener('click', function (e) {
+  var b = e.target.closest('[data-s]'); if (!b) return;
+  var a = b.getAttribute('data-s');
+  if (a === 'close') return sosClose();
+  if (a === 'gum') { var id = gum(); toast('Chicle apuntado', 'Deshacer', function () { delEv(id); }); $('toast').style.zIndex = 6; return; }
+  if (a === 'won') { addEv('respiro'); buzz(); sosClose(); return; }
+  if (a === 'slip' || a === 'timer') { sosStep = a; sure = false; return sosRender(); }
+  if (a === 'slipKeep') { addEv('desliz'); sosClose(); toast('Apuntado. El contador sigue.'); return; }
+  if (a === 'slipReset') {
+    if (!sure) { sure = true; return sosRender(); }
+    var n = numbers(Date.now()), d = new Date(), hh = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    setP({ quit: d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'), hora: hh, record: Math.max(S.p.record, n.whole) });
+    fillForm(); sosClose(); toast('Empezamos de nuevo. Tu récord ahora son ' + S.p.record + ' días.');
+  }
+});
+$('sosBtn').addEventListener('click', sosOpen);
+$('slipBtn').addEventListener('click', function () { sosOpen(); sosStep = 'slip'; sosRender(); });
+$('sos').addEventListener('cancel', function () { clearInterval(sosT); });
+
+fillForm(); render(); setInterval(tick, 1000);
+document.addEventListener('visibilitychange', function () { if (!document.hidden) render(); });
+
+// ---------- Connect the shared store when available ----------
+if (window.claude && window.claude.use) (async function () {
+  try {
+    var d = await window.claude.use('db'); if (!d) return;
+    db = d; render();
+    window.claude.use('assets').then(function (a) { assets = a; $('fFotoL').hidden = !a; }).catch(function () {});
+    db.doc('config/motivos').onSnapshot(function (x) { if (x.metadata.fromCache && !x.exists) return; if (x.exists && !S.mPend) { S.m = x.data(); persist(); fillForm(); render(); } }, function () {});
+    db.doc('config/perfil').onSnapshot(function (x) { if (x.metadata.fromCache && !x.exists) return; if (x.exists && !S.pPend) { S.p = Object.assign({}, DEFAULTS, x.data()); persist(); fillForm(); render(); } }, function () {});
+    db.collection('eventos').onSnapshot(function (s) {
+      var seen = {};
+      s.docs.forEach(function (x) { seen[x.id] = 1; if (!S.pend[x.id] && !S.del[x.id]) S.ev[x.id] = x.data(); });
+      if (!s.metadata.fromCache) Object.keys(S.ev).forEach(function (k) { if (!seen[k] && !S.pend[k]) delete S.ev[k]; });
+      persist(); render();
+    }, function () {});
+    flush();
+  } catch (e) {}
+})();
+</script>
+
+</body></html>

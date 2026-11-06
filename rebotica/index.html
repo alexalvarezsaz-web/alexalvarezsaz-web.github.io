@@ -1,0 +1,178 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="../shared/firebase-config.js"></script>
+<script src="../shared/claude-firebase.js" data-app="rebotica"></script>
+</head><body>
+<div class="cartel-top" aria-hidden="true" style="position:relative;height:clamp(130px,40vw,240px);overflow:hidden"><svg style="position:absolute;inset:0;width:100%;height:100%;display:block" viewBox="0 0 400 220" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="400" height="220" fill="#0c2a23"/><rect y="0" width="400" height="30" fill="#0a241e"/><rect y="26" width="400" height="30" fill="#0c2a23"/><rect y="52" width="400" height="30" fill="#0f3129"/><rect y="78" width="400" height="30" fill="#123a30"/><rect y="104" width="400" height="30" fill="#16443a"/><path d="M0 220 V120 H70 V100 H330 V120 H400 V220Z" fill="#081b16"/><rect x="116" y="150" width="168" height="70" fill="#123b30"/><rect x="128" y="160" width="62" height="60" fill="#d8f4e2"/><rect x="210" y="160" width="62" height="60" fill="#a7dfc0"/><path d="M146 196h26v24h-26zM226 186h30v34h-30z" fill="#0f3129"/><path d="M150 188h18v8h-18zM232 176h18v10h-18z" fill="#2f8f66"/><g transform="translate(200 76)"><path d="M-40 -14 H-14 V-40 H14 V-14 H40 V14 H14 V40 H-14 V14 H-40Z" fill="#1f9e62"/><path d="M-30 -7 H-7 V-30 H7 V-7 H30 V7 H7 V30 H-7 V7 H-30Z" fill="#b8ffd8"/></g></svg></div>
+<title>La Rebotica</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;600;800&family=Courier+Prime:wght@700&display=swap">
+<link rel="stylesheet" href="core.css">
+<style>
+/* Layout: a dispensary label. A green cross stamp, the next shift, then searchable notes with their source. */
+:root { --bg: #eef4ef; --fg: #14261b; --muted: #516358; --line: #c8d8cc; --card: #ffffff; --acc: #1c7c3f; --acc-ink: #ffffff; --danger: #b3261e; --warn-bg: #fdf3d8; --warn-ink: #4a3808; --disp: "Libre Franklin", system-ui, sans-serif; --body: "Libre Franklin", system-ui, sans-serif; --mono: "Courier Prime", ui-monospace, Consolas, monospace; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #101a14; --fg: #e4efe7; --muted: #98ac9f; --line: #27372d; --card: #17231c; --acc: #6fd694; --acc-ink: #0a1f12; --danger: #ff8a80; --warn-bg: #3a2f10; --warn-ink: #f5e3b0; color-scheme: dark; } }
+:root[data-theme="dark"] { --bg: #101a14; --fg: #e4efe7; --muted: #98ac9f; --line: #27372d; --card: #17231c; --acc: #6fd694; --acc-ink: #0a1f12; --danger: #ff8a80; --warn-bg: #3a2f10; --warn-ink: #f5e3b0; color-scheme: dark; }
+.head { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px; align-items: center; }
+.crux { width: clamp(64px, 14vw, 92px); aspect-ratio: 1; max-width: 100%; fill: var(--acc); display: block; }
+h1 { font-weight: 800; font-size: clamp(38px, 9vw, 64px); letter-spacing: -.02em; }
+h2 { font-weight: 800; letter-spacing: -.01em; }
+.warn { margin: 0; padding: 11px 14px; border-radius: 8px; background: var(--warn-bg); color: var(--warn-ink); font-size: 14.5px; }
+.next { font-size: 15px; color: var(--muted); }
+.next b { font: 700 20px var(--mono); color: var(--fg); }
+.tag { font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--acc); }
+.row b { font-weight: 600; }
+.gbox { display: grid; gap: 14px; padding: 18px; background: var(--card); border: 1.5px solid var(--acc); border-radius: 10px; min-height: 280px; align-content: start; min-width: 0; }
+.gctl { display: grid; gap: 8px; }
+.gsel { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.gsel select { padding: 7px 10px; border: 1.5px solid var(--line); border-radius: 8px; background: var(--card); font-weight: 600; font-size: 14.5px; max-width: 100%; }
+#game { display: grid; gap: 12px; min-width: 0; }
+.gq-l { margin: 0; color: var(--muted); font-size: 15px; }
+.gq { margin: 0; font: 700 clamp(30px, 7vw, 42px)/1.1 var(--mono); overflow-wrap: anywhere; }
+.gopts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.gopt, .pair { min-height: 52px; padding: 8px 12px; border: 1.5px solid var(--line); border-radius: 8px; background: var(--bg); font-weight: 600; font-size: 16px; cursor: pointer; overflow-wrap: anywhere; text-align: center; color: var(--fg); }
+.gopt:hover:not(:disabled), .pair:hover:not(:disabled) { border-color: var(--acc); }
+.gopt.good, .pair.good { background: var(--acc); color: var(--acc-ink); border-color: var(--acc); }
+.gopt.bad, .pair.bad { background: var(--danger); color: var(--acc-ink); border-color: var(--danger); }
+.gopt.off { opacity: .5; }
+.pair.sel { border-color: var(--fg); box-shadow: inset 0 0 0 1.5px var(--fg); }
+.pair.good { opacity: .65; }
+.pairs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.pcol { display: grid; gap: 7px; align-content: start; min-width: 0; }
+.pair { font-size: 15px; min-height: 46px; }
+.fb { display: grid; gap: 2px; padding: 10px 13px; border-radius: 8px; border-left: 5px solid var(--acc); background: var(--bg); overflow-wrap: anywhere; }
+.fb.bad { border-color: var(--danger); }
+.fb span { font-size: 14.5px; color: var(--muted); }
+.gtype { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+.gtype input { min-width: 0; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 8px; background: var(--bg); font-size: 16px; }
+.btn.big { justify-self: start; padding: 11px 22px; font-size: 16px; }
+.btn:disabled { opacity: .5; cursor: default; }
+.nov { display: grid; gap: 5px; padding: 13px 14px; background: var(--card); border: 1px solid var(--line); border-radius: 10px; }
+.nov h3 { font-size: 18px; font-weight: 800; }
+.nov p { margin: 0; font-size: 15px; overflow-wrap: anywhere; }
+.nov .mos { padding-left: 10px; border-left: 3px solid var(--acc); }
+.nov .meta { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; font-size: 13px; color: var(--muted); }
+.novs { display: grid; gap: 10px; }
+.pq { display: grid; gap: 8px; padding: 16px; background: var(--card); border: 1.5px solid var(--acc); border-radius: 10px; }
+.pq h3 { font-size: clamp(21px, 5vw, 27px); font-weight: 800; }
+.pq p { margin: 0; overflow-wrap: anywhere; }
+.pq .lab { font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--acc); }
+.clock { margin: 0; font: 700 26px var(--mono); color: var(--danger); }
+</style>
+<div class="wrap">
+  <div class="head">
+    <svg class="crux" viewBox="0 0 40 40" aria-hidden="true"><path d="M14 3h12v11h11v12H26v11H14V26H3V14h11z"/></svg>
+    <div><span class="eyebrow">Apuntes de trabajo</span><h1>La Rebotica</h1><p class="next" id="next"></p></div>
+  </div>
+  <p class="warn"><b>Sin datos de pacientes.</b> No apuntes nombres, DNI, recetas ni nada que identifique a nadie. Antes de aplicar una nota, compruébala en una fuente oficial como CIMA o Bot PLUS.</p>
+  <p class="say" id="say" hidden></p>
+  <section id="novedades">
+    <div class="shead"><h2>Para el mostrador</h2><span class="small" id="novFecha"></span></div>
+    <div class="chips" id="novF" role="group" aria-label="Filtrar novedades"></div>
+    <div class="novs" id="novs"></div>
+    <div><button class="btn ghost" type="button" id="novMas" hidden>Ver todas</button></div>
+  </section>
+  <section id="porque">
+    <div class="shead"><h2>El porqué de hoy</h2><button class="btn ghost" type="button" id="pqOtro">Otro</button></div>
+    <article class="pq" id="pq"></article>
+    <p class="small">Para entender lo que ya despachas. Es para repasar: ante una duda real, consulta la ficha técnica en <a href="https://cima.aemps.es/cima/publico/home.html" target="_blank" rel="noopener">CIMA ↗</a>.</p>
+  </section>
+  <section id="resuelto">
+    <div class="shead"><h2>Lo que he resuelto</h2><button class="btn edit-only" type="button" data-add="victorias">＋ Apuntar</button></div>
+    <p class="small">Esa vez que pillaste una interacción, explicaste bien un inhalador o alguien se fue más tranquilo. Sin nombres ni datos que identifiquen a nadie.</p>
+    <p class="small" id="vicT" hidden></p>
+    <ul class="list" id="victorias"></ul>
+  </section>
+  <section id="juegos">
+    <div class="shead"><h2>Juegos de marcas</h2><span class="small" id="gcount"></span></div>
+    <div class="gctl">
+      <div class="chips" id="gmode" role="group" aria-label="Elegir juego"></div>
+      <div class="chips" id="gdir" role="group" aria-label="Qué te preguntan"></div>
+      <div class="gsel"><select id="ggrupo" aria-label="Elegir tema"></select></div>
+    </div>
+    <div class="gbox"><div id="game"></div></div>
+    <div class="stats" id="gstats"></div>
+    <p class="small" id="gweak" hidden></p>
+    <p class="small">Marcas comercializadas en España comprobadas en CIMA (AEMPS) el 1 de noviembre de 2026, sin genéricos con nombre de laboratorio. Es para repasar: ante cualquier duda real, consulta CIMA.</p>
+    <details>
+      <summary style="cursor:pointer;font-weight:700">Mis fichas</summary>
+      <div style="display:grid;gap:10px;margin-top:8px">
+        <p class="small">Añade otras marcas que quieras repasar. Entran también en los juegos.</p>
+        <div><button class="btn edit-only" type="button" data-add="fichas">＋ Añadir ficha</button></div>
+        <ul class="list" id="fichas"></ul>
+      </div>
+    </details>
+  </section>
+  <section>
+    <div class="shead"><h2>Notas</h2><button class="btn edit-only" type="button" data-add="notas">＋ Nueva nota</button></div>
+    <input class="search" id="q" type="search" placeholder="Buscar en tus notas…" aria-label="Buscar en las notas" autocomplete="off">
+    <div class="chips" id="chips" role="group" aria-label="Filtrar por tipo"></div>
+    <ul class="list" id="notas"></ul>
+  </section>
+  <section>
+    <div class="shead"><h2>Guardias y turnos</h2><button class="btn edit-only" type="button" data-add="guardias">＋ Añadir turno</button></div>
+    <ul class="list" id="guardias"></ul>
+  </section>
+</div>
+<script src="core.js"></script>
+<script src="banco.js"></script>
+<script src="juegos.js"></script>
+<script>
+var C = Core, $ = function (i) { return document.getElementById(i); }, TIPOS = ['Apunte', 'Duda', 'Interacción', 'Consejo', 'Procedimiento'], filter = 'Todas';
+function norm(s) { return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); }
+C.wire({
+  victorias: { title: 'Lo que he resuelto', preset: function () { return { fecha: C.today() }; }, fields: [{ k: 'texto', label: 'Qué pasó, sin datos de nadie', req: 1, ph: 'Vi ibuprofeno con Sintrom y lo cambiamos por paracetamol' }, { k: 'fecha', label: 'Cuándo', type: 'date' }] },
+  fichas: { title: 'Ficha', fields: [{ k: 'pa', label: 'Principio activo', req: 1 }, { k: 'marcas', label: 'Marcas, separadas por comas', req: 1 }] },
+  notas: { title: 'Nota', fields: [{ k: 'titulo', label: 'Título', req: 1 }, { k: 'tipo', label: 'Tipo', type: 'select', options: TIPOS }, { k: 'texto', label: 'Nota', type: 'textarea' }, { k: 'fuente', label: 'Enlace a la fuente', type: 'url', ph: 'https://…' }] },
+  guardias: { title: 'Turno', preset: function () { return { fecha: C.today() }; }, fields: [{ k: 'fecha', label: 'Fecha', type: 'date', req: 1 }, { k: 'turno', label: 'Turno', ph: 'Guardia de noche, tarde…' }, { k: 'nota', label: 'Nota' }] }
+});
+$('q').addEventListener('input', render);
+$('chips').addEventListener('click', function (e) { var b = e.target.closest('.chip'); if (b) { filter = b.getAttribute('data-c'); render(); } });
+var novTipo = 'Todas', novAll = false, pqOff = 0;
+$('novF').addEventListener('click', function (e) { var b = e.target.closest('.chip'); if (b) { novTipo = b.getAttribute('data-t'); novAll = false; render(); } });
+$('novMas').addEventListener('click', function () { novAll = true; render(); });
+$('pqOtro').addEventListener('click', function () { pqOff++; render(); });
+function renderExtras() {
+  var nd = C.doc('contenido', 'novedades') || {}, items = (nd.items || []).slice().sort(function (a, b) { return (b.fecha || '').localeCompare(a.fecha || ''); });
+  var tipos = ['Todas'].concat(['Del día a día', 'Seguridad', 'Suministro', 'Retirada', 'Nuevo'].filter(function (t) { return items.some(function (x) { return x.tipo === t; }); }));
+  $('novFecha').textContent = nd.actualizado ? 'Revisadas el ' + C.fmt(nd.actualizado) : '';
+  $('novF').hidden = !items.length;
+  $('novF').innerHTML = tipos.map(function (t) { return '<button class="chip" type="button" data-t="' + t + '" aria-pressed="' + (novTipo === t) + '">' + t + '</button>'; }).join('');
+  var l = items.filter(function (x) { return novTipo === 'Todas' || x.tipo === novTipo; }), show = novAll ? l : l.slice(0, 4);
+  $('novs').innerHTML = show.map(function (x) {
+    return '<article class="nov"><div class="meta"><span class="tag">' + C.esc(x.tipo) + '</span><span>' + C.esc(x.cuando || C.fmt(x.fecha)) + '</span></div><h3>' + C.esc(x.titulo) + '</h3><p>' + C.esc(x.texto) + '</p>' + (x.mostrador ? '<p class="mos"><b>En el mostrador:</b> ' + C.esc(x.mostrador) + '</p>' : '') + (C.safe(x.url) ? '<p class="meta"><a href="' + C.esc(x.url) + '" target="_blank" rel="noopener">Leer la fuente ↗</a></p>' : '') + '</article>';
+  }).join('') || '<p class="empty">Aquí irá lo que te sirve en el día a día del mostrador.</p>';
+  $('novMas').hidden = novAll || l.length <= 4; $('novMas').textContent = 'Ver todas (' + l.length + ')';
+  var pd = C.doc('contenido', 'porques') || {}, pq = pd.items || [];
+  $('porque').hidden = !pq.length;
+  if (pq.length) { var c = pq[(Math.floor(Date.now() / 864e5) + pqOff) % pq.length]; $('pq').innerHTML = '<span class="tag">' + C.esc(c.pa) + '</span><h3>' + C.esc(c.q) + '</h3><p>' + C.esc(c.a) + '</p><p><span class="lab">En el mostrador</span><br>' + C.esc(c.m) + '</p><p><span class="lab">Ojo</span><br>' + C.esc(c.o) + '</p>'; }
+  var v = C.data.victorias.slice().sort(function (a, b) { return (b.fecha || '').localeCompare(a.fecha || '') || (b.ts || 0) - (a.ts || 0); }), mes = C.today().slice(0, 7), n = v.filter(function (x) { return (x.fecha || '').slice(0, 7) === mes; }).length;
+  $('vicT').hidden = !v.length; $('vicT').textContent = n + ' este mes · ' + v.length + ' en total';
+  $('victorias').innerHTML = v.length ? v.slice(0, 12).map(function (x) { return C.row({ col: 'victorias', id: x.id, title: x.texto, right: C.fmt(x.fecha) }); }).join('') : '<p class="empty">Apunta aquí la próxima vez que ayudes a alguien de verdad. Con el tiempo verás el trabajo de otra forma.</p>';
+}
+var gameReady = false;
+function render() {
+  renderExtras();
+  if (!gameReady) { gameReady = true; Juegos.init(); } else Juegos.sync();
+  var fi = C.data.fichas.slice().sort(function (a, b) { return (a.ts || 0) - (b.ts || 0); });
+  $('fichas').innerHTML = fi.length ? fi.map(function (x) { return C.row({ col: 'fichas', id: x.id, title: x.pa, sub: C.esc(x.marcas || '') }); }).join('') : '<p class="empty">Aún no tienes fichas propias.</p>';
+  var g = C.data.guardias.slice().sort(function (a, b) { return (a.fecha || '').localeCompare(b.fecha || ''); }), up = g.filter(function (x) { return C.days(x.fecha) >= 0; }), past = g.filter(function (x) { return C.days(x.fecha) < 0; }).reverse().slice(0, 5);
+  $('next').innerHTML = up.length ? 'Próximo turno: <b>' + C.esc(C.left(up[0].fecha)) + '</b>' + (up[0].turno ? ' · ' + C.esc(up[0].turno) : '') : '';
+  var used = TIPOS.filter(function (t) { return C.data.notas.some(function (n) { return n.tipo === t; }); });
+  if (filter !== 'Todas' && used.indexOf(filter) < 0) filter = 'Todas';
+  $('chips').hidden = used.length < 2;
+  $('chips').innerHTML = ['Todas'].concat(used).map(function (t) { return '<button class="chip" type="button" data-c="' + t + '" aria-pressed="' + (filter === t) + '">' + t + '</button>'; }).join('');
+  var q = norm($('q').value.trim());
+  var l = C.data.notas.filter(function (n) { return (filter === 'Todas' || n.tipo === filter) && (!q || norm([n.titulo, n.texto, n.tipo].join(' ')).indexOf(q) >= 0); }).sort(function (a, b) { return (b.ts || 0) - (a.ts || 0); });
+  $('notas').innerHTML = l.length ? l.map(function (n) {
+    var duda = n.tipo === 'Duda';
+    return C.row({ col: 'notas', id: n.id, check: duda ? 'resuelta' : null, done: duda && n.resuelta, title: n.titulo, sub: '<span class="tag">' + C.esc(n.tipo || 'Apunte') + (duda ? (n.resuelta ? ' · resuelta' : ' · pendiente') : '') + '</span>' + (n.texto ? '\n' + C.esc(n.texto) : '') + (C.safe(n.fuente) ? '\n<a href="' + C.esc(n.fuente) + '" target="_blank" rel="noopener">Ver la fuente ↗</a>' : '') });
+  }).join('') : q || filter !== 'Todas' ? '<p class="empty">Ninguna nota coincide con la búsqueda.</p>' : '<p class="empty">Apunta lo que aprendes en el mostrador, las dudas que tienes que mirar y los procedimientos que se te olvidan. Luego lo encuentras con el buscador.</p>';
+  var gl = up.concat(past);
+  $('guardias').innerHTML = gl.length ? gl.map(function (x) { return C.row({ col: 'guardias', id: x.id, title: C.fmt(x.fecha) + (x.turno ? ' · ' + x.turno : ''), sub: C.esc(x.nota || ''), right: C.left(x.fecha) }); }).join('') : '<p class="empty">Aquí irán tus próximas guardias, con los días que faltan.</p>';
+}
+C.start(['notas', 'guardias', 'fichas', 'marcador', 'contenido', 'victorias'], render, { key: 'rebotica-v1' });
+</script>
+</body></html>

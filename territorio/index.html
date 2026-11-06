@@ -1,0 +1,342 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="../shared/firebase-config.js"></script>
+<script src="../shared/claude-firebase.js" data-app="territorio"></script>
+</head><body>
+<div class="cartel-top" aria-hidden="true" style="position:relative;height:clamp(130px,40vw,240px);overflow:hidden"><svg style="position:absolute;inset:0;width:100%;height:100%;display:block" viewBox="0 0 400 220" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="400" height="220" fill="#c9b77e"/><rect y="0" width="400" height="30" fill="#b9c49a"/><rect y="26" width="400" height="30" fill="#c7cb9c"/><rect y="52" width="400" height="30" fill="#d8cf9f"/><rect y="78" width="400" height="30" fill="#e4d6a2"/><rect y="104" width="400" height="30" fill="#e9c987"/><path d="M0 170 L80 128 L140 150 L196 66 L214 96 L228 86 L246 60 L300 138 L400 116 V220 H0Z" fill="#3f6f4d"/><path d="M196 66 L214 96 L200 104 L184 90Z M246 60 L262 90 L246 98 L236 82Z" fill="#f0ead2"/><g fill="none" stroke="#e8e2c2" stroke-opacity=".45" stroke-width="1.5"><path d="M0 188C60 168 110 182 170 160S300 150 400 158"/><path d="M0 204C70 184 120 198 180 176S310 166 400 174"/><path d="M60 150C110 132 150 146 190 116S260 104 310 142"/><path d="M110 170C150 150 180 160 214 134S270 130 340 160"/></g><path d="M0 220 V196 C120 182 260 208 400 188 V220Z" fill="#20402d"/><path d="M322 96 c-11 0 -19 8 -19 18 c0 13 19 32 19 32 s19 -19 19 -32 c0 -10 -8 -18 -19 -18Z" fill="#c63a26"/><circle cx="322" cy="114" r="7" fill="#f3ead0"/></svg></div>
+<title>El Territorio</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Nunito+Sans:opsz,wght@6..12,400;6..12,700;6..12,800&display=swap">
+<style>
+/* Layout: a scouting tool. The topographic sheet is the page; a finder above it lights up the ground that matches what you are looking for. */
+:root {
+  --bg: #eef1e9; --surface: #ffffff; --ink: #1d2a21; --muted: #5b6b5f; --line: #d4dcd0; --soft: #e3e9de; --moss: #2e5a38; --moss-ink: #ffffff; --hero: #1f3325; --hero-ink: #f1f4ee; --hero-soft: #b4c4b6; --ochre: #b5730f;
+  --font-display: "DM Serif Display", Georgia, serif; --font-body: "Nunito Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #111a14; --surface: #18241c; --ink: #e6eee7; --muted: #9db0a1; --line: #2a3a2e; --soft: #1e2c22; --moss: #7fbf87; --moss-ink: #0f1a12; --hero: #0b130e; --ochre: #e9a640; color-scheme: dark; } }
+:root[data-theme="dark"] { --bg: #111a14; --surface: #18241c; --ink: #e6eee7; --muted: #9db0a1; --line: #2a3a2e; --soft: #1e2c22; --moss: #7fbf87; --moss-ink: #0f1a12; --hero: #0b130e; --ochre: #e9a640; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 16px; line-height: 1.45; }
+button, select { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--ochre); outline-offset: 2px; }
+a { color: var(--moss); }
+.hero { background: var(--hero); color: var(--hero-ink); }
+.in { max-width: 1040px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.hero .in { padding-block: 14px 13px; display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 14px; }
+h1 { margin: 0; font: 400 clamp(30px, 6vw, 42px)/1.05 var(--font-display); }
+.hero p { margin: 0; font-size: 14px; color: var(--hero-soft); }
+main .in { padding-block: 12px 40px; display: grid; gap: 12px; }
+.small { margin: 0; font-size: 13px; color: var(--muted); }
+.label { font-size: 11.500px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
+.chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; min-width: 0; }
+.chips.wrap { flex-wrap: wrap; overflow: visible; }
+.chip { flex: none; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 5px 12px; font-weight: 700; font-size: 13.500px; cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.legend { display: flex; flex-wrap: wrap; gap: 3px 10px; font-size: 12.500px; color: var(--muted); }
+.legend:empty { display: none; }
+.legend span { display: inline-flex; align-items: center; gap: 5px; }
+.legend .key { display: block; flex-basis: 100%; }
+.legend .key b { color: var(--ink); }
+.legend i { width: 13px; height: 13px; border-radius: 3px; background: var(--c); flex: none; }
+.finder { display: grid; gap: 9px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); min-width: 0; }
+.finder summary { cursor: pointer; font: 400 21px var(--font-display); }
+.finder[open] summary { margin-bottom: 8px; }
+.fgroup { display: grid; gap: 5px; min-width: 0; }
+.frow { display: grid; grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)); gap: 9px; }
+.frow label { display: grid; gap: 4px; min-width: 0; }
+select { width: 100%; padding: 7px 9px; border: 1px solid var(--line); border-radius: 9px; background: var(--bg); }
+.result { font-weight: 800; font-size: 14.500px; }
+.reset { justify-self: start; border: 0; background: none; padding: 0; font-size: 13.500px; font-weight: 700; color: var(--moss); text-decoration: underline; cursor: pointer; }
+.mapbox { position: relative; min-width: 0; }
+.mapview { width: 0; min-width: 100%; max-height: min(74vh, 700px); overflow: auto; border-radius: 12px; background: var(--soft); overscroll-behavior: contain; cursor: grab; }
+.mapview { touch-action: pan-x pan-y; }
+.mapview.drag { cursor: grabbing; user-select: none; }
+/* Full screen: the map fills the view, with the layers on top and the details rising from below */
+body.full { overflow: hidden; }
+#keyBtn { display: none; }
+body.full #keyBtn { display: inline-block; }
+body.full #legend:not(.open) { display: none; }
+body.full .mapbox { position: fixed; inset: 0; z-index: 40; background: var(--soft); }
+body.full .mapview { width: 100%; min-width: 0; height: 100%; max-height: none; border-radius: 0; }
+body.full #layers { position: fixed; z-index: 41; top: calc(8px + env(safe-area-inset-top, 0px)); left: max(8px, env(safe-area-inset-left, 0px)); right: max(58px, calc(50px + env(safe-area-inset-right, 0px))); }
+body.full #layers .chip { box-shadow: 0 1px 5px rgba(0, 0, 0, .35); }
+body.full #legend { position: fixed; z-index: 41; left: max(8px, env(safe-area-inset-left, 0px)); top: calc(48px + env(safe-area-inset-top, 0px)); max-width: min(62vw, 420px); padding: 6px 8px; border-radius: 9px; background: var(--surface); }
+body.full #tapInfo.has { position: fixed; z-index: 42; left: 0; right: 0; bottom: 0; max-height: 42vh; overflow: auto; border-radius: 14px 14px 0 0; background: var(--surface); padding: 12px max(16px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); box-shadow: 0 -8px 24px rgba(0, 0, 0, .3); }
+body.full #tapInfo:not(.has) { display: none; }
+body.full .mapzoom { top: calc(8px + env(safe-area-inset-top, 0px)); right: max(8px, env(safe-area-inset-right, 0px)); bottom: auto; }
+.tapclose { display: none; justify-self: end; border: 0; background: none; padding: 0; font-size: 13px; font-weight: 800; color: var(--muted); cursor: pointer; }
+body.full .tapclose { display: block; }
+.mapin { position: relative; margin: 0 auto; }
+.mapin img { display: block; width: 100%; height: auto; max-width: none; -webkit-user-drag: none; }
+#mapHi { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; pointer-events: none; }
+#mapTap { position: absolute; width: 18px; height: 18px; border: 3px solid #fff; border-radius: 50%; background: #1d2a21; transform: translate(-50%, -50%); box-shadow: 0 1px 5px rgba(0, 0, 0, .7); pointer-events: none; z-index: 1; }
+.rdot { position: absolute; transform: translate(-50%, -50%); min-width: 25px; padding: 1px 4px; border-radius: 6px; color: #fff; text-align: center; font-size: 10.500px; font-weight: 700; box-shadow: 0 1px 3px rgba(0, 0, 0, .55); pointer-events: none; background: #5a6b77; }
+.rdot.bueno { background: #24803f; } .rdot.pronto { background: #b57c0e; }
+.nflag { position: absolute; transform: translate(-50%, -100%); padding: 2px 7px; border-radius: 6px; background: #1d2a21; color: #fff; font-size: 11px; font-weight: 700; white-space: nowrap; box-shadow: 0 1px 4px rgba(0, 0, 0, .6); pointer-events: none; }
+.nflag.vieja { opacity: .7; }
+.mine { position: absolute; width: 16px; height: 16px; transform: translate(-50%, -50%); border: 2px solid #fff; border-radius: 50%; background: #b3261a; box-shadow: 0 1px 4px rgba(0, 0, 0, .6); pointer-events: none; }
+.mapzoom { position: absolute; bottom: 10px; right: 18px; z-index: 3; display: grid; gap: 4px; }
+.mapzoom button { width: 38px; height: 38px; padding: 0; border: 0; border-radius: 9px; background: #fff; color: #1d2a21; font-size: 21px; font-weight: 700; line-height: 1; box-shadow: 0 2px 7px rgba(0, 0, 0, .4); cursor: pointer; }
+.mapzoom button:disabled { color: #a8ada5; cursor: default; }
+.tapinfo { display: grid; gap: 7px; padding: 12px 14px; border-radius: 12px; background: var(--soft); }
+.facts { display: flex; flex-wrap: wrap; gap: 4px 16px; font-weight: 800; font-size: 15px; }
+.facts small { display: block; font-size: 11px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+.card { display: grid; gap: 8px; padding: 13px 15px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); min-width: 0; }
+.card h2 { margin: 0; font: 400 22px var(--font-display); }
+.card ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; font-size: 14.500px; }
+.sources summary { cursor: pointer; font-size: 13.500px; font-weight: 700; color: var(--muted); }
+.sources[open] { display: grid; gap: 6px; }
+</style>
+
+<div class="hero"><div class="in"><h1>El Territorio</h1><p>Para descubrir sitios nuevos: Berguedà y alrededores</p></div></div>
+<main><div class="in">
+  <details class="finder" id="finder" open>
+    <summary>Buscar zonas</summary>
+    <div class="fgroup"><span class="label">Bosque</span><div class="chips wrap" id="fForest" role="group" aria-label="Tipo de bosque"></div></div>
+    <div class="frow">
+      <label><span class="label">Altura desde</span><select id="fMin"></select></label>
+      <label><span class="label">Altura hasta</span><select id="fMax"></select></label>
+      <label><span class="label">Presión probable</span><select id="fPre"><option value="0">Cualquiera</option><option value="1">Solo baja</option><option value="2">Baja o media</option></select></label>
+      <label><span class="label">Orientación</span><select id="fOri"><option value="">Cualquiera</option><option value="baga">Baga</option><option value="solana">Solana</option></select></label>
+      <label><span class="label">Pendiente</span><select id="fSlope"><option value="">Cualquiera</option><option value="s">Suave (hasta 15°)</option><option value="m">Media (15–30°)</option><option value="f">Fuerte (más de 30°)</option></select></label>
+      <label><span class="label">Lluvia</span><select id="fRain"><option value="">Cualquiera</option><option value="bueno">Buen momento ahora</option><option value="noseco">Con lluvia reciente</option></select></label>
+    </div>
+    <p class="result" id="fResult">Elige lo que buscas y se iluminarán las zonas que encajen.</p>
+    <button class="reset" type="button" id="fReset" hidden>Quitar filtros</button>
+  </details>
+  <div class="chips" id="layers" role="group" aria-label="Qué ver en el mapa">
+    <button class="chip" type="button" data-l="" aria-pressed="true">Mapa completo</button>
+    <button class="chip" type="button" data-l="topo" aria-pressed="false">Solo topográfico</button>
+    <button class="chip" type="button" id="keyBtn" aria-pressed="false">Leyenda</button>
+    <button class="chip" type="button" id="rainBtn" aria-pressed="false">Lluvia</button>
+    <button class="chip" type="button" id="mineBtn" aria-pressed="false">Mis sitios</button>
+  </div>
+<div class="legend" id="legend"></div>
+  <div class="mapbox">
+    <div class="mapview" id="mapView"><div class="mapin" id="mapIn">
+      <img id="mapImg" src="/_blob/da98762fa1e997ada817c82663b84c51" width="3072" height="3584" alt="Mapa topográfico del Berguedà y alrededores" draggable="false">
+      
+      <canvas id="mapHi" hidden></canvas>
+      <div id="mapRain"></div><div id="mapMine"></div><div id="mapNews"></div>
+      <i id="mapTap" hidden></i>
+    </div></div>
+    <div class="mapzoom"><button type="button" id="mapFull" aria-label="Pantalla completa" aria-pressed="false">⛶</button><button type="button" id="mapMore" aria-label="Acercar">+</button><button type="button" id="mapOut" aria-label="Alejar">−</button></div>
+  </div>
+  <div class="tapinfo" id="tapInfo"><p class="small">Toca un punto del mapa para ver su altura, su bosque y qué setas suelen salir allí.</p></div>
+  <div class="card" id="newsBox"></div>
+  <details class="sources"><summary>Fuentes y límites de estos datos</summary>
+    <p class="small">Mapa: © <a href="https://opentopomap.org" target="_blank" rel="noopener">OpenTopoMap</a> (CC-BY-SA), datos © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">colaboradores de OpenStreetMap</a>, SRTM. Bosques: Mapa Forestal de España, <a href="https://www.miteco.gob.es/es/biodiversidad/temas/inventarios-nacionales/mapa-forestal-espana/mfe_25.html" target="_blank" rel="noopener">MITECO</a>, consultado el 2 nov 2026 y simplificado a píxeles de unos 57 m; la publicación no implica respaldo del ministerio. Alturas, baga, solana y pendiente: calculadas con Mapzen Terrain Tiles, con la misma resolución. Lluvia: Open-Meteo.</p>
+    <p class="small"><b>La presión probable es una estimación propia, no un recuento de gente:</b> solo mide la cercanía a carreteras, pistas y aparcamientos de OpenStreetMap. Las noticias citan comarcas o valles, nunca un punto exacto. Que haya bosque no da permiso para entrar: muchos montes son privados o tienen normas de recogida.</p>
+  </details>
+</div></main>
+
+<script>
+var $ = function (id) { return document.getElementById(id); };
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+var NOW_M = new Date().getMonth() + 1;
+function today() { var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function fmtDate(f) { var p = String(f || '').split('-'); return p.length === 3 ? +p[2] + '/' + +p[1] + '/' + p[0] : ''; }
+function daysOld(f) { return Math.round((new Date(today() + 'T12:00:00') - new Date(f + 'T12:00:00')) / 864e5); }
+
+// ---------- Geography of the sheet (Web Mercator tiles) ----------
+var MAP = { z: 12, x0: 2066, y0: 1514, nx: 6, ny: 7 };
+function mapPos(lat, lng) { var n = Math.pow(2, MAP.z), r = lat * Math.PI / 180; return { x: ((lng + 180) / 360 * n - MAP.x0) / MAP.nx, y: ((1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * n - MAP.y0) / MAP.ny }; }
+function mapLL(fx, fy) { var n = Math.pow(2, MAP.z), mx = MAP.x0 + fx * MAP.nx, my = MAP.y0 + fy * MAP.ny; return { lng: mx / n * 360 - 180, lat: Math.atan(Math.sinh(Math.PI * (1 - 2 * my / n))) * 180 / Math.PI }; }
+
+// ---------- Forests: pixel index to name, and the mushrooms each one tends to host ----------
+var FOREST = {1:'Hayedo (Fagus sylvatica)',2:'Abetal (Abies alba)',3:'Robledal de roble albar o común',4:'Enebral',5:'Abedular',6:'Avellaneda',7:'Robledal de roble pubescente',8:'Melojar',9:'Quejigar',10:'Encinar',11:'Pinar de pino albar (Pinus sylvestris)',12:'Pinar de pino negro (Pinus uncinata)',13:'Pinar de pino carrasco',14:'Pinar de pino salgareño (Pinus nigra)',15:'Bosque mixto de frondosas',16:'Bosque de ribera',17:'Frondosas alóctonas y autóctonas',18:'Choperas y plataneras',19:'Coníferas alóctonas',20:'Frondosas alóctonas invasoras',21:'Bosque mixto de frondosas',22:'Fresneda',23:'Pinar de pino rodeno',24:'Mezcla de coníferas y frondosas',25:'Temporalmente desarbolado',26:'Mezcla de coníferas',27:'Mezcla de coníferas',28:'Mezcla de coníferas y frondosas',29:'Mezcla de coníferas y frondosas'};
+var GROUPS = [['Pinos (pi roig, pinassa…)', [11, 13, 14, 19, 23, 26, 27]], ['Pi negre', [12]], ['Abeto (avet)', [2]], ['Hayedo', [1]], ['Robledal', [3, 7, 8, 9]], ['Encinar', [10]], ['Coníferas y frondosas', [24, 28, 29]], ['Frondosas mixtas', [15, 17, 21]]];
+var SP = { rovello: ['Rovelló', 9, 12], pinetell: ['Pinetell', 9, 12], molleric: ['Molleric', 9, 12], calceta: ['Pinetell de calceta', 9, 11], camaperdiu: ['Cama de perdiu', 9, 12], fredolic: ['Fredolic', 10, 12], fredolicgros: ['Fredolic gros', 10, 12], llenega: ['Llenega negra', 10, 12], camagroc: ['Camagroc', 10, 12], cep: ['Cep', 8, 11], rossinyol: ['Rossinyol', 6, 11], carlet: ['Carlet', 9, 11], trompeta: ['Trompeta de la mort', 9, 12], lloraverda: ['Llora verda', 6, 10], carbonera: ['Llora', 7, 11], llengua: ['Llengua de bou', 9, 12], peurata: ['Peu de rata col-i-flor', 8, 10], gotsvi: ['Gots de vi', 7, 10], marcot: ['Marçot', 2, 4], sureny: ['Sureny fosc', 6, 10] };
+var PINOS = ['rovello', 'pinetell', 'molleric', 'calceta', 'camaperdiu', 'fredolic', 'fredolicgros', 'llenega', 'camagroc'], ROBLES = ['cep', 'rossinyol', 'carlet', 'trompeta', 'lloraverda', 'carbonera', 'llengua'], MIX = ['rovello', 'pinetell', 'cep', 'rossinyol', 'camaperdiu', 'llengua'];
+var FOREST_SP = { 11: PINOS, 12: PINOS, 13: PINOS, 14: PINOS, 23: PINOS, 19: PINOS, 26: PINOS, 27: PINOS, 1: ['cep', 'rossinyol', 'trompeta', 'carbonera', 'lloraverda', 'llengua', 'peurata'], 21: ROBLES, 2: ['gotsvi', 'marcot', 'cep', 'rossinyol'], 7: ROBLES, 3: ROBLES, 8: ROBLES, 9: ROBLES, 15: ROBLES, 10: ['sureny', 'carlet', 'rossinyol'], 28: MIX, 29: MIX, 24: MIX };
+var ZONES = { 'Berguedà': [42.13, 1.82], 'Solsonès': [42.07, 1.63], 'Ripollès': [42.27, 2.06], 'Cerdanya': [42.38, 1.84], 'Osona': [42.01, 2.07], 'Bages': [41.99, 1.82] };
+var MAP_SRC = '/_blob/da98762fa1e997ada817c82663b84c51', TOPO_SRC = '/_blob/19761eb11805ac8857700378c3104d01', DATA_SRC = '/_blob/fba8f4b8d49cb333a23b177072cdbe0c';
+var FOREST_KEY = [['Pinos (pi roig, pinassa…)', '#12a83a'], ['Pi negre', '#1560d8'], ['Abeto (avet)', '#c218c9'], ['Hayedo', '#ef9a33'], ['Robledal', '#c77f3a'], ['Encinar', '#a98a3f'], ['Coníferas y frondosas', '#a9b94f'], ['Frondosas mixtas', '#e8c257'], ['Ribera', '#55bcd1']];
+var T = { layer: '', rain: false, zonas: null, noticias: null, sitios: null, data: null, loading: false, waiting: [], mine: false, picked: {} };
+
+// ---------- What the map shows ----------
+function setLayer(l) {
+  T.layer = l;
+  Array.prototype.forEach.call(document.querySelectorAll('#layers [data-l]'), function (c) { c.setAttribute('aria-pressed', c.getAttribute('data-l') === l ? 'true' : 'false'); });
+  var want = l === 'topo' ? TOPO_SRC : MAP_SRC, im = $('mapImg'); if (im.getAttribute('src') !== want) im.setAttribute('src', want);
+  var html = l === 'topo' ? '' : FOREST_KEY.map(function (x) { return '<span style="--c:' + x[1] + '"><i></i>' + esc(x[0]) + '</span>'; }).join('') +
+    '<span class="key"><b>Laderas oscuras:</b> baga. <b>Claras:</b> solana.</span><span class="key"><b>Rayas rojas:</b> presión alta. <b>Naranjas:</b> media. <b>Sin rayas:</b> baja.</span><span class="key"><b>Curvas gruesas con cifra:</b> cada 200 m. Cuanto más juntas, más inclinación.</span>';
+  if (T.rain) html += '<span class="key">' + (T.zonas ? 'Números: mm en 15 días, en verde si es buen momento · datos del ' + fmtDate(T.zonas.fecha) : 'Aún sin datos de lluvia') + '</span>';
+  $('legend').innerHTML = html;
+  $('mapRain').innerHTML = T.rain && T.zonas && T.zonas.puntos ? T.zonas.puntos.map(function (p) { var q = mapPos(p.lat, p.lng); return '<span class="rdot ' + esc(p.estado || '') + '" style="left:' + (q.x * 100).toFixed(2) + '%;top:' + (q.y * 100).toFixed(2) + '%">' + Math.round(p.l15) + '</span>'; }).join('') : '';
+}
+$('layers').addEventListener('click', function (e) {
+  var b = e.target.closest('[data-l]'); if (b) return setLayer(b.getAttribute('data-l'));
+  if (e.target.closest('#keyBtn')) { var on = $('legend').classList.toggle('open'); $('keyBtn').setAttribute('aria-pressed', String(on)); }
+  if (e.target.closest('#rainBtn')) { T.rain = !T.rain; $('rainBtn').setAttribute('aria-pressed', String(T.rain)); setLayer(T.layer); }
+  if (e.target.closest('#mineBtn')) { T.mine = !T.mine; $('mineBtn').setAttribute('aria-pressed', String(T.mine)); renderMine(); }
+});
+function renderMine() {
+  var items = T.mine && T.sitios && T.sitios.items || [];
+  $('mapMine').innerHTML = items.map(function (s) { var q = mapPos(s.lat, s.lng); return q.x < 0 || q.x > 1 || q.y < 0 || q.y > 1 ? '' : '<span class="mine" title="' + esc(s.lugar) + '" style="left:' + (q.x * 100).toFixed(3) + '%;top:' + (q.y * 100).toFixed(3) + '%"></span>'; }).join('');
+  if (T.mine && !items.length) $('fResult').textContent = 'Tus sitios aparecerán aquí tras la próxima actualización diaria.';
+}
+
+// ---------- Hidden data image: elevation in R and G, forest and pressure in B ----------
+function loadData(done) {
+  if (T.data) return done(); T.waiting.push(done); if (T.loading) return; T.loading = true;
+  var im = new Image();
+  var finish = function () { T.loading = false; var w = T.waiting; T.waiting = []; w.forEach(function (f) { f(); }); };
+  im.onload = function () { try { var c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight; var g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(im, 0, 0); T.data = g.getImageData(0, 0, c.width, c.height); } catch (e) {} finish(); };
+  im.onerror = finish; im.src = DATA_SRC;
+}
+
+// Slope in degrees and north-south facing (1 north, -1 south), from neighbouring elevations about 57 m apart
+function terrainAt(x, y) {
+  var w = T.data.width, h = T.data.height, d = T.data.data, at = function (a, b) { var i = (Math.max(0, Math.min(h - 1, b)) * w + Math.max(0, Math.min(w - 1, a))) * 4; return d[i] * 256 + d[i + 1]; };
+  var dx = (at(x + 1, y) - at(x - 1, y)) / 113.6, dy = (at(x, y + 1) - at(x, y - 1)) / 113.6, mag = Math.sqrt(dx * dx + dy * dy);
+  return { deg: Math.atan(mag) * 180 / Math.PI, ns: mag > 0 ? dy / mag : 0, flat: mag < .05 };
+}
+function facingName(t) { return t.flat ? 'Llano' : t.ns > .35 ? 'Baga' : t.ns < -.35 ? 'Solana' : 'Este u oeste'; }
+
+// ---------- Zone finder ----------
+$('fForest').innerHTML = GROUPS.map(function (g, i) { return '<button class="chip" type="button" data-g="' + i + '" aria-pressed="false">' + esc(g[0]) + '</button>'; }).join('');
+var heights = ''; for (var hh = 400; hh <= 2600; hh += 200) heights += '<option value="' + hh + '">' + hh.toLocaleString('es-ES') + ' m</option>';
+$('fMin').innerHTML = '<option value="0">Sin mínimo</option>' + heights; $('fMax').innerHTML = '<option value="9999">Sin máximo</option>' + heights;
+function zoneAt(lat, lng) {
+  if (!T.zonas || !T.zonas.puntos || !T.zonas.puntos.length) return null; var best = null, bd = 1e9;
+  T.zonas.puntos.forEach(function (p) { var d = Math.pow(p.lat - lat, 2) + Math.pow((p.lng - lng) * .74, 2); if (d < bd) { bd = d; best = p; } });
+  return best;
+}
+function runFinder() {
+  var keys = Object.keys(T.picked), min = +$('fMin').value, max = +$('fMax').value, pre = +$('fPre').value, rain = $('fRain').value, ori = $('fOri').value, sl = $('fSlope').value, active = keys.length || min > 0 || max < 9999 || pre || rain || ori || sl;
+  $('fReset').hidden = !active;
+  var cv = $('mapHi');
+  if (!active) { cv.hidden = true; $('fResult').textContent = 'Elige lo que buscas y se iluminarán las zonas que encajen.'; return; }
+  $('fResult').textContent = 'Buscando…';
+  loadData(function () {
+    if (!T.data) { $('fResult').textContent = 'No se han podido leer los datos del mapa. Prueba a recargar la página.'; return; }
+    var ok = {}; keys.forEach(function (k) { GROUPS[k][1].forEach(function (c) { ok[c] = 1; }); });
+    var w = T.data.width, h = T.data.height, d = T.data.data, g = cv.getContext('2d'); cv.width = w; cv.height = h;
+    var out = g.createImageData(w, h), o = out.data, hits = 0;
+    // Rain state by column and row of a coarse lookup, so the whole sheet stays fast
+    var lookup = null;
+    if (rain && T.zonas) { lookup = []; for (var ly = 0; ly < 56; ly++) { lookup[ly] = []; for (var lx = 0; lx < 48; lx++) { var ll = mapLL((lx + .5) / 48, (ly + .5) / 56), z = zoneAt(ll.lat, ll.lng); lookup[ly][lx] = z ? z.estado : ''; } } }
+    for (var y = 0, i = 0; y < h; y++) for (var x = 0; x < w; x++, i += 4) {
+      var e = d[i] * 256 + d[i + 1], c = d[i + 2] >> 2, p = d[i + 2] & 3, m = c > 0 && e >= min && e <= max && (!keys.length || ok[c]) && (!pre || p <= pre);
+      if (m && lookup) { var st = lookup[Math.floor(y * 56 / h)][Math.floor(x * 48 / w)]; m = rain === 'bueno' ? st === 'bueno' : st && st !== 'seco'; }
+      if (m && (ori || sl)) { var tt = terrainAt(x, y); if (ori === 'baga' && (tt.flat || tt.ns <= .35)) m = false; if (ori === 'solana' && (tt.flat || tt.ns >= -.35)) m = false; if (sl === 's' && tt.deg > 15) m = false; if (sl === 'm' && (tt.deg <= 15 || tt.deg > 30)) m = false; if (sl === 'f' && tt.deg <= 30) m = false; }
+      if (m) { o[i] = 255; o[i + 1] = 46; o[i + 2] = 150; o[i + 3] = 125; hits++; } else { o[i] = 15; o[i + 1] = 20; o[i + 2] = 15; o[i + 3] = 105; }
+    }
+    g.putImageData(out, 0, 0); cv.hidden = false;
+    var km = hits * .0568 * .0568;
+    $('fResult').textContent = rain && !T.zonas ? 'Aún no hay datos de lluvia por zonas.' : hits ? 'Unos ' + Math.round(km).toLocaleString('es-ES') + ' km² encajan. Toca una zona rosa para ver el detalle.' : 'Ninguna zona encaja. Prueba a abrir el rango de altura o a quitar algún filtro.';
+  });
+}
+$('fForest').addEventListener('click', function (e) { var b = e.target.closest('[data-g]'); if (!b) return; var k = b.getAttribute('data-g'); if (T.picked[k]) delete T.picked[k]; else T.picked[k] = 1; b.setAttribute('aria-pressed', T.picked[k] ? 'true' : 'false'); runFinder(); });
+['fMin', 'fMax', 'fPre', 'fRain', 'fOri', 'fSlope'].forEach(function (id) { $(id).addEventListener('change', runFinder); });
+$('fReset').addEventListener('click', function () { T.picked = {}; Array.prototype.forEach.call(document.querySelectorAll('#fForest .chip'), function (c) { c.setAttribute('aria-pressed', 'false'); }); $('fMin').value = '0'; $('fMax').value = '9999'; $('fPre').value = '0'; $('fRain').value = ''; $('fOri').value = ''; $('fSlope').value = ''; runFinder(); });
+
+// ---------- Tap on the map ----------
+function showTap(fx, fy) {
+  var t = $('mapTap'); t.hidden = false; t.style.left = (fx * 100) + '%'; t.style.top = (fy * 100) + '%';
+  var info = $('tapInfo'); info.classList.add('has'); info.innerHTML = '<p class="small">Mirando ese punto…</p>';
+  loadData(function () {
+    if (!T.data) { info.innerHTML = '<p class="small">No se han podido leer los datos del mapa. Prueba a recargar la página.</p>'; return; }
+    var w = T.data.width, i = (Math.min(T.data.height - 1, Math.floor(fy * T.data.height)) * w + Math.min(w - 1, Math.floor(fx * w))) * 4, d = T.data.data;
+    var ele = d[i] * 256 + d[i + 1], c = d[i + 2] >> 2, pr = d[i + 2] & 3, ll = mapLL(fx, fy), z = zoneAt(ll.lat, ll.lng), sp = FOREST_SP[c] || [], ter = terrainAt(Math.floor(fx * w), Math.floor(fy * T.data.height));
+    var inSeason = function (k) { var s = SP[k]; return s[1] <= s[2] ? NOW_M >= s[1] && NOW_M <= s[2] : NOW_M >= s[1] || NOW_M <= s[2]; };
+    var names = function (l) { return l.map(function (k) { return esc(SP[k][0]); }).join(', '); };
+    var now = sp.filter(inSeason), later = sp.filter(function (k) { return !inSeason(k); });
+    info.innerHTML = '<button type="button" class="tapclose" id="tapClose">Cerrar ✕</button><div class="facts"><span><small>Altura</small>' + ele.toLocaleString('es-ES') + ' m</span><span><small>Orientación</small>' + facingName(ter) + '</span><span><small>Pendiente</small>' + Math.round(ter.deg) + '°</span><span><small>Bosque</small>' + (FOREST[c] ? esc(FOREST[c]) : 'Sin bosque cartografiado') + '</span>' + (pr ? '<span><small>Presión probable</small>' + ['', 'Baja', 'Media', 'Alta'][pr] + '</span>' : '') + (z ? '<span><small>Lluvia 15 días</small>' + Math.round(z.l15) + ' mm</span>' : '') + '</div>' +
+      (now.length ? '<p class="small"><b>Suelen salir ahora en este bosque:</b> ' + names(now) + '.</p>' : '') + (later.length ? '<p class="small"><b>En otras épocas:</b> ' + names(later) + '.</p>' : '') +
+      (sp.length ? '<p class="small">Orientativo, según el tipo de bosque. No indica que hoy haya setas ni sirve para decidir qué se come.</p>' : '') +
+      '<a href="https://www.google.com/maps?q=' + ll.lat.toFixed(5) + ',' + ll.lng.toFixed(5) + '" target="_blank" rel="noopener">📍 Abrir este punto en Google Maps ↗</a>';
+  });
+}
+$('mapIn').addEventListener('click', function (e) { var r = this.getBoundingClientRect(); showTap((e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height); });
+
+// ---------- Season news ----------
+function renderNews() {
+  var items = (T.noticias && T.noticias.items || []).filter(function (n) { return n.fecha && daysOld(n.fecha) <= 21; }).sort(function (a, b) { return b.fecha.localeCompare(a.fecha); }), seen = {};
+  $('mapNews').innerHTML = items.map(function (n) { var z = ZONES[n.zona]; if (!z || seen[n.zona]) return ''; seen[n.zona] = 1; var q = mapPos(z[0], z[1]); return '<span class="nflag' + (daysOld(n.fecha) > 10 ? ' vieja' : '') + '" style="left:' + (q.x * 100).toFixed(2) + '%;top:' + (q.y * 100).toFixed(2) + '%">' + esc(n.zona) + '</span>'; }).join('');
+  $('newsBox').innerHTML = '<h2>Noticias de la temporada</h2>' + (items.length ? '<ul>' + items.map(function (n) {
+    var safe = /^https:\/\/\S+$/.test(n.url || ''), age = daysOld(n.fecha);
+    return '<li><b>' + esc(n.zona) + ':</b> ' + esc(n.texto) + ' <span class="small">' + (age <= 0 ? 'hoy' : 'hace ' + age + (age === 1 ? ' día' : ' días')) + (n.confirmada ? '' : ' · sin confirmar') + (safe ? ' · <a href="' + esc(n.url) + '" target="_blank" rel="noopener">' + esc(n.fuente || 'fuente') + ' ↗</a>' : '') + '</span></li>';
+  }).join('') + '</ul>' : '<p class="small">Ninguna noticia reciente sobre setas en estas comarcas.</p>') + '<p class="small">Se buscan una vez al día y se muestran hasta 21 días. Las de más de 10 salen atenuadas en el mapa.</p>';
+}
+
+// ---------- Map view: zoom and dragging ----------
+var mapZoom = innerWidth < 720 ? 2 : 1, placed = false;
+function sizeMap() {
+  var v = $('mapView'), m = $('mapIn'); if (!v.clientWidth) return;
+  var cx = v.scrollWidth ? (v.scrollLeft + v.clientWidth / 2) / v.scrollWidth : .5, cy = v.scrollHeight ? (v.scrollTop + v.clientHeight / 2) / v.scrollHeight : .5;
+  m.style.width = Math.round(v.clientWidth * mapZoom) + 'px';
+  if (!placed) { var q = mapPos(42.14, 1.82); cx = q.x; cy = q.y; placed = true; }
+  v.scrollLeft = cx * v.scrollWidth - v.clientWidth / 2; v.scrollTop = cy * v.scrollHeight - v.clientHeight / 2;
+  $('mapOut').disabled = mapZoom <= 1; $('mapMore').disabled = mapZoom >= MAX_ZOOM;
+}
+var MAX_ZOOM = 6;
+function setZoom(d) { mapZoom = Math.max(1, Math.min(MAX_ZOOM, mapZoom + d)); sizeMap(); }
+// Zoom around a point on screen, so what is under the fingers or the cursor stays there
+function zoomAt(z, cx, cy) {
+  var v = $('mapView'), r = v.getBoundingClientRect(), px = cx - r.left, py = cy - r.top;
+  var fx = (v.scrollLeft + px) / v.scrollWidth, fy = (v.scrollTop + py) / v.scrollHeight;
+  mapZoom = Math.max(1, Math.min(MAX_ZOOM, z));
+  $('mapIn').style.width = Math.round(v.clientWidth * mapZoom) + 'px';
+  v.scrollLeft = fx * v.scrollWidth - px; v.scrollTop = fy * v.scrollHeight - py;
+  $('mapOut').disabled = mapZoom <= 1; $('mapMore').disabled = mapZoom >= MAX_ZOOM;
+}
+$('mapMore').addEventListener('click', function () { setZoom(mapZoom >= 3 ? 1 : .5); });
+$('mapOut').addEventListener('click', function () { setZoom(mapZoom > 3 ? -1 : -.5); });
+(function () {
+  var v = $('mapView'), pinch = null;
+  function gap(t) { return Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY); }
+  v.addEventListener('touchstart', function (e) { if (e.touches.length === 2) pinch = { d: gap(e.touches), z: mapZoom }; }, { passive: true });
+  v.addEventListener('touchmove', function (e) {
+    if (!pinch || e.touches.length !== 2) return; e.preventDefault();
+    zoomAt(pinch.z * gap(e.touches) / pinch.d, (e.touches[0].clientX + e.touches[1].clientX) / 2, (e.touches[0].clientY + e.touches[1].clientY) / 2);
+  }, { passive: false });
+  v.addEventListener('touchend', function (e) { if (e.touches.length < 2) pinch = null; }, { passive: true });
+  // Trackpad pinch always; the plain mouse wheel only in full screen, where the page cannot scroll
+  v.addEventListener('wheel', function (e) { if (!e.ctrlKey && !document.body.classList.contains('full')) return; e.preventDefault(); zoomAt(mapZoom * Math.exp(-e.deltaY * .002), e.clientX, e.clientY); }, { passive: false });
+  v.addEventListener('dblclick', function (e) { e.preventDefault(); zoomAt(mapZoom * 1.7, e.clientX, e.clientY); });
+})();
+// Full screen fills whatever the viewer gives the page; a real browser full screen is a bonus where allowed
+function setFull(on) {
+  var v = $('mapView'), cx = v.scrollWidth ? (v.scrollLeft + v.clientWidth / 2) / v.scrollWidth : .5, cy = v.scrollHeight ? (v.scrollTop + v.clientHeight / 2) / v.scrollHeight : .5;
+  document.body.classList.toggle('full', on);
+  var b = $('mapFull'); b.textContent = on ? '✕' : '⛶'; b.setAttribute('aria-pressed', String(on)); b.setAttribute('aria-label', on ? 'Salir de pantalla completa' : 'Pantalla completa');
+  try {
+    if (on && document.documentElement.requestFullscreen) { var w = document.documentElement.requestFullscreen(); if (w && w.catch) w.catch(function () {}); }
+    if (!on && document.fullscreenElement) { var x = document.exitFullscreen(); if (x && x.catch) x.catch(function () {}); }
+  } catch (e) {}
+  $('mapIn').style.width = Math.round(v.clientWidth * mapZoom) + 'px';
+  v.scrollLeft = cx * v.scrollWidth - v.clientWidth / 2; v.scrollTop = cy * v.scrollHeight - v.clientHeight / 2;
+}
+$('mapFull').addEventListener('click', function () { setFull(!document.body.classList.contains('full')); });
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && document.body.classList.contains('full')) setFull(false); });
+document.addEventListener('fullscreenchange', function () { if (!document.fullscreenElement && document.body.classList.contains('full')) setFull(false); sizeMap(); });
+$('tapInfo').addEventListener('click', function (e) { if (e.target.closest('#tapClose')) this.classList.remove('has'); });
+var waitResize; window.addEventListener('resize', function () { clearTimeout(waitResize); waitResize = setTimeout(sizeMap, 150); });
+(function () {
+  var v = $('mapView'), start = null, moved = false;
+  v.addEventListener('pointerdown', function (e) { if (e.pointerType === 'mouse' && e.button === 0) { start = { x: e.clientX, y: e.clientY, l: v.scrollLeft, t: v.scrollTop }; moved = false; } });
+  window.addEventListener('pointermove', function (e) { if (!start) return; var dx = e.clientX - start.x, dy = e.clientY - start.y; if (Math.abs(dx) + Math.abs(dy) > 4) { moved = true; v.classList.add('drag'); } if (moved) { v.scrollLeft = start.l - dx; v.scrollTop = start.t - dy; } });
+  window.addEventListener('pointerup', function () { start = null; v.classList.remove('drag'); });
+  v.addEventListener('click', function (e) { if (moved) { e.stopPropagation(); e.preventDefault(); moved = false; } }, true);
+  v.addEventListener('dragstart', function (e) { e.preventDefault(); });
+})();
+sizeMap(); renderNews();
+
+// ---------- Shared store: filled once a day ----------
+if (window.claude && window.claude.use) (async function () {
+  try {
+    var db = await window.claude.use('db'); if (!db) return;
+    db.doc('config/zonas').onSnapshot(function (x) { T.zonas = x.exists ? x.data() : null; setLayer(T.layer); }, function () {});
+    db.doc('config/noticias').onSnapshot(function (x) { T.noticias = x.exists ? x.data() : null; renderNews(); }, function () {});
+    db.doc('config/sitios').onSnapshot(function (x) { T.sitios = x.exists ? x.data() : null; renderMine(); }, function () {});
+  } catch (e) {}
+})();
+</script>
+
+</body></html>

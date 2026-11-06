@@ -1,0 +1,448 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="../shared/firebase-config.js"></script>
+<script src="../shared/claude-firebase.js" data-app="viladomat"></script>
+</head><body>
+<div class="cartel-top" aria-hidden="true" style="position:relative;height:clamp(130px,40vw,240px);overflow:hidden"><svg style="position:absolute;inset:0;width:100%;height:100%;display:block" viewBox="0 0 400 220" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="400" height="220" fill="#e6a14f"/><rect y="0" width="400" height="30" fill="#d9894a"/><rect y="26" width="400" height="30" fill="#e6a14f"/><rect y="52" width="400" height="30" fill="#efbb64"/><rect y="78" width="400" height="30" fill="#f4d07f"/><rect y="104" width="400" height="30" fill="#f6dd9a"/><circle cx="306" cy="88" r="30" fill="#fff0c0"/><path d="M0 150 L100 104 L210 138 L300 108 L400 142 V220 H0Z" fill="#8f8a55"/><path d="M0 220 V164 C100 138 260 176 400 150 V220Z" fill="#5c6b3a"/><path d="M0 188C100 166 270 198 400 176M0 204C100 184 270 214 400 194" fill="none" stroke="#475629" stroke-width="3"/><path d="M116 150 V112 L168 84 L220 112 V150Z" fill="#d6b58a"/><path d="M106 116 L168 78 L230 116 L222 120 L168 90 L114 120Z" fill="#8c4a2a"/><path d="M158 150 V124 a10 10 0 0 1 20 0 V150Z" fill="#4a2f22"/><rect x="130" y="118" width="12" height="14" fill="#4a2f22"/><rect x="194" y="118" width="12" height="14" fill="#4a2f22"/><path d="M252 158 C242 118 248 88 256 74 C264 88 270 118 260 158Z M282 164 C274 130 278 104 284 92 C292 104 296 130 288 164Z M62 170 C52 134 58 106 66 92 C74 106 80 134 70 170Z" fill="#2a3a22"/></svg></div>
+<title>Diari de Viladomat</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700&family=Nunito:wght@400;600;800&family=DM+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="core.css">
+<style>
+/* Layout: a band of soil strata under the name, then a relief map of the parcel, the year's jobs by season, what is planted, costs and photos. */
+:root { --bg: #f3f0e6; --fg: #2a2318; --muted: #6d6250; --line: #d7cfba; --card: #fbf9f1; --acc: #4f6f2c; --acc-ink: #ffffff; --danger: #b23a1e; --s1: #6f8f3a; --s2: #8a5e34; --s3: #6b4526; --s4: #4a3020; --parcel: rgba(111, 143, 58, .14); --l0: #b5760f; --l1: #c2362b; --l2: #2775c4; --l3: #7a4a24; --l4: #3f8f3a; --map: #ebe4cf; --contour: rgba(122, 88, 44, .32); --contour-x: rgba(105, 70, 30, .72); --disp: "Fraunces", Georgia, serif; --body: "Nunito", system-ui, sans-serif; --mono: "DM Mono", ui-monospace, Consolas, monospace; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #1a1711; --fg: #efe9da; --muted: #ada28c; --line: #3a3324; --card: #231f17; --acc: #a6c76a; --acc-ink: #18200b; --danger: #ff9a7c; --parcel: rgba(166, 199, 106, .1); --l0: #e8a93a; --l1: #ff7a6b; --l2: #6fb3f0; --l3: #c9925f; --l4: #7fce6e; --map: #201c15; --contour: rgba(205, 170, 115, .22); --contour-x: rgba(220, 186, 130, .6); color-scheme: dark; } }
+:root[data-theme="dark"] { --bg: #1a1711; --fg: #efe9da; --muted: #ada28c; --line: #3a3324; --card: #231f17; --acc: #a6c76a; --acc-ink: #18200b; --danger: #ff9a7c; --parcel: rgba(166, 199, 106, .1); --l0: #e8a93a; --l1: #ff7a6b; --l2: #6fb3f0; --l3: #c9925f; --l4: #7fce6e; --map: #201c15; --contour: rgba(205, 170, 115, .22); --contour-x: rgba(220, 186, 130, .6); color-scheme: dark; }
+.top { padding-block: 34px 18px; }
+.top > div { display: grid; gap: 4px; }
+h1 { font-size: clamp(42px, 10vw, 76px); font-weight: 700; letter-spacing: -.015em; }
+.strata { display: grid; grid-template-rows: 9px 14px 20px 30px; }
+.strata i:nth-child(1) { background: var(--s1); } .strata i:nth-child(2) { background: var(--s2); } .strata i:nth-child(3) { background: var(--s3); } .strata i:nth-child(4) { background: var(--s4); }
+.gal { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.gal figure { margin: 0; display: grid; gap: 3px; min-width: 0; }
+.gal img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 6px; background: var(--line); display: block; }
+.gal figcaption { font-size: 13.5px; color: var(--muted); overflow-wrap: anywhere; }
+.upl { display: inline-block; cursor: pointer; }
+.total { font: 500 30px var(--mono); font-variant-numeric: tabular-nums; }
+.chip.now::after { content: " · ahora"; font-weight: 600; }
+.chip { display: inline-flex; align-items: center; gap: 6px; }
+
+/* Map */
+.mapgrid { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 760px) { .mapgrid { grid-template-columns: minmax(0, 1fr); } }
+.mapbox { position: relative; background: var(--map); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+#map { display: block; width: 100%; height: min(76vh, 740px); touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; outline: none; }
+#map.drag { cursor: grabbing; }
+@media (max-width: 760px) { #map { height: 66vh; } }
+.mapbox:fullscreen { border-radius: 0; border: 0; }
+.mapbox:fullscreen #map { height: 100vh; }
+.paper { fill: var(--map); }
+.cmin { fill: none; stroke: var(--contour); stroke-width: 1; vector-effect: non-scaling-stroke; stroke-linecap: round; }
+.cmaj { fill: none; stroke: var(--contour-x); stroke-width: 1.7; vector-effect: non-scaling-stroke; stroke-linecap: round; }
+.clbl { font: 500 11px var(--mono); fill: var(--contour-x); paint-order: stroke; stroke: var(--map); stroke-width: 4px; stroke-linejoin: round; }
+.outside { fill: var(--map); opacity: .5; }
+.parcela-h { fill: none; stroke: var(--acc); stroke-opacity: .22; stroke-width: 11; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+.parcela { fill: var(--parcel); stroke: var(--acc); stroke-width: 2.5; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+.vailet { fill: none; stroke: var(--fg); stroke-width: 2.5; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.pin { cursor: pointer; outline: none; }
+.pin .hit { fill: transparent; }
+.pin .drop { fill: var(--lc); stroke: var(--map); stroke-width: 2; }
+.pin .gly { fill: var(--map); }
+.pin .dot { fill: var(--lc); stroke: var(--map); stroke-width: 2; }
+.pin:hover .drop, .pin:focus-visible .drop, .pin.sel .drop, .pin:hover .dot, .pin:focus-visible .dot, .pin.sel .dot { stroke: var(--fg); stroke-width: 2.5; }
+.pin .ring { fill: none; stroke: var(--lc); stroke-width: 3; }
+.lbl { display: none; font: 800 13px var(--body); fill: var(--fg); paint-order: stroke; stroke: var(--map); stroke-width: 4px; stroke-linejoin: round; pointer-events: none; }
+#map.near .pin:not(.minor):not(.nolbl) .lbl,.pin.sel .lbl, .pin:hover .lbl, .pin:focus-visible .lbl { display: block; }
+.probe circle { fill: none; stroke: var(--fg); stroke-width: 2.5; }
+.probe path { stroke: var(--fg); stroke-width: 2; }
+@media (prefers-reduced-motion: no-preference) {
+  .pin .ring { animation: ping 1.8s ease-out infinite; transform-origin: 0 -21px; }
+  @keyframes ping { from { transform: scale(.7); opacity: 1; } to { transform: scale(1.5); opacity: 0; } }
+}
+.mctl { position: absolute; top: 10px; right: 10px; display: grid; gap: 5px; }
+.mctl button { width: 38px; height: 38px; padding: 0; border: 1px solid var(--line); border-radius: 9px; background: var(--card); color: var(--fg); font: 800 19px/1 var(--body); cursor: pointer; box-shadow: 0 2px 8px rgba(0, 0, 0, .14); }
+.mctl button:hover { border-color: var(--fg); }
+.mnorth { position: absolute; top: 10px; left: 10px; width: 34px; height: 46px; pointer-events: none; }
+.mnorth path { fill: var(--fg); }
+.mnorth text { font: 800 12px var(--body); fill: var(--fg); }
+.mscale { position: absolute; left: 12px; bottom: 10px; display: grid; gap: 2px; font: 500 12px var(--mono); color: var(--fg); pointer-events: none; }
+.mscale i { display: block; height: 7px; border: 2px solid var(--fg); border-top: 0; transition: width .15s; }
+.mread { position: absolute; right: 10px; bottom: 10px; padding: 3px 8px; border-radius: 6px; background: var(--card); border: 1px solid var(--line); font-size: 12.5px; pointer-events: none; }
+.side { display: grid; gap: 12px; min-width: 0; }
+.info { display: grid; gap: 6px; padding: 14px 16px; background: var(--card); border: 1px solid var(--line); border-radius: 10px; }
+.info h3 { font-size: 23px; overflow-wrap: anywhere; }
+.info p { margin: 0; overflow-wrap: anywhere; }
+.info .eyebrow { display: flex; align-items: center; gap: 7px; }
+.facts { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 3px 12px; margin: 2px 0 0; font-size: 14.5px; }
+.facts dt { color: var(--muted); }
+.facts dd { margin: 0; overflow-wrap: anywhere; }
+.acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.acts a, .acts button { font-size: 14px; padding: 6px 12px; text-decoration: none; }
+.ico { width: 20px; height: 20px; flex: none; }
+.ico .gly { fill: var(--map); }
+.plist { list-style: none; margin: 0; padding: 0; max-height: 330px; overflow: auto; border-top: 1px solid var(--line); }
+.plist button { display: flex; align-items: center; gap: 9px; width: 100%; padding: 7px 6px; border: 0; border-bottom: 1px solid var(--line); background: none; text-align: left; cursor: pointer; }
+.plist button:hover { background: var(--card); }
+.plist button[aria-current="true"] { background: var(--card); font-weight: 800; }
+.plist span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.plist small { color: var(--muted); font: 500 12.5px var(--mono); }
+</style>
+<div class="band top"><div>
+  <span class="eyebrow">La Nou de Berguedà</span>
+  <h1>Viladomat</h1>
+  <p class="small">Tu diario del terreno: mapa, tareas, plantas, gastos y fotos.</p>
+</div></div>
+<div class="strata" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+<div class="wrap">
+  <p class="say" id="say" hidden></p>
+  <section id="mapa">
+    <div class="shead"><h2>El mapa</h2><span class="small num" id="mapStats"></span></div>
+    <div class="chips" id="capas" role="group" aria-label="Elegir qué puntos ver"></div>
+    <div class="mapgrid" id="mapGrid" hidden>
+      <div class="mapbox" id="mapBox">
+        <svg id="map" tabindex="0" role="application" aria-label="Mapa de la parcela con relieve. Arrastra para moverte; rueda, pellizco o botones para acercarte."></svg>
+        <svg class="mnorth" viewBox="0 0 34 46" aria-hidden="true"><text x="17" y="12" text-anchor="middle">N</text><path d="M17 16 L24 42 L17 36 L10 42Z"/></svg>
+        <div class="mctl">
+          <button type="button" id="zIn" aria-label="Acercar">+</button>
+          <button type="button" id="zOut" aria-label="Alejar">−</button>
+          <button type="button" id="zFit" aria-label="Ver toda la parcela">⌂</button>
+          <button type="button" id="zFull" aria-label="Pantalla completa">⤢</button>
+        </div>
+        <div class="mscale" aria-hidden="true"><i id="scaleBar"></i><span id="scaleTxt"></span></div>
+        <div class="mread num" id="readout" hidden></div>
+      </div>
+      <div class="side">
+        <div class="info" id="info" aria-live="polite"></div>
+        <ol class="plist" id="plist" aria-label="Puntos del mapa"></ol>
+        <p class="small" id="mapNote"></p>
+      </div>
+    </div>
+    <p class="empty" id="mapEmpty">Aquí aparecerá el mapa de la parcela con sus puntos de interés.</p>
+  </section>
+  <section>
+    <div class="shead"><h2>Tareas de la temporada</h2><button class="btn edit-only" type="button" data-add="tareas">＋ Añadir tarea</button></div>
+    <div class="chips" id="seasons" role="group" aria-label="Elegir estación"></div>
+    <ul class="list" id="tareas"></ul>
+  </section>
+  <section>
+    <div class="shead"><h2>Lo plantado</h2><button class="btn edit-only" type="button" data-add="plantas">＋ Añadir planta</button></div>
+    <ul class="list" id="plantas"></ul>
+  </section>
+  <section>
+    <div class="shead"><h2>Gastos</h2><button class="btn edit-only" type="button" data-add="gastos">＋ Apuntar gasto</button></div>
+    <div><span class="total" id="total">0 €</span> <span class="small" id="totalT"></span></div>
+    <ul class="list" id="gastos"></ul>
+  </section>
+  <section>
+    <div class="shead"><h2>Fotos</h2><span class="edit-only" id="uplWrap"><label class="btn upl" for="file">📷 Subir fotos</label><input id="file" type="file" accept="image/*" multiple hidden></span></div>
+    <p class="small" id="fotoMsg" aria-live="polite"></p>
+    <div class="gal" id="fotos"></div>
+  </section>
+</div>
+<script src="core.js"></script>
+<script>
+var C = Core, $ = function (i) { return document.getElementById(i); };
+var ZONAS = ['Todo el terreno', 'Fites i vailet', 'Casetes i refugis', 'Aigua i basses', 'Fusta i cercles', 'Clarianes, prat i arbres', 'Otra'];
+
+// ---------- Map: relief from the terrain model, the cadastral outline and the points stored in the page ----------
+// World units are metres east and south of the relief's north-west corner; pins and labels are counter-scaled to stay the same size on screen.
+var capa = 'all', selPt = null, probe = null, B = null, view = { z: 1, cx: 0, cy: 0 };
+var GL = {
+  fita: 'M-2.6 6.5L-1.8-5L0-7.5L1.8-5L2.6 6.5Z',
+  casa: 'M-7-.5L0-7L7-.5H5V6.5H1.6V2.5H-1.6V6.5H-5V-.5Z',
+  gota: 'M0-7.5C3.5-2.5 5.8.5 5.8 2.6A5.8 5.8 0 0 1-5.8 2.6C-5.8.5-3.5-2.5 0-7.5Z',
+  fusta: 'M-6.5 0A6.5 6.5 0 1 0 6.5 0A6.5 6.5 0 1 0-6.5 0ZM-2.8 0A2.8 2.8 0 1 0 2.8 0A2.8 2.8 0 1 0-2.8 0Z',
+  arbre: 'M0-8L6.5 2.5H2V7H-2V2.5H-6.5Z',
+  punt: 'M-3.5 0A3.5 3.5 0 1 0 3.5 0A3.5 3.5 0 1 0-3.5 0Z'
+};
+var DROP = 'M0 0C-3-7-12-12-12-21A12 12 0 1 1 12-21C12-12 3-7 0 0Z';
+function kindOf(n) { n = String(n || '').toLowerCase(); return /fit|vailet/.test(n) ? 'fita' : /cas|refug/.test(n) ? 'casa' : /aigua|bass/.test(n) ? 'gota' : /fusta|cercl/.test(n) ? 'fusta' : /clar|prat|arbr/.test(n) ? 'arbre' : 'punt'; }
+function icon(k, ci) { return '<svg class="ico" viewBox="-11 -11 22 22" aria-hidden="true"><circle r="11" style="fill:var(--l' + (ci % 5) + ')"/><path class="gly" fill-rule="evenodd" d="' + GL[k] + '"/></svg>'; }
+var metres = function (d) { return d < 1000 ? Math.round(d) + ' m' : (d / 1000).toLocaleString('es-ES', { maximumFractionDigits: 1 }) + ' km'; };
+var fx = function (n) { return (+n).toFixed(5); };
+
+// Catmull-Rom interpolation keeps the contour lines smooth between the 20 m grid samples
+function cr(a, b, c, d, t) { return b + .5 * t * (c - a + t * (2 * a - 5 * b + 4 * c - d + t * (3 * (b - c) + d - a))); }
+function build(m) {
+  var R = m.relieve, pts = [];
+  if (R && !(R.z && R.z.length === R.nx * R.ny)) R = null;
+  m.capas.forEach(function (c, ci) { var k = kindOf(c.nombre); c.puntos.forEach(function (p, pi) { pts.push(Object.assign({ c: ci, k: k, key: ci + '-' + pi, capa: c.nombre, minor: k === 'fita' && !/fita/i.test(p.n) }, p)); }); });
+  var ll = pts.map(function (p) { return [p.lng, p.lat]; }).concat(m.parcela || []);
+  var lo = function (i) { return Math.min.apply(null, ll.map(function (a) { return a[i]; })); }, hi = function (i) { return Math.max.apply(null, ll.map(function (a) { return a[i]; })); };
+  var w0 = R ? R.w : lo(0), n0 = R ? R.n : hi(1), K = Math.cos((lo(1) + hi(1)) / 2 * Math.PI / 180), M = 111320;
+  var P = function (lng, lat) { return [(lng - w0) * K * M, (n0 - lat) * M]; };
+  var b = { P: P, U: function (x, y) { return [n0 - y / M, w0 + x / (K * M)]; }, m: m, pts: pts, k: 1 };
+  pts.forEach(function (p) { var q = P(p.lng, p.lat); p.x = q[0]; p.y = q[1]; });
+  b.poly = (m.parcela || []).map(function (a) { return P(a[0], a[1]); });
+  b.line = (m.linea || []).map(function (a) { return P(a[0], a[1]); });
+  var xy = pts.map(function (p) { return [p.x, p.y]; }).concat(b.poly), xs = xy.map(function (a) { return a[0]; }), ys = xy.map(function (a) { return a[1]; });
+  b.fit = { x0: Math.min.apply(null, xs), x1: Math.max.apply(null, xs), y0: Math.min.apply(null, ys), y1: Math.max.apply(null, ys) };
+  var f = b.fit, pad = 80;
+  b.world = R ? { x0: 0, y0: 0, x1: (R.e - R.w) * K * M, y1: (R.n - R.s) * M } : { x0: f.x0 - pad, y0: f.y0 - pad, x1: f.x1 + pad, y1: f.y1 + pad };
+  var Wd = b.world, s = '<rect class="paper" x="' + Wd.x0 + '" y="' + Wd.y0 + '" width="' + (Wd.x1 - Wd.x0) + '" height="' + (Wd.y1 - Wd.y0) + '"/>';
+  b.dem = function () { return null; };
+  if (R) {
+    var nx = R.nx, ny = R.ny, Z = R.z, gw = Wd.x1 / (nx - 1), gh = Wd.y1 / (ny - 1);
+    var zAt = function (i, j) { i = i < 0 ? 0 : i > nx - 1 ? nx - 1 : i; j = j < 0 ? 0 : j > ny - 1 ? ny - 1 : j; return Z[j * nx + i]; };
+    var bic = function (gx, gy) { var i = Math.floor(gx), j = Math.floor(gy), u = gx - i, v = gy - j, r = []; for (var q = -1; q < 3; q++) r.push(cr(zAt(i - 1, j + q), zAt(i, j + q), zAt(i + 1, j + q), zAt(i + 2, j + q), u)); return cr(r[0], r[1], r[2], r[3], v); };
+    b.dem = function (x, y) { var gx = x / gw, gy = y / gh; return gx < 0 || gy < 0 || gx > nx - 1 || gy > ny - 1 ? null : bic(gx, gy); };
+    // A finer grid for shading and contours
+    var UP = 4, cx = (nx - 1) * UP + 1, cy = (ny - 1) * UP + 1, sx = Wd.x1 / (cx - 1), sy = Wd.y1 / (cy - 1), F = [], zmin = Infinity, zmax = -Infinity;
+    for (var j = 0; j < cy; j++) { F[j] = new Float32Array(cx); for (var i = 0; i < cx; i++) { var z = bic(i / UP, j / UP); F[j][i] = z; if (z < zmin) zmin = z; if (z > zmax) zmax = z; } }
+    // Hillshade lit from the north-west
+    var cv = document.createElement('canvas'); cv.width = cx; cv.height = cy;
+    var g = cv.getContext('2d');
+    if (g) {
+      var img = g.createImageData(cx, cy), L = [-.5, -.5, .7071], ex = 1.6;
+      for (j = 0; j < cy; j++) for (i = 0; i < cx; i++) {
+        var dx = (F[j][Math.min(i + 1, cx - 1)] - F[j][Math.max(i - 1, 0)]) / (2 * sx) * ex, dy = (F[Math.min(j + 1, cy - 1)][i] - F[Math.max(j - 1, 0)][i]) / (2 * sy) * ex;
+        var nl = Math.sqrt(dx * dx + dy * dy + 1), sh = (-dx * L[0] - dy * L[1] + L[2]) / nl - L[2], o = (j * cx + i) * 4;
+        if (sh < 0) { img.data[o] = 40; img.data[o + 1] = 26; img.data[o + 2] = 10; img.data[o + 3] = Math.min(.55, -sh * 1.5) * 255; }
+        else { img.data[o] = 255; img.data[o + 1] = 248; img.data[o + 2] = 228; img.data[o + 3] = Math.min(.42, sh * 1.5) * 255; }
+      }
+      g.putImageData(img, 0, 0);
+      s += '<image href="' + cv.toDataURL() + '" x="0" y="0" width="' + Wd.x1.toFixed(1) + '" height="' + Wd.y1.toFixed(1) + '" preserveAspectRatio="none"/>';
+    }
+    // Contours every 10 m, a heavier one every 50 m with its height written on it
+    var minor = '', major = '', labels = [], tx = (f.x0 + f.x1) / 2;
+    for (var lv = Math.ceil(zmin / 10) * 10; lv < zmax; lv += 10) {
+      var maj = lv % 50 === 0, seg = '', best = null;
+      for (j = 0; j < cy - 1; j++) for (i = 0; i < cx - 1; i++) {
+        var a = F[j][i], bb = F[j][i + 1], d = F[j + 1][i], e = F[j + 1][i + 1], q = [];
+        if ((a < lv) !== (bb < lv)) q.push([(i + (lv - a) / (bb - a)) * sx, j * sy]);
+        if ((bb < lv) !== (e < lv)) q.push([(i + 1) * sx, (j + (lv - bb) / (e - bb)) * sy]);
+        if ((d < lv) !== (e < lv)) q.push([(i + (lv - d) / (e - d)) * sx, (j + 1) * sy]);
+        if ((a < lv) !== (d < lv)) q.push([i * sx, (j + (lv - a) / (d - a)) * sy]);
+        for (var t = 0; t + 1 < q.length; t += 2) {
+          seg += 'M' + q[t][0].toFixed(1) + ' ' + q[t][1].toFixed(1) + 'L' + q[t + 1][0].toFixed(1) + ' ' + q[t + 1][1].toFixed(1);
+          if (maj) { var mx = (q[t][0] + q[t + 1][0]) / 2, my = (q[t][1] + q[t + 1][1]) / 2; if (my > f.y0 && my < f.y1 && (!best || Math.abs(mx - tx) < Math.abs(best.x - tx))) best = { x: mx, y: my, r: Math.atan2(q[t + 1][1] - q[t][1], q[t + 1][0] - q[t][0]) * 180 / Math.PI }; }
+        }
+      }
+      if (maj) major += seg; else minor += seg;
+      if (best) { if (best.r > 90) best.r -= 180; if (best.r < -90) best.r += 180; labels.push('<text class="clbl scl" text-anchor="middle" dy="4" data-x="' + best.x.toFixed(1) + '" data-y="' + best.y.toFixed(1) + '" data-r="' + best.r.toFixed(0) + '">' + lv + '</text>'); }
+    }
+    s += '<path class="cmin" d="' + minor + '"/><path class="cmaj" d="' + major + '"/>';
+    b.labels = labels.join('');
+    // Height range inside the parcel, from the model
+    var inR = [];
+    for (j = 0; j < cy; j += 2) for (i = 0; i < cx; i += 2) if (inside(b.poly, i * sx, j * sy)) inR.push(F[j][i]);
+    if (inR.length) b.range = [Math.min.apply(null, inR), Math.max.apply(null, inR)];
+  }
+  var pp = b.poly.map(function (a) { return a[0].toFixed(1) + ',' + a[1].toFixed(1); }).join(' ');
+  if (b.poly.length) s += '<path class="outside" fill-rule="evenodd" d="M' + Wd.x0 + ' ' + Wd.y0 + 'H' + Wd.x1 + 'V' + Wd.y1 + 'H' + Wd.x0 + 'Z M' + pp.replace(/ /g, ' L') + 'Z"/><polygon class="parcela-h" points="' + pp + '"/><polygon class="parcela" points="' + pp + '"/>';
+  b.svg = s + (b.labels || '');
+  var area = 0;
+  b.poly.forEach(function (a, i) { var c = b.poly[(i + 1) % b.poly.length]; area += a[0] * c[1] - c[0] * a[1]; });
+  b.area = Math.abs(area) / 2 / 1e4;
+  return b;
+}
+function inside(poly, x, y) {
+  var r = false;
+  for (var i = 0, j = poly.length - 1; i < poly.length; j = i++) { var a = poly[i], c = poly[j]; if ((a[1] > y) !== (c[1] > y) && x < (c[0] - a[0]) * (y - a[1]) / (c[1] - a[1]) + a[0]) r = !r; }
+  return r;
+}
+function edgeDist(poly, x, y) {
+  var best = Infinity;
+  poly.forEach(function (a, i) {
+    var c = poly[(i + 1) % poly.length], dx = c[0] - a[0], dy = c[1] - a[1], l = dx * dx + dy * dy, t = l ? Math.max(0, Math.min(1, ((x - a[0]) * dx + (y - a[1]) * dy) / l)) : 0;
+    best = Math.min(best, Math.hypot(a[0] + t * dx - x, a[1] + t * dy - y));
+  });
+  return best;
+}
+function nearest(x, y, skip) {
+  var best = null, bd = Infinity;
+  B.pts.forEach(function (p) { if (p.key === skip) return; var d = Math.hypot(p.x - x, p.y - y); if (d < bd) { bd = d; best = p; } });
+  return best ? { p: best, d: bd } : null;
+}
+function gaiaAlt(p) { var e = /Elevació Gaia: (\d+) m/.exec(p.d || ''); return e ? +e[1] : null; }
+function where(x, y) {
+  if (!B.poly.length) return '';
+  var d = edgeDist(B.poly, x, y), ins = inside(B.poly, x, y);
+  return d < 4 ? 'Sobre el límite del catastro' : (ins ? 'Dentro, a ' : 'Fuera, a ') + metres(d) + ' del límite';
+}
+function shown(p) { return capa === 'all' || capa === p.c; }
+
+function renderPins() {
+  var s = '';
+  if (B.line.length > 1 && (capa === 'all' || B.pts.some(function (p) { return p.c === capa && p.k === 'fita'; }))) s += '<polyline class="vailet" points="' + B.line.map(function (a) { return a[0].toFixed(1) + ',' + a[1].toFixed(1); }).join(' ') + '"/>';
+  var list = B.pts.filter(shown).sort(function (a, b) { return (b.minor ? 1 : 0) - (a.minor ? 1 : 0) || (a.key === selPt) - (b.key === selPt) || a.y - b.y; });
+  list.forEach(function (p) {
+    var at = ' data-p="' + p.key + '" data-x="' + p.x.toFixed(1) + '" data-y="' + p.y.toFixed(1) + '" tabindex="0" role="button" aria-label="' + C.esc(p.n) + '" style="--lc:var(--l' + (p.c % 5) + ')"', sel = p.key === selPt ? ' sel' : '';
+    if (p.minor) s += '<g class="pin minor scl' + sel + '"' + at + '><circle class="hit" r="12"/>' + (sel ? '<circle class="ring" cy="0" r="10" style="transform-origin:0 0"/>' : '') + '<circle class="dot" r="5"/><text class="lbl" x="9" y="4">' + C.esc(p.n) + '</text></g>';
+    else s += '<g class="pin scl' + sel + '"' + at + '><circle class="hit" cy="-20" r="18"/>' + (sel ? '<circle class="ring" cy="-21" r="17"/>' : '') + '<path class="drop" d="' + DROP + '"/><path class="gly" fill-rule="evenodd" transform="translate(0 -21)" d="' + GL[p.k] + '"/><text class="lbl" x="15" y="-17">' + C.esc(p.n) + '</text></g>';
+  });
+  if (probe) s += '<g class="probe scl" data-x="' + probe.x.toFixed(1) + '" data-y="' + probe.y.toFixed(1) + '"><circle r="9"/><path d="M-16 0H-6M6 0H16M0-16V-6M0 6V16"/></g>';
+  $('mDyn').innerHTML = s;
+}
+function applyView() {
+  if (!B) return;
+  var svg = $('map'), cw = svg.clientWidth || 600, ch = svg.clientHeight || 600, f = B.fit, asp = cw / ch, Wd = B.world;
+  var fh = Math.max(f.y1 - f.y0, (f.x1 - f.x0) / asp) * 1.12, vh = fh / view.z, vw = vh * asp;
+  view.cx = Math.max(Wd.x0, Math.min(Wd.x1, view.cx)); view.cy = Math.max(Wd.y0, Math.min(Wd.y1, view.cy));
+  svg.setAttribute('viewBox', [view.cx - vw / 2, view.cy - vh / 2, vw, vh].map(function (n) { return n.toFixed(2); }).join(' '));
+  var k = B.k = vw / cw;
+  svg.querySelectorAll('.scl').forEach(function (el) { el.setAttribute('transform', 'translate(' + el.getAttribute('data-x') + ' ' + el.getAttribute('data-y') + ') scale(' + k.toFixed(4) + ')' + (el.getAttribute('data-r') ? ' rotate(' + el.getAttribute('data-r') + ')' : '')); });
+  var v = svg.querySelector('.vailet'); if (v) v.style.strokeDasharray = '8 6';
+  svg.classList.toggle('near', k < .7);
+  // Names only where they fit: the selected pin first, then top to bottom, skipping any that would overlap
+  var boxes = [], pins = Array.prototype.slice.call(svg.querySelectorAll('.pin:not(.minor)')).sort(function (a, b) { return b.classList.contains('sel') - a.classList.contains('sel') || a.getAttribute('data-y') - b.getAttribute('data-y'); });
+  pins.forEach(function (el) {
+    var x = el.getAttribute('data-x') / k, y = el.getAttribute('data-y') / k, w = el.getAttribute('aria-label').length * 7.4 + 4, bx = [x - 13, y - 36, x + 17 + w, y + 2];
+    var hit = k >= .7 || boxes.some(function (o) { return bx[0] < o[2] && bx[2] > o[0] && bx[1] < o[3] && bx[3] > o[1]; });
+    el.classList.toggle('nolbl', hit && !el.classList.contains('sel'));
+    if (!hit || el.classList.contains('sel')) boxes.push(bx);
+  });
+  var nice = [5, 10, 20, 25, 50, 100, 200, 250, 500, 1000].filter(function (n) { return n / k <= 120; }).pop() || 5;
+  $('scaleBar').style.width = (nice / k).toFixed(0) + 'px'; $('scaleTxt').textContent = metres(nice);
+}
+function toWorld(px, py) { var svg = $('map'), r = svg.getBoundingClientRect(), vb = svg.viewBox.baseVal; return [vb.x + (px - r.left) * B.k, vb.y + (py - r.top) * B.k]; }
+function zoomAt(f, px, py) {
+  var r = $('map').getBoundingClientRect();
+  if (px == null) { px = r.left + r.width / 2; py = r.top + r.height / 2; }
+  var w = toWorld(px, py), z = Math.max(.8, Math.min(16, view.z * f)), k2 = B.k * view.z / z;
+  view.z = z; view.cx = w[0] - (px - r.left) * k2 + r.width * k2 / 2; view.cy = w[1] - (py - r.top) * k2 + r.height * k2 / 2;
+  applyView();
+}
+function fitView() { var f = B.fit; view = { z: 1, cx: (f.x0 + f.x1) / 2, cy: (f.y0 + f.y1) / 2 }; applyView(); }
+function goTo(p) { view.cx = p.x; view.cy = p.y; if (view.z < 2.5) view.z = 2.5; applyView(); }
+
+function renderInfo() {
+  var p = B.pts.filter(function (x) { return x.key === selPt; })[0], h = '';
+  if (p) {
+    var ga = gaiaAlt(p), dm = B.dem(p.x, p.y), no = /Notes: (.*?)(?: Font:|$)/.exec(p.d || ''), nb = nearest(p.x, p.y, p.key);
+    h = '<span class="eyebrow">' + icon(p.k, p.c) + C.esc(p.capa) + '</span><h3>' + C.esc(p.n) + '</h3>' + (no ? '<p>' + C.esc(no[1]) + '</p>' : '') +
+      '<dl class="facts"><dt>Altitud</dt><dd class="num">' + (ga ? ga + ' m (Gaia)' : dm != null ? '≈ ' + Math.round(dm) + ' m' : '—') + '</dd>' +
+      '<dt>Parcela</dt><dd>' + C.esc(where(p.x, p.y)) + '</dd>' + (nb ? '<dt>Al lado</dt><dd>' + C.esc(nb.p.n) + ' · ' + metres(nb.d) + '</dd>' : '') +
+      '<dt>Coordenadas</dt><dd class="num">' + fx(p.lat) + ', ' + fx(p.lng) + '</dd></dl>';
+    h += acts(p.lat, p.lng);
+  } else if (probe) {
+    var pd = B.dem(probe.x, probe.y), pn = nearest(probe.x, probe.y);
+    h = '<span class="eyebrow">Punto del mapa</span><h3 class="num">' + fx(probe.lat) + ', ' + fx(probe.lng) + '</h3>' +
+      '<dl class="facts"><dt>Altitud</dt><dd class="num">' + (pd != null ? '≈ ' + Math.round(pd) + ' m' : '—') + '</dd><dt>Parcela</dt><dd>' + C.esc(where(probe.x, probe.y)) + '</dd>' + (pn ? '<dt>Lo más cerca</dt><dd>' + C.esc(pn.p.n) + ' · ' + metres(pn.d) + '</dd>' : '') + '</dl>' +
+      '<p class="small">Copia las coordenadas para apuntar una fita o un sitio nuevo.</p>' + acts(probe.lat, probe.lng);
+  } else {
+    h = '<span class="eyebrow">Parcel·la</span><h3>' + C.esc(B.m.parcelaNombre || 'Viladomat') + '</h3><p>' + B.pts.length + ' puntos de interés' + (B.range ? ', de ' + Math.round(B.range[0]) + ' a ' + Math.round(B.range[1]) + ' m: ' + Math.round(B.range[1] - B.range[0]) + ' m de desnivel dentro de la finca' : '') + '.</p><p class="small">Toca un punto para ver su ficha, o cualquier otro sitio del mapa para saber sus coordenadas y altura.</p>';
+  }
+  $('info').innerHTML = h;
+}
+function acts(lat, lng) { return '<div class="acts"><button class="btn ghost" type="button" data-copy="' + fx(lat) + ', ' + fx(lng) + '">Copiar coordenadas</button><a class="btn ghost" href="https://www.google.com/maps?q=' + fx(lat) + ',' + fx(lng) + '" target="_blank" rel="noopener">Google Maps ↗</a></div>'; }
+function renderList() {
+  $('plist').innerHTML = B.pts.filter(shown).map(function (p) { var a = gaiaAlt(p), dm = a || B.dem(p.x, p.y); return '<li><button type="button" data-p="' + p.key + '" aria-current="' + (p.key === selPt) + '">' + icon(p.k, p.c) + '<span>' + C.esc(p.n) + '</span><small>' + (dm != null ? Math.round(dm) + ' m' : '') + '</small></button></li>'; }).join('');
+}
+function renderMap() {
+  var m = C.doc('mapa', 'terreno');
+  $('mapGrid').hidden = !m; $('mapEmpty').hidden = !!m; $('capas').hidden = !m;
+  if (!m) return;
+  if (!B || B.m !== m) {
+    var first = !B; B = build(m);
+    $('map').innerHTML = '<g id="mStatic">' + B.svg + '</g><g id="mDyn"></g>';
+    if (first) { var f = B.fit; view = { z: 1, cx: (f.x0 + f.x1) / 2, cy: (f.y0 + f.y1) / 2 }; }
+    $('mapNote').textContent = (m.relieve ? 'Curvas de nivel cada 10 m del modelo ' + (m.relieve.fuente || 'del terreno') + '. ' : '') + 'Puntos de tu mapa de Gaia GPS y contorno del catastro.';
+  }
+  $('capas').innerHTML = '<button class="chip" type="button" data-capa="all" aria-pressed="' + (capa === 'all') + '">Todo (' + B.pts.length + ')</button>' + m.capas.map(function (c, i) { return '<button class="chip" type="button" data-capa="' + i + '" aria-pressed="' + (capa === i) + '">' + icon(kindOf(c.nombre), i) + C.esc(c.nombre) + ' (' + c.puntos.length + ')</button>'; }).join('');
+  $('mapStats').textContent = [B.area ? B.area.toLocaleString('es-ES', { maximumFractionDigits: 1 }) + ' ha' : '', B.range ? Math.round(B.range[0]) + '–' + Math.round(B.range[1]) + ' m' : ''].filter(Boolean).join(' · ');
+  renderPins(); renderInfo(); renderList(); applyView();
+}
+function select(key, center) { selPt = key; probe = null; renderPins(); renderInfo(); renderList(); var p = B.pts.filter(function (x) { return x.key === key; })[0]; if (p && center) goTo(p); else applyView(); }
+
+// Drag to pan, pinch or wheel to zoom, tap a pin or anywhere else
+var ptrs = {}, drag = null, pinch = null;
+(function () {
+  var svg = $('map');
+  svg.addEventListener('pointerdown', function (e) {
+    if (!B) return;
+    ptrs[e.pointerId] = { x: e.clientX, y: e.clientY };
+    try { svg.setPointerCapture(e.pointerId); } catch (x) {}
+    var ids = Object.keys(ptrs);
+    if (ids.length === 1) drag = { moved: 0, target: e.target };
+    else { if (drag) drag.moved = 99; var a = ptrs[ids[0]], b = ptrs[ids[1]]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y) }; }
+  });
+  svg.addEventListener('pointermove', function (e) {
+    if (!B) return;
+    if (e.pointerType === 'mouse' && !drag) { var w = toWorld(e.clientX, e.clientY), ll = B.U(w[0], w[1]), z = B.dem(w[0], w[1]); $('readout').hidden = false; $('readout').textContent = fx(ll[0]) + ', ' + fx(ll[1]) + (z != null ? ' · ' + Math.round(z) + ' m' : ''); }
+    var o = ptrs[e.pointerId]; if (!o) return;
+    var dx = e.clientX - o.x, dy = e.clientY - o.y; ptrs[e.pointerId] = { x: e.clientX, y: e.clientY };
+    var ids = Object.keys(ptrs);
+    if (ids.length === 1 && drag) { drag.moved += Math.abs(dx) + Math.abs(dy); if (drag.moved > 5) { svg.classList.add('drag'); view.cx -= dx * B.k; view.cy -= dy * B.k; applyView(); } }
+    else if (ids.length === 2 && pinch) { var a = ptrs[ids[0]], b = ptrs[ids[1]], d = Math.hypot(a.x - b.x, a.y - b.y); if (pinch.d) zoomAt(d / pinch.d, (a.x + b.x) / 2, (a.y + b.y) / 2); pinch.d = d; }
+  });
+  function up(e) {
+    if (!ptrs[e.pointerId]) return;
+    delete ptrs[e.pointerId];
+    if (Object.keys(ptrs).length) return;
+    svg.classList.remove('drag'); pinch = null;
+    if (drag && drag.moved <= 5 && e.type === 'pointerup') tap(drag.target, e.clientX, e.clientY);
+    drag = null;
+  }
+  svg.addEventListener('pointerup', up); svg.addEventListener('pointercancel', up);
+  svg.addEventListener('pointerleave', function (e) { if (e.pointerType === 'mouse') $('readout').hidden = true; });
+  svg.addEventListener('wheel', function (e) { if (!B) return; e.preventDefault(); zoomAt(Math.exp(-e.deltaY * (e.deltaMode ? 0.05 : 0.0018)), e.clientX, e.clientY); }, { passive: false });
+  svg.addEventListener('keydown', function (e) {
+    if (!B) return;
+    var g = e.target.closest && e.target.closest('.pin');
+    if (g && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); select(g.getAttribute('data-p')); var n = svg.querySelector('[data-p="' + selPt + '"]'); if (n) n.focus(); return; }
+    var st = 60 * B.k, mv = { ArrowLeft: [-st, 0], ArrowRight: [st, 0], ArrowUp: [0, -st], ArrowDown: [0, st] }[e.key];
+    if (mv) { e.preventDefault(); view.cx += mv[0]; view.cy += mv[1]; applyView(); }
+    if (e.key === '+' || e.key === '=') zoomAt(1.4); if (e.key === '-') zoomAt(1 / 1.4);
+  });
+  if (window.ResizeObserver) new ResizeObserver(function () { applyView(); }).observe(svg);
+})();
+function tap(target, px, py) {
+  var g = target && target.closest && target.closest('.pin');
+  if (g) return select(g.getAttribute('data-p'));
+  var w = toWorld(px, py), ll = B.U(w[0], w[1]);
+  selPt = null; probe = { x: w[0], y: w[1], lat: ll[0], lng: ll[1] };
+  renderPins(); renderInfo(); renderList(); applyView();
+}
+$('zIn').addEventListener('click', function () { if (B) zoomAt(1.6); });
+$('zOut').addEventListener('click', function () { if (B) zoomAt(1 / 1.6); });
+$('zFit').addEventListener('click', function () { if (B) fitView(); });
+$('zFull').hidden = !document.fullscreenEnabled;
+$('zFull').addEventListener('click', function () { if (document.fullscreenElement) document.exitFullscreen().catch(function () {}); else $('mapBox').requestFullscreen().catch(function () {}); });
+$('plist').addEventListener('click', function (e) { var b = e.target.closest('[data-p]'); if (b) select(b.getAttribute('data-p'), true); });
+$('info').addEventListener('click', function (e) {
+  var b = e.target.closest('[data-copy]'); if (!b) return;
+  var t = b.getAttribute('data-copy'), done = function () { b.textContent = 'Copiadas'; setTimeout(function () { b.textContent = 'Copiar coordenadas'; }, 1600); };
+  try { navigator.clipboard.writeText(t).then(done, function () { b.textContent = t; }); } catch (x) { b.textContent = t; }
+});
+$('capas').addEventListener('click', function (e) { var b = e.target.closest('.chip'); if (b) { var v = b.getAttribute('data-capa'); capa = v === 'all' ? 'all' : +v; if (selPt && !B.pts.some(function (p) { return p.key === selPt && shown(p); })) selPt = null; renderMap(); } });
+var EST = ['Primavera', 'Verano', 'Otoño', 'Invierno'], NOW_EST = ['Invierno', 'Invierno', 'Primavera', 'Primavera', 'Primavera', 'Verano', 'Verano', 'Verano', 'Otoño', 'Otoño', 'Otoño', 'Invierno'][new Date().getMonth()], est = NOW_EST;
+C.wire({
+  tareas: { title: 'Tarea', preset: function () { return { estacion: est }; }, fields: [{ k: 'texto', label: 'Qué hay que hacer', req: 1, ph: 'Limpiar el camino de acceso' }, { k: 'estacion', label: 'Estación', type: 'select', options: EST }, { k: 'zona', label: 'Zona', type: 'select', options: ZONAS }, { k: 'nota', label: 'Nota', type: 'textarea' }] },
+  plantas: { title: 'Planta', preset: function () { return { fecha: C.today() }; }, fields: [{ k: 'nombre', label: 'Qué has plantado', req: 1 }, { k: 'zona', label: 'Zona', type: 'select', options: ZONAS }, { k: 'fecha', label: 'Cuándo', type: 'date' }, { k: 'nota', label: 'Cómo va', type: 'textarea' }] },
+  gastos: { title: 'Gasto', preset: function () { return { fecha: C.today() }; }, fields: [{ k: 'concepto', label: 'Concepto', req: 1 }, { k: 'importe', label: 'Importe (€)', type: 'number', req: 1 }, { k: 'fecha', label: 'Fecha', type: 'date' }, { k: 'zona', label: 'Zona', type: 'select', options: ZONAS }] },
+  fotos: { title: 'Foto', fields: [{ k: 'fecha', label: 'Fecha', type: 'date' }, { k: 'texto', label: 'Pie de foto' }], afterDelete: function (o) { if (C.assets && o.asset) C.assets.delete(o.asset).catch(function () {}); } }
+});
+var euros = function (n) { return n.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'; };
+$('seasons').addEventListener('click', function (e) { var b = e.target.closest('.chip'); if (b) { est = b.getAttribute('data-e'); render(); } });
+$('file').addEventListener('change', async function () {
+  var fs = Array.prototype.slice.call(this.files || []), ok = 0;
+  if (!C.assets) { $('fotoMsg').textContent = 'Las fotos solo se pueden subir con tu sesión de Claude iniciada.'; return; }
+  for (var i = 0; i < fs.length; i++) {
+    $('fotoMsg').textContent = 'Subiendo ' + (i + 1) + ' de ' + fs.length + '…';
+    try { var r = await C.upload(fs[i]); await C.put('fotos', C.uid(), { asset: r.id, fecha: C.today(), texto: '', ts: Date.now() }); ok++; }
+    catch (x) { $('fotoMsg').textContent = 'No se ha podido subir una foto. Prueba otra vez con más cobertura.'; }
+  }
+  if (ok) $('fotoMsg').textContent = ok === 1 ? 'Foto subida.' : ok + ' fotos subidas.';
+  this.value = '';
+});
+function render() {
+  renderMap();
+  $('seasons').innerHTML = EST.map(function (s) { var n = C.data.tareas.filter(function (t) { return t.estacion === s && !t.hecha; }).length; return '<button class="chip' + (s === NOW_EST ? ' now' : '') + '" type="button" data-e="' + s + '" aria-pressed="' + (s === est) + '">' + s + (n ? ' (' + n + ')' : '') + '</button>'; }).join('');
+  var t = C.data.tareas.filter(function (x) { return x.estacion === est; }).sort(function (a, b) { return (a.hecha ? 1 : 0) - (b.hecha ? 1 : 0) || (a.ts || 0) - (b.ts || 0); });
+  $('tareas').innerHTML = t.length ? t.map(function (x) { return C.row({ col: 'tareas', id: x.id, check: 'hecha', done: x.hecha, title: x.texto, sub: C.esc([x.zona, x.nota].filter(Boolean).join(' · ')) }); }).join('') : '<p class="empty">Sin tareas en ' + est.toLowerCase() + '. Apunta lo que toca hacer cada estación y lo tendrás a mano el año que viene.</p>';
+  var p = C.data.plantas.slice().sort(function (a, b) { return (b.fecha || '').localeCompare(a.fecha || ''); });
+  $('plantas').innerHTML = p.length ? p.map(function (x) { return C.row({ col: 'plantas', id: x.id, title: x.nombre, sub: C.esc([x.zona, x.nota].filter(Boolean).join(' · ')), right: C.fmt(x.fecha) }); }).join('') : '<p class="empty">Aquí irá lo que plantas, dónde y cómo va creciendo.</p>';
+  var g = C.data.gastos.slice().sort(function (a, b) { return (b.fecha || '').localeCompare(a.fecha || ''); }), yr = String(new Date().getFullYear());
+  var sum = g.filter(function (x) { return (x.fecha || '').slice(0, 4) === yr; }).reduce(function (a, x) { return a + (+x.importe || 0); }, 0);
+  $('total').textContent = euros(sum); $('totalT').textContent = 'en ' + yr;
+  $('gastos').innerHTML = g.length ? g.map(function (x) { return C.row({ col: 'gastos', id: x.id, title: x.concepto, sub: C.esc([C.fmt(x.fecha), x.zona].filter(Boolean).join(' · ')), right: euros(+x.importe || 0) }); }).join('') : '<p class="empty">Apunta material, herramientas y trabajos para ver cuánto llevas este año.</p>';
+  var f = C.data.fotos.slice().sort(function (a, b) { return (b.fecha || '').localeCompare(a.fecha || '') || (b.ts || 0) - (a.ts || 0); });
+  $('fotos').innerHTML = f.length ? f.map(function (x) { return '<figure><img src="/_blob/' + C.esc(x.asset) + '" alt="' + C.esc(x.texto || 'Foto de Viladomat') + '" loading="lazy"><figcaption>' + C.esc(C.fmt(x.fecha)) + (x.texto ? ' · ' + C.esc(x.texto) : '') + ' <button class="lnk edit-only" type="button" data-edit="fotos|' + C.esc(x.id) + '" aria-label="Editar foto">Editar</button></figcaption></figure>'; }).join('') : '<p class="empty" style="grid-column:1/-1">Sube fotos para ver el antes y el después de cada zona.</p>';
+}
+C.start(['mapa', 'tareas', 'plantas', 'gastos', 'fotos'], render, { key: 'viladomat-v1', assets: true });
+</script>
+
+</body></html>

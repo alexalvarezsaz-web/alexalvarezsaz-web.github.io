@@ -29,10 +29,49 @@
     document.body.appendChild(bar);
   }
 
-  // Same shape as the claude.ai db: collection('x') and doc('x/id') give Firestore refs
+  // Firestore rejects arrays inside arrays, which the claude.ai db allowed: inner arrays are stored as {__arr: [...]}
+  function enc(v, inArr) {
+    if (Array.isArray(v)) { var a = v.map(function (x) { return enc(x, true); }); return inArr ? { __arr: a } : a; }
+    if (v && typeof v === 'object') { var o = {}; Object.keys(v).forEach(function (k) { o[k] = enc(v[k], false); }); return o; }
+    return v;
+  }
+  function dec(v) {
+    if (Array.isArray(v)) return v.map(dec);
+    if (v && typeof v === 'object') {
+      if (Array.isArray(v.__arr) && Object.keys(v).length === 1) return v.__arr.map(dec);
+      var o = {}; Object.keys(v).forEach(function (k) { o[k] = dec(v[k]); }); return o;
+    }
+    return v;
+  }
+  // Apps wait for a snapshot that is not fromCache, which Firestore only sends for unchanged data when asked
+  var META = { includeMetadataChanges: true };
+  function docSnap(s) { return { id: s.id, exists: s.exists, metadata: s.metadata, data: function () { var d = s.data(); return d === undefined ? undefined : dec(d); } }; }
+  function querySnap(s) { var docs = s.docs.map(docSnap); return { docs: docs, size: s.size, empty: s.empty, metadata: s.metadata, forEach: function (f) { docs.forEach(f); } }; }
+  function docRef(r) {
+    return {
+      id: r.id,
+      set: function (d, o) { return r.set(enc(d, false), o); },
+      update: function (d) { return r.update(enc(d, false)); },
+      delete: function () { return r.delete(); },
+      get: function () { return r.get().then(docSnap); },
+      onSnapshot: function (next, err) { return r.onSnapshot(META, function (s) { next(docSnap(s)); }, err); }
+    };
+  }
+  function colRef(r) {
+    return {
+      id: r.id,
+      doc: function (id) { return docRef(id ? r.doc(id) : r.doc()); },
+      add: function (d) { return r.add(enc(d, false)).then(docRef); },
+      get: function () { return r.get().then(querySnap); },
+      onSnapshot: function (next, err) { return r.onSnapshot(META, function (s) { next(querySnap(s)); }, err); }
+    };
+  }
+
+  // Same shape as the claude.ai db: collection('x') and doc('x/id')
   var db = {
-    collection: function (p) { return base.collection(p); },
-    doc: function (p) { var s = p.split('/'); return base.collection(s[0]).doc(s.slice(1).join('/')); }
+    collection: function (p) { return colRef(base.collection(p)); },
+    doc: function (p) { var s = p.split('/'); return docRef(base.collection(s[0]).doc(s.slice(1).join('/'))); },
+    encode: function (d) { return enc(d, false); }
   };
 
   var user = {

@@ -1,17 +1,4 @@
 # Personal data exported from claude.ai: imported into Firebase, never published
 _datos/
-# Apps not yet moved to Firebase: they only work inside claude.ai for now
-bolets/
-sense-fum/
-la-cruilla/
-la-sessio/
-viladomat/
-piso/
-tfg/
-rebotica/
-cims-coves/
-cracovia/
-territorio/
-rebost/
 # Kept locally (names the owner's email); pasted into the Firebase console
 firestore.rules

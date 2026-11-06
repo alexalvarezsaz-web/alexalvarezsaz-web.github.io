@@ -1,0 +1,48 @@
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 16px; line-height: 1.55; }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--acc); outline-offset: 2px; }
+a { color: var(--acc); }
+h1, h2, h3 { margin: 0; line-height: 1.12; text-wrap: balance; font-family: var(--disp); font-weight: 400; }
+h2 { font-size: clamp(25px, 4vw, 32px); }
+.wrap { max-width: 900px; margin: 0 auto; padding-block: 26px 70px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 34px; }
+.band { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.band > div { max-width: 900px; margin: 0 auto; }
+section { display: grid; gap: 12px; min-width: 0; scroll-margin-top: 12px; }
+.shead { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; }
+.eyebrow { font: 500 12.5px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.small { margin: 0; font-size: 14px; color: var(--muted); }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.say { margin: 0; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); font-size: 14.5px; font-weight: 700; }
+.btn { border: 0; border-radius: 8px; padding: 8px 15px; font-weight: 700; cursor: pointer; background: var(--acc); color: var(--acc-ink); }
+.btn.ghost { background: transparent; color: var(--fg); border: 1.5px solid var(--line); }
+.btn.del { margin-right: auto; background: transparent; color: var(--danger); border: 1.5px solid var(--danger); }
+.btn.del.sure { background: var(--danger); color: #fff; }
+.edit-only { display: none !important; }
+.can-edit .edit-only { display: revert !important; }
+.list { list-style: none; margin: 0; padding: 0; display: grid; }
+.row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 4px 12px; align-items: start; padding: 11px 2px; border-bottom: 1px solid var(--line); }
+.row:last-child { border-bottom: 0; }
+.row b { font-weight: 700; overflow-wrap: anywhere; }
+.row p { margin: 0; color: var(--muted); font-size: 15px; overflow-wrap: anywhere; white-space: pre-wrap; }
+.row input[type=checkbox] { width: 20px; height: 20px; margin: 3px 0 0; accent-color: var(--acc); }
+.row.done b { text-decoration: line-through; color: var(--muted); }
+.lnk { border: 0; background: none; padding: 2px 0; font-size: 13.5px; font-weight: 700; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.empty { margin: 0; padding: 18px; text-align: center; color: var(--muted); border: 1.5px dashed var(--line); border-radius: 10px; font-size: 15px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { border: 1.5px solid var(--line); background: var(--card); border-radius: 999px; padding: 5px 13px; font-weight: 700; font-size: 14px; cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+.stat { display: grid; gap: 1px; }
+.stat b { font: 500 26px var(--mono); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.stat span { font-size: 13.5px; color: var(--muted); }
+.search { width: 100%; padding: 10px 14px; border: 1.5px solid var(--line); border-radius: 8px; background: var(--card); font-size: 16px; }
+dialog { border: 0; padding: 0; border-radius: 12px; background: var(--card); color: var(--fg); width: min(480px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); box-shadow: 0 30px 70px -20px rgba(0, 0, 0, .6); }
+dialog::backdrop { background: rgba(10, 14, 12, .6); }
+dialog form { display: grid; gap: 11px; padding: 20px; }
+dialog h2 { font-size: 25px; }
+dialog label { display: grid; gap: 3px; font-size: 13.5px; font-weight: 700; color: var(--muted); min-width: 0; }
+dialog label input, dialog label select, dialog label textarea { width: 100%; min-width: 0; padding: 9px 11px; font-weight: 400; font-size: 16px; color: var(--fg); background: var(--bg); border: 1.5px solid var(--line); border-radius: 8px; }
+dialog textarea { min-height: 90px; resize: vertical; }
+.err { margin: 0; color: var(--danger); font-weight: 700; font-size: 14px; }
+.bar { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }

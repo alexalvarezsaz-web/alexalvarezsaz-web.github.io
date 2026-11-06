@@ -1,0 +1,89 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="../shared/firebase-config.js"></script>
+<script src="../shared/claude-firebase.js" data-app="cims-coves"></script>
+</head><body>
+<div class="cartel-top" aria-hidden="true" style="position:relative;height:clamp(130px,40vw,240px);overflow:hidden"><svg style="position:absolute;inset:0;width:100%;height:100%;display:block" viewBox="0 0 400 220" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="400" height="220" fill="#0d1216"/><path d="M0 0 H400 V220 H0Z" fill="#101a20"/><path d="M96 220 C86 150 130 62 212 56 C286 60 330 150 316 220Z" fill="#7fb6c7"/><path d="M96 220 C90 176 110 130 150 100 L190 150 L232 84 L262 128 L286 110 C306 146 318 186 316 220Z" fill="#3e6e80"/><path d="M232 84 L246 106 L232 112 L218 104Z" fill="#eef5f4"/><path d="M96 220 C150 190 260 196 316 220Z" fill="#1d3a48"/><path d="M60 220 C52 150 100 40 212 30 C320 36 366 150 356 220 H400 V0 H0 V220Z" fill="#0b1014"/><path d="M60 220 C70 140 108 70 170 46M356 220 C350 150 318 84 268 52" fill="none" stroke="#2a3338" stroke-width="5"/><path d="M196 0 C200 60 204 110 206 164" fill="none" stroke="#e8a100" stroke-width="2.5"/><circle cx="206" cy="172" r="7" fill="#f2bd5a"/><path d="M206 178 l-5 22 M206 178 l6 22 M206 182 l-11 10 M206 182 l11 -6" stroke="#f2bd5a" stroke-width="3"/></svg></div>
+<title>Cims i Coves</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;800&family=Barlow:wght@400;500;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="core.css">
+<style>
+/* Layout: a vertical cross-section. Metres climbed rise above the ground line, metres descended into caves drop below it, the log follows. */
+:root { --bg: #eef1f2; --fg: #1a2226; --muted: #55636a; --line: #c9d2d6; --card: #fbfcfc; --acc: #c2571a; --acc-ink: #ffffff; --danger: #b3261e; --sky: #bcd7e6; --peak: #5d7480; --rock: #57483c; --void: #1b1613; --cross-ink: #1a2226; --void-ink: #f4ebe0; --disp: "Barlow Condensed", "Arial Narrow", sans-serif; --body: "Barlow", system-ui, sans-serif; --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #121719; --fg: #e5ebed; --muted: #9aa8ae; --line: #2c373b; --card: #1a2225; --acc: #ff9a5c; --acc-ink: #24100a; --danger: #ff8a80; --sky: #24404f; --peak: #6f8a97; --cross-ink: #eaf1f4; color-scheme: dark; } }
+:root[data-theme="dark"] { --bg: #121719; --fg: #e5ebed; --muted: #9aa8ae; --line: #2c373b; --card: #1a2225; --acc: #ff9a5c; --acc-ink: #24100a; --danger: #ff8a80; --sky: #24404f; --peak: #6f8a97; --cross-ink: #eaf1f4; color-scheme: dark; }
+.cross { position: relative; display: grid; }
+.above { background: linear-gradient(var(--sky), var(--sky)); color: var(--cross-ink); position: relative; overflow: hidden; }
+.above svg, .below svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.above svg { top: auto; bottom: 0; height: clamp(70px, 14vw, 120px); }
+.above .in { position: relative; padding-block: 30px clamp(84px, 16vw, 136px); display: grid; gap: 2px; }
+.below { background: var(--rock); color: var(--void-ink); position: relative; overflow: hidden; }
+.below .in { position: relative; padding-block: 18px 34px; display: grid; gap: 2px; justify-items: end; text-align: right; }
+h1 { font: 800 clamp(58px, 15vw, 116px)/.92 var(--disp); text-transform: uppercase; letter-spacing: -.005em; }
+.big { font: 500 clamp(30px, 7vw, 44px)/1.1 var(--mono); font-variant-numeric: tabular-nums; }
+.cap { font-size: 15px; font-weight: 500; }
+h2 { font-weight: 800; text-transform: uppercase; letter-spacing: .01em; }
+.tag { font: 500 12px var(--mono); text-transform: uppercase; letter-spacing: .05em; color: var(--acc); }
+.band > div.in { max-width: 900px; margin: 0 auto; }
+</style>
+<div class="cross">
+  <div class="above band">
+    <svg viewBox="0 0 1000 300" preserveAspectRatio="none" aria-hidden="true"><path d="M0 300 L0 250 L170 200 L280 240 L470 120 L560 190 L690 70 L860 220 L1000 170 L1000 300Z" style="fill:var(--peak)"/></svg>
+    <div class="in">
+      <span class="eyebrow" style="color:var(--cross-ink)">Cuaderno de montaña y cueva</span>
+      <h1>Cims i Coves</h1>
+      <span class="big" id="up">0 m ↑</span>
+      <span class="cap" id="upT">subidos en 0 salidas de montaña</span>
+    </div>
+  </div>
+  <div class="below band">
+    <svg viewBox="0 0 1000 200" preserveAspectRatio="none" aria-hidden="true"><path d="M150 0 C180 60 110 80 150 130 C190 180 330 190 400 150 C450 120 420 70 490 60 C560 55 590 120 680 110 C740 100 730 40 700 0 L640 0 C650 40 620 70 590 60 C540 30 460 10 400 50 C350 90 370 120 300 130 C240 135 210 90 230 0Z" style="fill:var(--void)"/></svg>
+    <div class="in">
+      <span class="big" id="down">0 m ↓</span>
+      <span class="cap" id="downT">bajados en 0 cuevas</span>
+    </div>
+  </div>
+</div>
+<div class="wrap">
+  <p class="say" id="say" hidden></p>
+  <section>
+    <div class="shead"><h2>Salidas</h2><button class="btn edit-only" type="button" data-add="salidas">＋ Apuntar salida</button></div>
+    <div class="chips" id="chips" role="group" aria-label="Filtrar"></div>
+    <ul class="list" id="salidas"></ul>
+  </section>
+  <section>
+    <div class="shead"><h2>Material</h2><span style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost edit-only" type="button" id="clear">Desmarcar todo</button><button class="btn edit-only" type="button" data-add="material">＋ Añadir</button></span></div>
+    <p class="small">Marca lo que ya llevas en la mochila antes de salir.</p>
+    <ul class="list" id="material"></ul>
+  </section>
+</div>
+<script src="core.js"></script>
+<script>
+var C = Core, $ = function (i) { return document.getElementById(i); }, filter = 'Todas', TIPOS = ['Montaña', 'Cueva'];
+C.wire({
+  salidas: { title: 'Salida', preset: function () { return { fecha: C.today(), tipo: filter === 'Cueva' ? 'Cueva' : 'Montaña' }; }, fields: [{ k: 'nombre', label: 'Cima, ruta o cueva', req: 1 }, { k: 'tipo', label: 'Tipo', type: 'select', options: TIPOS }, { k: 'fecha', label: 'Fecha', type: 'date', req: 1 }, { k: 'lugar', label: 'Zona' }, { k: 'metros', label: 'Metros de desnivel o de profundidad', type: 'number' }, { k: 'km', label: 'Kilómetros', type: 'number' }, { k: 'con', label: 'Con quién' }, { k: 'mapa', label: 'Enlace al mapa o al track', type: 'url', ph: 'https://…' }, { k: 'notas', label: 'Notas', type: 'textarea' }] },
+  material: { title: 'Material', fields: [{ k: 'texto', label: 'Qué', req: 1 }, { k: 'tipo', label: 'Para', type: 'select', options: ['Montaña', 'Cueva', 'Ambas'] }] }
+});
+$('chips').addEventListener('click', function (e) { var b = e.target.closest('.chip'); if (b) { filter = b.getAttribute('data-c'); render(); } });
+$('clear').addEventListener('click', function () { C.data.material.filter(function (m) { return m.listo; }).forEach(function (m) { C.patch('material', m.id, { listo: false }); }); });
+function render() {
+  var s = C.data.salidas, m = s.filter(function (x) { return x.tipo !== 'Cueva'; }), c = s.filter(function (x) { return x.tipo === 'Cueva'; });
+  var add = function (l) { return Math.round(l.reduce(function (a, x) { return a + (+x.metros || 0); }, 0)); };
+  $('up').textContent = add(m).toLocaleString('es-ES') + ' m ↑'; $('upT').textContent = 'subidos en ' + m.length + (m.length === 1 ? ' salida de montaña' : ' salidas de montaña');
+  $('down').textContent = add(c).toLocaleString('es-ES') + ' m ↓'; $('downT').textContent = 'bajados en ' + c.length + (c.length === 1 ? ' cueva' : ' cuevas');
+  $('chips').innerHTML = ['Todas'].concat(TIPOS).map(function (t) { return '<button class="chip" type="button" data-c="' + t + '" aria-pressed="' + (filter === t) + '">' + t + '</button>'; }).join('');
+  var l = s.filter(function (x) { return filter === 'Todas' || (filter === 'Cueva') === (x.tipo === 'Cueva'); }).sort(function (a, b) { return (b.fecha || '').localeCompare(a.fecha || ''); });
+  $('salidas').innerHTML = l.length ? l.map(function (x) {
+    var nums = [x.metros != null ? Math.round(x.metros) + ' m' : '', x.km != null ? String(x.km).replace('.', ',') + ' km' : ''].filter(Boolean).join(' · ');
+    var sub = '<span class="tag">' + C.esc(x.tipo || 'Montaña') + '</span>' + C.esc([' ' + (x.lugar || ''), x.con ? 'con ' + x.con : ''].filter(function (v) { return v.trim(); }).join(' · ')) + (nums ? '\n' + C.esc(nums) : '') + (C.safe(x.mapa) ? '\n<a href="' + C.esc(x.mapa) + '" target="_blank" rel="noopener">Ver mapa ↗</a>' : '') + (x.notas ? '\n' + C.esc(x.notas) : '');
+    return C.row({ col: 'salidas', id: x.id, title: x.nombre, sub: sub, right: C.fmt(x.fecha) });
+  }).join('') : '<p class="empty">Apunta cada cima, ruta o cueva con sus metros, y las cifras de arriba irán sumando.</p>';
+  var ma = C.data.material.slice().sort(function (a, b) { return (a.tipo || '').localeCompare(b.tipo || '') || (a.ts || 0) - (b.ts || 0); });
+  $('material').innerHTML = ma.length ? ma.map(function (x) { return C.row({ col: 'material', id: x.id, check: 'listo', done: x.listo, title: x.texto, sub: C.esc(x.tipo || '') }); }).join('') : '<p class="empty">Apunta tu lista de material, separada para montaña y para cueva.</p>';
+}
+C.start(['salidas', 'material'], render, { key: 'cims-v1' });
+</script>
+</body></html>

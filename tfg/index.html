@@ -1,0 +1,89 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="../shared/firebase-config.js"></script>
+<script src="../shared/claude-firebase.js" data-app="tfg"></script>
+</head><body>
+<div class="cartel-top" aria-hidden="true" style="position:relative;height:clamp(130px,40vw,240px);overflow:hidden"><svg style="position:absolute;inset:0;width:100%;height:100%;display:block" viewBox="0 0 400 220" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="400" height="220" fill="#2c2343"/><rect y="0" width="400" height="30" fill="#241c39"/><rect y="26" width="400" height="30" fill="#2c2343"/><rect y="52" width="400" height="30" fill="#372c50"/><rect y="78" width="400" height="30" fill="#43365c"/><rect y="104" width="400" height="30" fill="#524367"/><path d="M210 40 L120 182 H320Z" fill="#f2c868" opacity=".28"/><path d="M180 36 L240 36 L252 58 L168 58Z" fill="#d99a2b"/><path d="M208 36 V10 H212 V36Z" fill="#14101f"/><path d="M0 182 H400 V220 H0Z" fill="#14101f"/><rect x="118" y="164" width="184" height="18" rx="2" fill="#b43e3a"/><rect x="134" y="148" width="150" height="16" rx="2" fill="#2f6f83"/><rect x="146" y="134" width="124" height="14" rx="2" fill="#e8dcc0"/><path d="M160 134h3v14h-3zM176 134h3v14h-3zM240 134h3v14h-3z" fill="#7a6a4b"/><path d="M310 182 l6 -56 h24 l6 56Z" fill="#6d5a8c"/><path d="M322 126 l-6 -34 M330 126 l2 -40 M338 126 l10 -30" stroke="#e8dcc0" stroke-width="3"/></svg></div>
+<title>Cuaderno del TFG</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bitter:wght@500;800&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="core.css">
+<style>
+/* Layout: a squared lab notebook. The delivery date is the headline; milestones run down a margin line, sources and tutorials follow. */
+:root { --bg: #f4f6fb; --fg: #17233f; --muted: #57637f; --line: #cfd7e8; --card: #ffffff; --acc: #1f4fbf; --acc-ink: #ffffff; --danger: #bf2c2c; --grid: rgba(31, 79, 191, .09); --disp: "Bitter", Georgia, serif; --body: "Source Sans 3", system-ui, sans-serif; --mono: "JetBrains Mono", ui-monospace, Consolas, monospace; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #10162a; --fg: #e6ebf8; --muted: #9eaac6; --line: #2b3656; --card: #182139; --acc: #7ea3ff; --acc-ink: #0d1427; --danger: #ff8080; --grid: rgba(126, 163, 255, .08); color-scheme: dark; } }
+:root[data-theme="dark"] { --bg: #10162a; --fg: #e6ebf8; --muted: #9eaac6; --line: #2b3656; --card: #182139; --acc: #7ea3ff; --acc-ink: #0d1427; --danger: #ff8080; --grid: rgba(126, 163, 255, .08); color-scheme: dark; }
+body { background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px); background-size: 24px 24px; }
+.hero { display: grid; gap: 4px; }
+h1 { font-size: clamp(30px, 6vw, 46px); font-weight: 800; overflow-wrap: anywhere; }
+.count { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin-top: 8px; }
+.count b { font: 500 clamp(64px, 16vw, 112px)/1 var(--mono); color: var(--acc); font-variant-numeric: tabular-nums; }
+.count span { font-size: 18px; color: var(--muted); }
+.bar-p { height: 10px; background: var(--line); border-radius: 5px; overflow: hidden; }
+.bar-p i { display: block; height: 100%; background: var(--acc); }
+.late { color: var(--danger); font-weight: 700; }
+.nextup { color: var(--acc); font-weight: 700; }
+</style>
+<div class="wrap">
+  <div class="hero">
+    <span class="eyebrow">Trabajo de Fin de Grado</span>
+    <h1 id="title">Mi TFG</h1>
+    <div class="count" id="count"></div>
+    <p class="small" id="tutor"></p>
+    <div><button class="btn ghost edit-only" type="button" data-edit="config|tfg">Poner título y fecha de entrega</button></div>
+  </div>
+  <p class="say" id="say" hidden></p>
+  <section>
+    <div class="shead"><h2>Hitos</h2><button class="btn edit-only" type="button" data-add="hitos">＋ Añadir hito</button></div>
+    <div class="bar-p" aria-hidden="true"><i id="prog" style="width:0"></i></div>
+    <p class="small" id="progT"></p>
+    <ul class="list" id="hitos"></ul>
+  </section>
+  <section>
+    <div class="shead"><h2>Fuentes</h2><button class="btn edit-only" type="button" data-add="fuentes">＋ Añadir fuente</button></div>
+    <p class="small" id="fuentesT"></p>
+    <ul class="list" id="fuentes"></ul>
+  </section>
+  <section>
+    <div class="shead"><h2>Tutorías</h2><button class="btn edit-only" type="button" data-add="tutorias">＋ Apuntar tutoría</button></div>
+    <ul class="list" id="tutorias"></ul>
+  </section>
+</div>
+<script src="core.js"></script>
+<script>
+var C = Core, $ = function (i) { return document.getElementById(i); };
+C.wire({
+  config: { title: 'Datos del TFG', fields: [{ k: 'titulo', label: 'Título', ph: 'El título, aunque sea provisional' }, { k: 'entrega', label: 'Fecha de entrega', type: 'date' }, { k: 'tutor', label: 'Tutor o tutora' }] },
+  hitos: { title: 'Hito', fields: [{ k: 'texto', label: 'Qué hay que tener hecho', req: 1, ph: 'Entregar el índice' }, { k: 'fecha', label: 'Para cuándo', type: 'date' }, { k: 'nota', label: 'Nota', type: 'textarea' }] },
+  fuentes: { title: 'Fuente', fields: [{ k: 'cita', label: 'Autor, año y título', req: 1 }, { k: 'url', label: 'Enlace', type: 'url', ph: 'https://…' }, { k: 'nota', label: 'Para qué me sirve', type: 'textarea' }] },
+  tutorias: { title: 'Tutoría', preset: function () { return { fecha: C.today() }; }, fields: [{ k: 'fecha', label: 'Fecha', type: 'date', req: 1 }, { k: 'resumen', label: 'Qué hablamos', type: 'textarea' }, { k: 'pasos', label: 'Qué tengo que hacer', type: 'textarea' }] }
+});
+function render() {
+  var cfg = C.doc('config', 'tfg') || {};
+  $('title').textContent = cfg.titulo || 'Mi TFG';
+  $('tutor').textContent = cfg.tutor ? 'Tutoría: ' + cfg.tutor : ''; $('tutor').hidden = !cfg.tutor;
+  var d = C.days(cfg.entrega);
+  $('count').innerHTML = d == null ? '<span>Aún sin fecha de entrega.</span>' : d >= 0 ? '<b>' + d + '</b><span>' + (d === 1 ? 'día' : 'días') + ' para entregar · ' + C.esc(C.fmt(cfg.entrega)) + '</span>' : '<span>Entrega pasada: ' + C.esc(C.fmt(cfg.entrega)) + '</span>';
+  var h = C.data.hitos.slice().sort(function (a, b) { return (a.fecha || '9').localeCompare(b.fecha || '9'); }), done = h.filter(function (x) { return x.hecha; }).length, first = h.filter(function (x) { return !x.hecha; })[0];
+  $('prog').style.width = (h.length ? done / h.length * 100 : 0) + '%';
+  $('progT').textContent = h.length ? done + ' de ' + h.length + ' hitos hechos' : '';
+  $('hitos').innerHTML = h.length ? h.map(function (x) {
+    var dd = C.days(x.fecha), when = x.fecha ? C.fmt(x.fecha) + ' · ' + C.left(x.fecha) : '';
+    var cl = !x.hecha && dd != null && dd < 0 ? 'late' : x === first ? 'nextup' : '';
+    return C.row({ col: 'hitos', id: x.id, check: 'hecha', done: x.hecha, title: x.texto, sub: (when ? '<span class="' + cl + '">' + C.esc(when) + '</span>' : '') + (x.nota ? (when ? '\n' : '') + C.esc(x.nota) : '') });
+  }).join('') : '<p class="empty">Aquí irán tus plazos: propuesta, índice, borradores y entrega. Marca cada uno al terminarlo y la barra avanza.</p>';
+  var f = C.data.fuentes.slice().sort(function (a, b) { return (a.ts || 0) - (b.ts || 0); }), read = f.filter(function (x) { return x.leida; }).length;
+  $('fuentesT').textContent = f.length ? read + ' de ' + f.length + ' leídas' : '';
+  $('fuentes').innerHTML = f.length ? f.map(function (x) {
+    return C.row({ col: 'fuentes', id: x.id, check: 'leida', done: false, title: x.cita, sub: (C.safe(x.url) ? '<a href="' + C.esc(x.url) + '" target="_blank" rel="noopener">Abrir ↗</a>' : '') + (x.nota ? (x.url ? '\n' : '') + C.esc(x.nota) : '') }).replace('data-check="fuentes|' + C.esc(x.id) + '|leida"', 'data-check="fuentes|' + C.esc(x.id) + '|leida"' + (x.leida ? ' checked' : ''));
+  }).join('') : '<p class="empty">Aquí irá tu bibliografía: la cita, el enlace y para qué te sirve. Márcala cuando la hayas leído.</p>';
+  var t = C.data.tutorias.slice().sort(function (a, b) { return (b.fecha || '').localeCompare(a.fecha || ''); });
+  $('tutorias').innerHTML = t.length ? t.map(function (x) {
+    return C.row({ col: 'tutorias', id: x.id, title: C.fmt(x.fecha), sub: C.esc(x.resumen || '') + (x.pasos ? (x.resumen ? '\n' : '') + '→ ' + C.esc(x.pasos) : '') });
+  }).join('') : '<p class="empty">Apunta lo que hablas en cada tutoría y lo que te toca hacer después.</p>';
+}
+C.start(['config', 'hitos', 'fuentes', 'tutorias'], render, { key: 'tfg-v1' });
+</script>
+</body></html>

@@ -1,0 +1,253 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="../shared/firebase-config.js"></script>
+<script src="../shared/claude-firebase.js" data-app="piso"></script>
+</head><body>
+<div class="cartel-top" aria-hidden="true" style="position:relative;height:clamp(130px,40vw,240px);overflow:hidden"><svg style="position:absolute;inset:0;width:100%;height:100%;display:block" viewBox="0 0 400 220" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="400" height="220" fill="#d9774a"/><rect y="0" width="400" height="30" fill="#2a3b63"/><rect y="26" width="400" height="30" fill="#514a74"/><rect y="52" width="400" height="30" fill="#a35f6e"/><rect y="78" width="400" height="30" fill="#d9774a"/><rect y="104" width="400" height="30" fill="#efa45c"/><path d="M0 220 V110 H70 V76 H150 V120 H226 V60 H320 V100 H400 V220Z" fill="#1f2743"/><rect x="16" y="124" width="14" height="20" fill="#39436a"/><rect x="42" y="124" width="14" height="20" fill="#39436a"/><rect x="16" y="156" width="14" height="20" fill="#39436a"/><rect x="42" y="156" width="14" height="20" fill="#39436a"/><rect x="86" y="92" width="14" height="20" fill="#39436a"/><rect x="116" y="92" width="14" height="20" fill="#39436a"/><rect x="86" y="126" width="14" height="20" fill="#39436a"/><rect x="116" y="160" width="14" height="20" fill="#39436a"/><rect x="86" y="190" width="14" height="20" fill="#39436a"/><rect x="176" y="136" width="14" height="20" fill="#39436a"/><rect x="176" y="170" width="14" height="20" fill="#39436a"/><rect x="204" y="170" width="14" height="20" fill="#39436a"/><rect x="242" y="76" width="14" height="20" fill="#39436a"/><rect x="272" y="76" width="14" height="20" fill="#39436a"/><rect x="298" y="76" width="14" height="20" fill="#39436a"/><rect x="242" y="112" width="14" height="20" fill="#39436a"/><rect x="298" y="112" width="14" height="20" fill="#39436a"/><rect x="272" y="150" width="14" height="20" fill="#39436a"/><rect x="298" y="186" width="14" height="20" fill="#39436a"/><rect x="340" y="116" width="14" height="20" fill="#39436a"/><rect x="370" y="116" width="14" height="20" fill="#39436a"/><rect x="370" y="150" width="14" height="20" fill="#39436a"/><rect x="340" y="186" width="14" height="20" fill="#39436a"/><rect x="264" y="104" width="24" height="34" fill="#ffd778"/><path d="M276 104v34M264 121h24" stroke="#1f2743" stroke-width="2"/><rect x="118" y="124" width="14" height="20" fill="#f4c76b"/></svg></div>
+<title>Nuestro Piso</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Figtree:wght@400;500;700&family=Space+Mono:wght@700&display=swap">
+<link rel="stylesheet" href="core.css">
+<style>
+/* Layout: a wall-thick floor plan outline as the header, then the two plans side by side, a project board by status, sales and meetups from Wallapop, and a wall of ideas. */
+:root { --bg: #f6f2ea; --fg: #23201c; --muted: #6a645a; --line: #dcd5c7; --card: #fffdf8; --acc: #2f5d62; --acc-ink: #ffffff; --danger: #b3351e; --wall: #23201c; --room: #e7dfd0; --doing: #c9791a; --disp: "Syne", "Trebuchet MS", sans-serif; --body: "Figtree", system-ui, sans-serif; --mono: "Space Mono", ui-monospace, Consolas, monospace; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #181613; --fg: #efe9dd; --muted: #a79f90; --line: #37322a; --card: #221f1a; --acc: #7fc3ca; --acc-ink: #0f2224; --danger: #ff937a; --wall: #efe9dd; --room: #2c2820; --doing: #eda94e; color-scheme: dark; } }
+:root[data-theme="dark"] { --bg: #181613; --fg: #efe9dd; --muted: #a79f90; --line: #37322a; --card: #221f1a; --acc: #7fc3ca; --acc-ink: #0f2224; --danger: #ff937a; --wall: #efe9dd; --room: #2c2820; --doing: #eda94e; color-scheme: dark; }
+.plan { display: grid; grid-template-columns: 1.7fr 1fr; grid-template-rows: auto auto; border: 7px solid var(--wall); background: var(--room); min-width: 0; }
+.plan > div { padding: clamp(14px, 3vw, 24px); min-width: 0; }
+.plan .a { grid-row: 1 / 3; border-right: 7px solid var(--wall); display: grid; gap: 4px; align-content: end; min-height: clamp(150px, 30vw, 230px); }
+.plan .b { border-bottom: 7px solid var(--wall); }
+.plan .b b, .plan .c b { display: block; font: 700 clamp(25px, 6vw, 38px)/1 var(--mono); font-variant-numeric: tabular-nums; }
+.plan .b span, .plan .c span { font-size: 13.5px; color: var(--muted); }
+h1 { font-weight: 800; font-size: clamp(50px, 13vw, 96px); line-height: .95; letter-spacing: -.02em; }
+h2 { font-weight: 800; }
+.plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.pl { display: grid; gap: 10px; align-content: start; padding: 16px; background: var(--card); border: 1px solid var(--line); border-radius: 4px; min-width: 0; }
+.pl h3 { font-size: 23px; font-weight: 700; overflow-wrap: anywhere; }
+.pl p { margin: 0; color: var(--muted); font-size: 15px; overflow-wrap: anywhere; }
+.pl img { width: 100%; aspect-ratio: 4 / 3; object-fit: contain; background: var(--room); display: block; }
+.ph { display: grid; place-items: center; aspect-ratio: 4 / 3; max-width: 100%; background: var(--room); color: var(--muted); font-size: 14px; text-align: center; padding: 12px; }
+.acts { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.btn { text-decoration: none; display: inline-block; }
+.upl { cursor: pointer; }
+.board { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; align-items: start; }
+.col { display: grid; gap: 4px; min-width: 0; }
+.col h3 { font-size: 18px; font-weight: 700; display: flex; justify-content: space-between; padding-bottom: 6px; border-bottom: 4px solid var(--c); }
+.col h3 span { font: 700 15px var(--mono); }
+#board .row, #ventas .row { grid-template-columns: minmax(0, 1fr) auto; }
+#board .row > span:first-child, #ventas .row > span:first-child { display: none; }
+.stats { padding: 14px 16px; background: var(--card); border: 1px solid var(--line); border-radius: 4px; }
+.cita-dia { font: 700 13px var(--mono); color: var(--doing); text-transform: uppercase; letter-spacing: .03em; }
+details summary { cursor: pointer; font-weight: 700; color: var(--muted); padding: 6px 0; }
+.badge { display: inline-block; font: 700 11px var(--mono); text-transform: uppercase; letter-spacing: .03em; padding: 1px 7px; border-radius: 999px; background: var(--doing); color: var(--bg); }
+.sug:not([hidden]) { display: block; }
+.sug { margin-top: 4px; padding: 8px 10px; border-left: 3px solid var(--acc); background: var(--room); color: var(--fg); white-space: pre-wrap; }
+.copy { border: 1.5px solid var(--line); background: var(--card); border-radius: 6px; padding: 3px 10px; font-size: 13px; font-weight: 700; cursor: pointer; color: var(--fg); }
+.tpls { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.tpl { display: grid; gap: 6px; align-content: start; padding: 12px; background: var(--card); border: 1px solid var(--line); border-radius: 4px; min-width: 0; }
+.tpl p { margin: 0; font-size: 15px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.fold { border: 0; background: none; padding: 0; font: inherit; color: inherit; cursor: pointer; text-align: left; display: inline-flex; align-items: baseline; gap: 10px; }
+.fold::after { content: "▾"; font-size: .6em; color: var(--muted); transition: transform .2s; }
+section.closed .fold::after { transform: rotate(-90deg); }
+section.closed > :not(.shead) { display: none !important; }
+section.closed .shead .edit-only { display: none !important; }
+.ideas { columns: 3 220px; column-gap: 12px; }
+.idea { break-inside: avoid; margin: 0 0 12px; padding: 12px; background: var(--card); border: 1px solid var(--line); border-radius: 4px; display: grid; gap: 6px; }
+.idea img { width: 100%; display: block; background: var(--room); }
+.idea b { overflow-wrap: anywhere; }
+.idea p { margin: 0; font-size: 15px; color: var(--muted); overflow-wrap: anywhere; white-space: pre-wrap; }
+.tag { font: 700 11.5px var(--mono); letter-spacing: .03em; text-transform: uppercase; color: var(--acc); }
+</style>
+<div class="wrap">
+  <div class="plan">
+    <div class="a"><span class="eyebrow">Planos, proyectos e ideas</span><h1>Piso</h1></div>
+    <div class="b"><b id="nDoing">0</b><span>en marcha</span></div>
+    <div class="c"><b id="nCost">0 €</b><span>presupuesto pendiente</span></div>
+  </div>
+  <p class="say" id="say" hidden></p>
+  <section>
+    <div class="shead"><h2>Los planos</h2><button class="btn ghost edit-only" type="button" data-add="planos">＋ Añadir plano</button></div>
+    <div class="plans" id="planos"></div>
+    <p class="small" id="uplMsg" aria-live="polite"></p>
+  </section>
+  <section>
+    <div class="shead"><h2>Proyectos</h2><button class="btn edit-only" type="button" data-add="proyectos">＋ Añadir proyecto</button></div>
+    <div class="board" id="board"></div>
+    <p class="empty" id="boardEmpty" hidden>Aquí irán las obras y compras que queréis hacer, por estado y por estancia, con su presupuesto.</p>
+  </section>
+  <section>
+    <div class="shead"><h2>Ventas en Wallapop</h2><button class="btn edit-only" type="button" data-add="ventas">＋ Añadir artículo</button></div>
+    <div class="stats">
+      <div class="stat"><b id="vTotal">0 €</b><span>ya vendido</span></div>
+      <div class="stat"><b id="vPend">0 €</b><span>en venta o reservado</span></div>
+      <div class="stat"><b id="vCount">0</b><span>artículos vendidos</span></div>
+      <div class="stat"><b id="vBal">0 €</b><span>balance: vendido − gastado en el piso</span></div>
+    </div>
+    <div class="board" id="ventas"></div>
+    <p class="empty" id="ventasEmpty" hidden>Aquí irán las cosas que vendéis en Wallapop: lo que está a la venta, lo reservado y lo ya vendido, con su precio.</p>
+  </section>
+  <section>
+    <div class="shead"><h2>Citas</h2><button class="btn edit-only" type="button" data-add="citas">＋ Añadir cita</button></div>
+    <ul class="list" id="citas"></ul>
+    <p class="empty" id="citasEmpty" hidden>Apunta aquí quién viene a por qué, cuándo y dónde habéis quedado.</p>
+    <details id="pasadasBox" hidden><summary id="pasadasSum">Citas pasadas</summary><ul class="list" id="pasadas"></ul></details>
+  </section>
+  <section>
+    <div class="shead"><h2>Interesados</h2><button class="btn edit-only" type="button" data-add="interesados">＋ Añadir interesado</button></div>
+    <ul class="list" id="inter"></ul>
+    <p class="empty" id="interEmpty" hidden>Quién ha preguntado por cada cosa y en qué quedasteis.</p>
+    <details id="friosBox" hidden><summary id="friosSum">Fríos o descartados</summary><ul class="list" id="frios"></ul></details>
+  </section>
+  <section>
+    <div class="shead"><h2>Mensajes tipo</h2><button class="btn ghost edit-only" type="button" data-add="plantillas">＋ Añadir mensaje</button></div>
+    <div class="tpls" id="tpls"></div>
+    <p class="small" id="copyMsg" aria-live="polite"></p>
+  </section>
+  <section>
+    <div class="shead"><h2>Ideas</h2><span class="acts edit-only"><label class="btn ghost upl" for="ideaFile">📷 Subir imagen</label><input id="ideaFile" type="file" accept="image/*" multiple hidden><button class="btn" type="button" data-add="ideas">＋ Añadir idea</button></span></div>
+    <div class="chips" id="chips" role="group" aria-label="Filtrar por estancia"></div>
+    <div class="ideas" id="ideas"></div>
+  </section>
+</div>
+<script src="core.js"></script>
+<script>
+var C = Core, $ = function (i) { return document.getElementById(i); }, filter = 'Todas';
+var ESTANCIAS = ['Todo el piso', 'Dormitorio', 'Despacho', 'Vestidor', 'Lavabo', 'Comedor', 'Cocina', 'Recibidor', 'Terraza norte', 'Terraza sur', 'Otra'], ESTADOS = [['Por hacer', '--muted'], ['En marcha', '--doing'], ['Hecho', '--acc']];
+var VENTAS = [['En venta', '--muted'], ['Reservado', '--doing'], ['Vendido', '--acc']];
+var INTER = [['Ha quedado', 1], ['Negociando', 1], ['En espera', 1], ['Frío', 0], ['Descartado', 0]], PARADO = 21;
+C.wire({
+  planos: { title: 'Plano', fields: [{ k: 'nombre', label: 'Nombre', req: 1 }, { k: 'url', label: 'Enlace al editor', type: 'url', req: 1, ph: 'https://…' }, { k: 'texto', label: 'Nota' }] },
+  proyectos: { title: 'Proyecto', fields: [{ k: 'titulo', label: 'Qué queréis hacer', req: 1 }, { k: 'estado', label: 'Estado', type: 'select', options: ESTADOS.map(function (e) { return e[0]; }) }, { k: 'estancia', label: 'Estancia', type: 'select', options: ESTANCIAS }, { k: 'coste', label: 'Presupuesto (€)', type: 'number' }, { k: 'url', label: 'Enlace', type: 'url', ph: 'https://…' }, { k: 'nota', label: 'Nota', type: 'textarea' }] },
+  ventas: { title: 'Artículo', fields: [{ k: 'articulo', label: 'Artículo', req: 1 }, { k: 'estado', label: 'Estado', type: 'select', options: VENTAS.map(function (e) { return e[0]; }) }, { k: 'precio', label: 'Precio (€)', type: 'number' }, { k: 'fecha', label: 'Fecha de venta', type: 'date' }, { k: 'comprador', label: 'Comprador' }, { k: 'url', label: 'Enlace al anuncio', type: 'url', ph: 'https://es.wallapop.com/…' }, { k: 'url2', label: 'Segundo anuncio (opcional)', type: 'url', ph: 'https://es.wallapop.com/…' }, { k: 'publicado', label: 'Publicado el', type: 'date' }, { k: 'vistas', label: 'Visitas', type: 'number' }, { k: 'favs', label: 'Favoritos', type: 'number' }, { k: 'ref', label: 'Precio de artículos parecidos', ph: 'p. ej. la mayoría entre 10 y 20 €' }, { k: 'sugerencia', label: 'Texto propuesto para el anuncio', type: 'textarea' }, { k: 'nota', label: 'Nota', type: 'textarea' }] },
+  interesados: { title: 'Interesado', fields: [{ k: 'persona', label: 'Nombre', req: 1 }, { k: 'articulo', label: 'Artículo', type: 'select', get options() { return ['—'].concat(C.data.ventas.filter(function (v) { return v.estado !== 'Vendido'; }).map(function (v) { return v.articulo; })); } }, { k: 'estado', label: 'Estado', type: 'select', options: INTER.map(function (e) { return e[0]; }) }, { k: 'toca', label: 'A quién le toca', type: 'select', options: ['—', 'Te toca responder', 'Esperando su respuesta'] }, { k: 'fecha', label: 'Último mensaje', type: 'date' }, { k: 'ultimo', label: 'En qué quedasteis', type: 'textarea' }] },
+  plantillas: { title: 'Mensaje tipo', fields: [{ k: 'titulo', label: 'Para cuándo', req: 1, ph: '¿Sigue disponible?' }, { k: 'texto', label: 'Mensaje', type: 'textarea', req: 1 }] },
+  citas: { title: 'Cita', preset: function () { return { fecha: C.today() }; }, fields: [{ k: 'persona', label: 'Nombre de la persona', req: 1 }, { k: 'fecha', label: 'Día', type: 'date', req: 1 }, { k: 'hora', label: 'Hora', type: 'time' }, { k: 'articulo', label: 'Artículo', type: 'select', get options() { return ['—'].concat(C.data.ventas.map(function (v) { return v.articulo; })); } }, { k: 'lugar', label: 'Dónde', ph: 'En casa, en el metro…' }, { k: 'contacto', label: 'Contacto', ph: 'Usuario de Wallapop o teléfono' }, { k: 'nota', label: 'Nota', type: 'textarea' }] },
+  ideas: { title: 'Idea', preset: function () { return { estancia: filter === 'Todas' ? 'Todo el piso' : filter }; }, fields: [{ k: 'titulo', label: 'La idea', req: 1 }, { k: 'estancia', label: 'Estancia', type: 'select', options: ESTANCIAS }, { k: 'url', label: 'Enlace', type: 'url', ph: 'https://…' }, { k: 'nota', label: 'Nota', type: 'textarea' }], afterDelete: function (o) { if (C.assets && o.foto) C.assets.delete(o.foto).catch(function () {}); } }
+});
+var euros = function (n) { return Math.round(n).toLocaleString('es-ES') + ' €'; };
+async function uploadTo(files, fn) {
+  if (!C.assets) { $('uplMsg').textContent = 'Las imágenes solo se pueden subir con tu sesión de Claude iniciada.'; return; }
+  for (var i = 0; i < files.length; i++) {
+    $('uplMsg').textContent = 'Subiendo ' + (i + 1) + ' de ' + files.length + '…';
+    try { var r = await C.upload(files[i]); await fn(r.id); $('uplMsg').textContent = 'Imagen subida.'; }
+    catch (e) { $('uplMsg').textContent = 'No se ha podido subir la imagen. Comprueba la conexión y vuelve a probar.'; }
+  }
+}
+$('ideaFile').addEventListener('change', async function () {
+  await uploadTo(Array.prototype.slice.call(this.files || []), function (id) { return C.put('ideas', C.uid(), { titulo: 'Imagen de referencia', estancia: filter === 'Todas' ? 'Todo el piso' : filter, foto: id, ts: Date.now() }); });
+  this.value = '';
+});
+$('planos').addEventListener('change', async function (e) {
+  var id = e.target.getAttribute('data-shot'); if (!id) return;
+  var old = (C.doc('planos', id) || {}).foto;
+  await uploadTo(Array.prototype.slice.call(e.target.files || []).slice(0, 1), function (a) { return C.db.doc('planos/' + id).update({ foto: a }); });
+  if (old && C.assets) C.assets.delete(old).catch(function () {});
+});
+// Each section folds from its heading; which ones are folded is remembered per viewer
+var folded = {};
+try { folded = JSON.parse(localStorage.getItem('piso-folded') || '{}') || {}; } catch (e) {}
+document.querySelectorAll('section > .shead > h2').forEach(function (h) {
+  var s = h.closest('section'), name = h.textContent, b = document.createElement('button');
+  b.className = 'fold'; b.type = 'button'; b.textContent = name;
+  h.textContent = ''; h.appendChild(b);
+  function set(c) { s.classList.toggle('closed', c); b.setAttribute('aria-expanded', String(!c)); }
+  set(!!folded[name]);
+  b.addEventListener('click', function () {
+    folded[name] = !s.classList.contains('closed'); set(folded[name]);
+    try { localStorage.setItem('piso-folded', JSON.stringify(folded)); } catch (e) {}
+  });
+});
+// Copy a suggested listing text or a template to paste into Wallapop
+document.addEventListener('click', function (e) {
+  var s = e.target.closest && e.target.closest('[data-sug]');
+  if (s) { var box = s.nextElementSibling, open = box.hidden; box.hidden = !open; s.setAttribute('aria-expanded', String(open)); s.textContent = open ? 'Ocultar texto propuesto' : 'Ver texto propuesto'; return; }
+  var b = e.target.closest && e.target.closest('[data-copy]'); if (!b) return;
+  var p = b.getAttribute('data-copy').split('|'), o = C.doc(p[0], p[1]), t = o ? o[p[2]] : '';
+  function ok() { $('copyMsg').textContent = ''; b.textContent = 'Copiado ✓'; setTimeout(function () { b.textContent = 'Copiar'; }, 1500); }
+  function fallback() { var ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); var r = false; try { r = document.execCommand('copy'); } catch (x) {} ta.remove(); if (r) ok(); else b.textContent = 'Selecciónalo y cópialo a mano'; }
+  if (navigator.clipboard) navigator.clipboard.writeText(t).then(ok, fallback); else fallback();
+});
+$('chips').addEventListener('click', function (e) { var b = e.target.closest('.chip'); if (b) { filter = b.getAttribute('data-c'); render(); } });
+function cita(x) {
+  var sub = '<span class="cita-dia">' + C.esc(C.left(x.fecha)) + '</span>' + (x.articulo && x.articulo !== '—' ? ' · <span class="tag">' + C.esc(x.articulo) + '</span>' : '') +
+    (x.lugar ? '\n📍 ' + C.esc(x.lugar) : '') + (x.contacto ? '\n' + C.esc(x.contacto) : '') + (x.nota ? '\n' + C.esc(x.nota) : '');
+  return C.row({ col: 'citas', id: x.id, title: x.persona, sub: sub, right: C.fmt(x.fecha) + (x.hora ? ' · ' + x.hora : ''), check: 'hecha', done: !!x.hecha });
+}
+function render() {
+  var pl = C.data.planos.slice().sort(function (a, b) { return (a.ts || 0) - (b.ts || 0); });
+  $('planos').innerHTML = pl.length ? pl.map(function (p) {
+    return '<article class="pl"><h3>' + C.esc(p.nombre) + '</h3>' + (p.foto ? '<img src="/_blob/' + C.esc(p.foto) + '" alt="Captura de ' + C.esc(p.nombre) + '" loading="lazy">' : '<div class="ph">Sube una captura para ver aquí el último estado del plano.</div>') + (p.texto ? '<p>' + C.esc(p.texto) + '</p>' : '') +
+      '<div class="acts">' + (C.safe(p.url) ? '<a class="btn" href="' + C.esc(p.url) + '" target="_blank" rel="noopener">Abrir el editor ↗</a>' : '') + '<label class="btn ghost upl edit-only">📷 Captura<input type="file" accept="image/*" hidden data-shot="' + C.esc(p.id) + '" aria-label="Subir captura de ' + C.esc(p.nombre) + '"></label><button class="lnk edit-only" type="button" data-edit="planos|' + C.esc(p.id) + '" aria-label="Editar ' + C.esc(p.nombre) + '">Editar</button></div></article>';
+  }).join('') : '<p class="empty" style="grid-column:1/-1">Aquí irán los enlaces a vuestros planos.</p>';
+  var pr = C.data.proyectos;
+  $('board').hidden = !pr.length; $('boardEmpty').hidden = !!pr.length;
+  $('board').innerHTML = ESTADOS.map(function (e) {
+    var l = pr.filter(function (x) { return (x.estado || 'Por hacer') === e[0]; }).sort(function (a, b) { return (a.ts || 0) - (b.ts || 0); });
+    return '<div class="col" style="--c:var(' + e[1] + ')"><h3>' + e[0] + '<span>' + l.length + '</span></h3><ul class="list">' + l.map(function (x) {
+      return C.row({ col: 'proyectos', id: x.id, title: x.titulo, sub: '<span class="tag">' + C.esc(x.estancia || 'Todo el piso') + '</span>' + (x.nota ? '\n' + C.esc(x.nota) : '') + (C.safe(x.url) ? '\n<a href="' + C.esc(x.url) + '" target="_blank" rel="noopener">Ver enlace ↗</a>' : ''), right: x.coste != null ? euros(+x.coste) : '' });
+    }).join('') + '</ul></div>';
+  }).join('');
+  $('nDoing').textContent = pr.filter(function (x) { return x.estado === 'En marcha'; }).length;
+  $('nCost').textContent = euros(pr.filter(function (x) { return x.estado !== 'Hecho'; }).reduce(function (a, x) { return a + (+x.coste || 0); }, 0));
+  var ve = C.data.ventas, sum = function (l) { return l.reduce(function (a, x) { return a + (+x.precio || 0); }, 0); };
+  var vendidos = ve.filter(function (x) { return x.estado === 'Vendido'; });
+  $('vTotal').textContent = euros(sum(vendidos));
+  $('vPend').textContent = euros(sum(ve.filter(function (x) { return x.estado !== 'Vendido'; })));
+  $('vCount').textContent = vendidos.length;
+  var bal = sum(vendidos) - pr.filter(function (x) { return x.estado === 'Hecho'; }).reduce(function (a, x) { return a + (+x.coste || 0); }, 0);
+  $('vBal').textContent = (bal < 0 ? '−' : '') + euros(Math.abs(bal));
+  $('ventas').hidden = !ve.length; $('ventasEmpty').hidden = !!ve.length;
+  $('ventas').innerHTML = VENTAS.map(function (e) {
+    var l = ve.filter(function (x) { return (x.estado || 'En venta') === e[0]; }).sort(function (a, b) { return e[0] === 'Vendido' ? (b.fecha || '').localeCompare(a.fecha || '') : (a.ts || 0) - (b.ts || 0); });
+    return '<div class="col" style="--c:var(' + e[1] + ')"><h3>' + e[0] + '<span>' + l.length + '</span></h3><ul class="list">' + l.map(function (x) {
+      var dias = x.publicado ? -C.days(x.publicado) : null, vendido = x.estado === 'Vendido';
+      var stats = [!vendido && dias != null ? 'publicado hace ' + dias + ' días' : '', !vendido && x.vistas != null ? x.vistas + ' visitas' : '', !vendido && x.favs != null ? x.favs + ' ♥' : ''].filter(Boolean).join(' · ');
+      var sub = [x.fecha ? C.fmt(x.fecha) : '', x.comprador ? (vendido ? 'a ' : 'con ') + C.esc(x.comprador) : ''].filter(Boolean).join(' · ') +
+        ((x.estado || 'En venta') === 'En venta' && dias >= PARADO ? '\n<span class="badge">Parado</span> ' : stats ? '\n' : '') + stats +
+        (x.ref && !vendido ? '\nParecidos en Wallapop: ' + C.esc(x.ref) : '') + (x.nota ? '\n' + C.esc(x.nota) : '') +
+        (C.safe(x.url) ? '\n<a href="' + C.esc(x.url) + '" target="_blank" rel="noopener">Ver anuncio ↗</a>' : '') + (C.safe(x.url2) ? ' · <a href="' + C.esc(x.url2) + '" target="_blank" rel="noopener">Anuncio de medidas ↗</a>' : '') +
+        (x.sugerencia && !vendido ? '\n<button class="lnk" type="button" data-sug aria-expanded="false">Ver texto propuesto</button><span class="sug" hidden>' + C.esc(x.sugerencia) + '\n<button class="copy" type="button" data-copy="ventas|' + C.esc(x.id) + '|sugerencia">Copiar</button></span>' : '');
+      return C.row({ col: 'ventas', id: x.id, title: x.articulo, sub: sub, right: x.precio != null ? euros(+x.precio) : '' });
+    }).join('') + '</ul></div>';
+  }).join('');
+  var key = function (x) { return (x.fecha || '') + ' ' + (x.hora || ''); };
+  var ci = C.data.citas.slice().sort(function (a, b) { return key(a).localeCompare(key(b)); });
+  var prox = ci.filter(function (x) { return !x.hecha && (C.days(x.fecha) == null || C.days(x.fecha) >= 0); }), pas = ci.filter(function (x) { return prox.indexOf(x) < 0; }).reverse();
+  $('citas').innerHTML = prox.map(cita).join('');
+  $('citasEmpty').hidden = !!prox.length;
+  $('citasEmpty').textContent = ci.length ? 'No hay citas pendientes.' : 'Apunta aquí quién viene a por qué, cuándo y dónde habéis quedado.';
+  $('pasadasBox').hidden = !pas.length;
+  $('pasadasSum').textContent = 'Citas pasadas o hechas (' + pas.length + ')';
+  $('pasadas').innerHTML = pas.map(cita).join('');
+  var activo = function (x) { return INTER.some(function (e) { return e[0] === (x.estado || 'Negociando') && e[1]; }); };
+  var orden = function (a, b) { return (a.toca === 'Te toca responder' ? 0 : 1) - (b.toca === 'Te toca responder' ? 0 : 1) || (b.fecha || '').localeCompare(a.fecha || ''); };
+  var it = C.data.interesados.slice().sort(orden), act = it.filter(activo), fr = it.filter(function (x) { return !activo(x); });
+  var inter = function (x) {
+    var sub = '<span class="tag">' + C.esc(x.estado || 'Negociando') + '</span>' + (x.articulo && x.articulo !== '—' ? ' · ' + C.esc(x.articulo) : '') + (x.toca === 'Te toca responder' ? ' · <span class="badge">Te toca responder</span>' : '') + (x.ultimo ? '\n' + C.esc(x.ultimo) : '');
+    return C.row({ col: 'interesados', id: x.id, title: x.persona, sub: sub, right: x.fecha ? C.left(x.fecha) : '' });
+  };
+  $('inter').innerHTML = act.map(inter).join('');
+  $('interEmpty').hidden = !!act.length;
+  $('interEmpty').textContent = it.length ? 'Ahora mismo no hay nadie interesado.' : 'Quién ha preguntado por cada cosa y en qué quedasteis.';
+  $('friosBox').hidden = !fr.length;
+  $('friosSum').textContent = 'Fríos o descartados (' + fr.length + ')';
+  $('frios').innerHTML = fr.map(inter).join('');
+  var tp = C.data.plantillas.slice().sort(function (a, b) { return (a.ts || 0) - (b.ts || 0); });
+  $('tpls').innerHTML = tp.length ? tp.map(function (t) {
+    return '<div class="tpl"><b>' + C.esc(t.titulo) + '</b><p>' + C.esc(t.texto) + '</p><div class="acts"><button class="copy" type="button" data-copy="plantillas|' + C.esc(t.id) + '|texto">Copiar</button><button class="lnk edit-only" type="button" data-edit="plantillas|' + C.esc(t.id) + '">Editar</button></div></div>';
+  }).join('') : '<p class="empty" style="grid-column:1/-1">Respuestas que repetís a menudo, listas para copiar.</p>';
+  var ids = C.data.ideas, used = ESTANCIAS.filter(function (s) { return ids.some(function (i) { return i.estancia === s; }); });
+  if (filter !== 'Todas' && used.indexOf(filter) < 0) filter = 'Todas';
+  $('chips').hidden = used.length < 2;
+  $('chips').innerHTML = ['Todas'].concat(used).map(function (s) { return '<button class="chip" type="button" data-c="' + s + '" aria-pressed="' + (filter === s) + '">' + s + '</button>'; }).join('');
+  var li = ids.filter(function (i) { return filter === 'Todas' || i.estancia === filter; }).sort(function (a, b) { return (b.ts || 0) - (a.ts || 0); });
+  $('ideas').innerHTML = li.length ? li.map(function (i) {
+    return '<figure class="idea">' + (i.foto ? '<img src="/_blob/' + C.esc(i.foto) + '" alt="' + C.esc(i.titulo) + '" loading="lazy">' : '') + '<span class="tag">' + C.esc(i.estancia || 'Todo el piso') + '</span><b>' + C.esc(i.titulo) + '</b>' + (i.nota ? '<p>' + C.esc(i.nota) + '</p>' : '') + '<div class="acts">' + (C.safe(i.url) ? '<a href="' + C.esc(i.url) + '" target="_blank" rel="noopener">Ver enlace ↗</a>' : '') + '<button class="lnk edit-only" type="button" data-edit="ideas|' + C.esc(i.id) + '" aria-label="Editar idea">Editar</button></div></figure>';
+  }).join('') : '<p class="empty">Guarda aquí colores, muebles, fotos y enlaces que os gusten, por estancia.</p>';
+}
+C.start(['planos', 'proyectos', 'ventas', 'citas', 'interesados', 'plantillas', 'ideas'], render, { key: 'piso-v1', assets: true });
+</script>
+
+</body></html>

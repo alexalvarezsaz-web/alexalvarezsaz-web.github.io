@@ -1,0 +1,546 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="../shared/firebase-config.js"></script>
+<script src="../shared/claude-firebase.js" data-app="la-sessio"></script>
+</head><body>
+<div class="cartel-top" aria-hidden="true" style="position:relative;height:clamp(110px,32vw,200px);overflow:hidden"><svg style="position:absolute;inset:0;width:100%;height:100%;display:block" viewBox="0 0 400 220" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="400" height="220" fill="#3a0f1c"/><path d="M200 10 L70 220 H330Z" fill="#f2bd5a"/><path d="M200 10 L130 220 H270Z" fill="#fae0a0"/><path d="M0 0 H128 C118 70 74 150 0 196Z" fill="#8d2233"/><path d="M400 0 H272 C282 70 326 150 400 196Z" fill="#8d2233"/><path d="M36 0 C34 60 22 120 0 168M84 0 C80 60 54 124 14 170M364 0 C366 60 378 120 400 168M316 0 C320 60 346 124 386 170" fill="none" stroke="#5e1526" stroke-width="4"/><path d="M0 0 H400 V14 H0Z" fill="#5e1526"/><g fill="#1a0a10"><circle cx="70" cy="206" r="26"/><circle cx="130" cy="200" r="26"/><circle cx="200" cy="204" r="26"/><circle cx="270" cy="200" r="26"/><circle cx="330" cy="206" r="26"/></g></svg></div>
+<title>La Sessió</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow:wght@400;500;700&display=swap">
+<style>
+/* Layout: a cinema programme in a dark room. "What do I put on?" on top (three options, never more), then one shelf per kind of thing to watch, each a stack of tickets with a torn stub */
+:root {
+  --bg: #1c1016; --panel: #2a1820; --ticket: #f3e7d2; --ticket-ink: #24141b; --ticket-soft: #6e5a5c; --ink: #f6ece0; --muted: #bda9a4; --line: #4a2f39;
+  --lamp: #f2bd5a; --lamp-ink: #2a1a07; --curtain: #8d2233;
+  --n: #e50914; --h: #7b3ff2; --d: #1a5fd0; --a: #0a8f9e; --c: #e8710a; --y: #c4302b; --t: #c2185b; --r: #5a6b7d;
+  --display: "Anton", Impact, "Arial Narrow", sans-serif; --body: "Barlow", "Segoe UI", sans-serif; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 400 16px/1.4 var(--body); }
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; touch-action: manipulation; }
+:focus-visible { outline: 3px solid var(--lamp); outline-offset: 2px; }
+.wrap { max-width: 980px; margin: 0 auto; display: grid; gap: 14px; padding-block: 16px 40px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1 { margin: 0; font: 400 clamp(46px, 13vw, 76px)/.95 var(--display); letter-spacing: .01em; color: var(--lamp); text-transform: uppercase; }
+.sub { margin: 0; color: var(--muted); max-width: 62ch; }
+
+/* Tonight */
+.tonight { padding: 16px; border-radius: 16px; background: linear-gradient(135deg, var(--curtain), #4a1422); display: grid; gap: 10px; }
+.tonight h2 { margin: 0; font: 400 26px/1 var(--display); letter-spacing: .02em; text-transform: uppercase; }
+.go { min-height: 60px; width: 100%; border: 0; border-radius: 12px; background: var(--lamp); color: var(--lamp-ink); font: 400 24px var(--display); letter-spacing: .03em; text-transform: uppercase; }
+.gos { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 8px; }
+.go.alt { background: transparent; color: var(--ink); border: 2px solid var(--lamp); font-size: 20px; }
+.news { display: grid; gap: 8px; padding: 12px 14px; border-radius: 12px; background: var(--panel); border-left: 4px solid var(--lamp); }
+.news + .news { margin-top: 8px; }
+.news p { margin: 0; }
+.news .acts button { color: var(--ink); border-color: var(--line); }
+.hl { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 4px; }
+.hl li { display: flex; align-items: center; gap: 10px; min-height: 40px; border-bottom: 1px solid var(--line); }
+.hl span { width: 52px; flex: none; color: var(--muted); font-size: 13.5px; font-weight: 700; }
+.hl b { flex: 1; min-width: 0; font-weight: 500; overflow-wrap: break-word; }
+.hl button { width: 36px; height: 36px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); }
+.three { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 8px; }
+.mini { display: grid; gap: 6px; align-content: start; padding: 12px; border-radius: 12px; background: var(--ticket); color: var(--ticket-ink); }
+.mini .k { font-size: 12.5px; font-weight: 700; color: var(--ticket-soft); text-transform: uppercase; letter-spacing: .04em; }
+.mini h3 { margin: 0; font: 400 22px/1.08 var(--display); letter-spacing: .012em; overflow-wrap: break-word; }
+.mini p { margin: 0; font-size: 14.5px; }
+.mini .this { min-height: 44px; margin-top: 2px; border: 0; border-radius: 9px; background: var(--ticket-ink); color: var(--ticket); font-weight: 700; }
+.mini.cont { box-shadow: 0 0 0 3px var(--lamp); }
+.mini .go-link { display: grid; place-items: center; text-decoration: none; font-size: 15px; }
+.qa { display: flex; flex-wrap: wrap; gap: 5px; }
+.qa button { flex: 1 1 auto; min-height: 40px; padding: 0 9px; border-radius: 9px; border: 1px solid var(--ticket-soft); background: transparent; color: var(--ticket-ink); font-weight: 700; font-size: 14px; }
+.qa button[aria-pressed="true"] { background: var(--ticket-ink); color: var(--ticket); }
+.reroll { justify-self: start; min-height: 40px; padding: 0 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,.4); background: transparent; color: var(--ink); font-weight: 700; }
+.done { display: grid; gap: 8px; }
+.done p { margin: 0; font-weight: 700; }
+
+/* Tabs */
+.tabs { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; border-bottom: 2px solid var(--line); }
+.tab { flex: none; min-height: 48px; padding: 0 14px; border: 0; border-bottom: 3px solid transparent; margin-bottom: -2px; background: none; color: var(--muted); font: 400 21px var(--display); letter-spacing: .03em; text-transform: uppercase; }
+.tab[aria-selected="true"] { color: var(--lamp); border-bottom-color: var(--lamp); }
+.tab small { font: 700 13px var(--body); color: var(--muted); margin-left: 4px; }
+
+.filters { display: grid; gap: 8px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { min-height: 40px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font-weight: 700; display: inline-flex; align-items: center; gap: 6px; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.tonight .chip { border-color: rgba(255,255,255,.35); background: transparent; }
+.tonight .chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.find { width: 100%; min-height: 46px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); font-size: 16px; }
+.find::placeholder { color: var(--muted); }
+.pb { display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 4px; border-radius: 5px; color: #fff; font: 700 12.5px var(--body); }
+.pb.n { background: var(--n); } .pb.h { background: var(--h); } .pb.d { background: var(--d); } .pb.a { background: var(--a); } .pb.c { background: var(--c); } .pb.y { background: var(--y); } .pb.t { background: var(--t); } .pb.r { background: var(--r); }
+.count { margin: 0; color: var(--muted); font-size: 14px; }
+
+.list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); gap: 10px; }
+.tk { display: grid; grid-template-columns: 74px minmax(0, 1fr); background: var(--ticket); color: var(--ticket-ink); border-radius: 12px; overflow: hidden; }
+.tk.star { box-shadow: 0 0 0 3px var(--lamp); }
+.stub { display: grid; align-content: center; justify-items: center; gap: 8px; padding: 10px 4px; border-right: 2px dashed var(--ticket-soft); text-align: center; font-variant-numeric: tabular-nums; }
+.stub b { display: block; font: 400 25px/1 var(--display); }
+.stub span { font-size: 11.5px; font-weight: 700; color: var(--ticket-soft); }
+.tb { padding: 11px 13px; display: grid; gap: 6px; min-width: 0; align-content: start; }
+.tb h2 { margin: 0; font: 400 23px/1.08 var(--display); letter-spacing: .012em; overflow-wrap: break-word; }
+.meta { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; font-size: 13px; font-weight: 700; color: var(--ticket-soft); }
+.why { margin: 0; font-size: 15px; }
+.prog { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 9px; background: rgba(36, 20, 27, .08); font-weight: 700; font-size: 14.5px; }
+.prog button { width: 40px; height: 40px; border-radius: 9px; border: 1px solid var(--ticket-soft); background: transparent; color: var(--ticket-ink); font-weight: 700; font-size: 18px; }
+.prog span { flex: 1; }
+.acts { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.acts button { min-height: 42px; padding: 0 11px; border-radius: 9px; border: 1px solid var(--ticket-soft); background: transparent; color: var(--ticket-ink); font-weight: 700; }
+.acts button[aria-pressed="true"] { background: var(--ticket-ink); color: var(--ticket); border-color: var(--ticket-ink); }
+.acts a, .mini a { color: var(--ticket-soft); font-size: 13.5px; font-weight: 700; }
+.acts a { margin-left: auto; }
+.nope { display: grid; gap: 8px; padding: 10px; border-radius: 9px; background: rgba(36, 20, 27, .08); }
+.nope b { font-size: 14.5px; }
+.nope .opts { display: flex; flex-wrap: wrap; gap: 5px; }
+.nope .opts button { min-height: 40px; padding: 0 10px; border-radius: 9px; border: 1px solid var(--ticket-soft); background: transparent; color: var(--ticket-ink); font-weight: 700; font-size: 14px; }
+.nope .opts button[aria-pressed="true"] { background: var(--ticket-ink); color: var(--ticket); }
+.nope input { width: 100%; min-height: 44px; padding: 0 10px; border-radius: 9px; border: 1px solid var(--ticket-soft); background: #fffaf0; color: var(--ticket-ink); font-size: 16px; }
+.nope .row { display: flex; gap: 6px; }
+.nope .row button { flex: 1; min-height: 44px; border-radius: 9px; font-weight: 700; border: 1px solid var(--ticket-ink); background: transparent; color: var(--ticket-ink); }
+.nope .row .yes { background: var(--ticket-ink); color: var(--ticket); }
+.gone { margin: 0; font-size: 14px; font-style: italic; color: var(--ticket-soft); }
+.learn { margin: 0; padding: 9px 12px; border-radius: 10px; background: var(--panel); font-size: 14px; color: var(--muted); }
+.learn b { color: var(--ink); }
+.empty { padding: 26px 16px; text-align: center; color: var(--muted); }
+details.more { padding: 12px 16px; border-radius: 14px; background: var(--panel); }
+details.more summary { cursor: pointer; font-weight: 700; min-height: 32px; display: flex; align-items: center; }
+.add { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin-top: 10px; }
+.add label { display: grid; gap: 3px; font-size: 13px; font-weight: 700; color: var(--muted); min-width: 0; }
+.add input, .add select { width: 100%; min-width: 0; min-height: 44px; padding: 0 10px; border-radius: 9px; border: 1px solid var(--line); background: var(--bg); font-size: 16px; }
+.add button { min-height: 44px; border: 0; border-radius: 9px; background: var(--lamp); color: var(--lamp-ink); font-weight: 700; align-self: end; }
+.note { font-size: 13.5px; color: var(--muted); margin: 0; }
+</style>
+
+<main class="wrap">
+  <header style="display:grid;gap:6px">
+    <h1>La Sessió</h1>
+    <p class="sub">Pelis, series, documentales y vídeos elegidos para ti, disponibles en España. Si no sabes qué poner, pide tres opciones y quédate con una.</p>
+  </header>
+
+  <section class="tonight" aria-label="Elegir qué ver ahora">
+    <h2>¿Qué pongo?</h2>
+    <div class="chips" id="pMode" role="group" aria-label="Para qué"></div>
+    <div class="chips" id="pWho" role="group" aria-label="Con quién"></div>
+    <div class="gos"><button class="go" type="button" id="goBtn">Dame 3 opciones</button><button class="go alt" type="button" id="randBtn">Elige tú</button></div>
+    <div id="pick"></div>
+  </section>
+
+  <div id="news"></div>
+  <details class="more" id="histBox"><summary id="histSum">Esta semana</summary><div id="hist"></div></details>
+
+  <div class="tabs" id="tabs" role="tablist" aria-label="Qué ver"></div>
+  <p class="sub" id="tabSub"></p>
+
+  <div class="filters">
+    <input class="find" id="q" type="search" placeholder="Buscar por título…" autocomplete="off" aria-label="Buscar">
+    <div class="chips" id="fP" role="group" aria-label="Plataforma"></div>
+    <div class="chips" id="fG" role="group" aria-label="Género"></div>
+    <div class="chips" id="fS" role="group" aria-label="Estado"></div>
+  </div>
+  <p class="learn" id="learn" hidden></p>
+  <p class="count" id="count"></p>
+  <div class="list" id="list"></div>
+
+  <details class="more">
+    <summary>Añadir algo a la lista</summary>
+    <form class="add" id="addF">
+      <label>Título<input id="aT" maxlength="80" required></label>
+      <label>Qué es<select id="aK"></select></label>
+      <label>Género<input id="aG" maxlength="30" list="gens" placeholder="Thriller"></label>
+      <label>Plataforma<select id="aP"></select></label>
+      <label>Minutos<input id="aM" type="number" min="1" max="400" inputmode="numeric" placeholder="25"></label>
+      <button type="submit">Añadir</button>
+    </form>
+    <datalist id="gens"></datalist>
+  </details>
+  <p class="note" id="note"></p>
+</main>
+
+<script>
+var PLAT = { n: 'Netflix', h: 'HBO Max', d: 'Disney+', a: 'Prime Video', c: 'Crunchyroll', y: 'YouTube', t: '3Cat', r: 'RTVE Play' };
+var TABS = { pelis: 'Películas', series: 'Series', docus: 'Documentales', yt: 'YouTube' };
+var SUBS = {
+  pelis: 'Elegidas a partir de lo que has visto y te ha encantado en Netflix.',
+  series: 'Marca «Empezada» y apunta por qué capítulo vas: a la hora de comer, la primera opción será seguir con ella.',
+  docus: 'Naturaleza de la buena, montaña, crímenes reales y alguno de tu carrera.',
+  yt: 'Canales para un vídeo suelto mientras comes. Se abren en YouTube.'
+};
+var KIND1 = { pelis: 'Película', series: 'Serie', docus: 'Documental', yt: 'YouTube' };
+var COMER = 35;
+var LS = 'la-sessio-v2', S = { cat: { pelis: [], series: [], docus: [], yt: [] }, pareja: [], fecha: '', est: {}, mias: {}, hist: {} }, db = null;
+var F = { tab: 'pelis', p: '', g: '', s: 'pend' }, P = { mode: 'comer', ys: false, ids: [], chosen: '', ask: '', nope: '' };
+try { var raw = JSON.parse(localStorage.getItem(LS) || 'null'); if (raw) S = Object.assign(S, raw); } catch (e) {}
+try { var ui = JSON.parse(localStorage.getItem(LS + '-ui') || 'null'); if (ui && TABS[ui.tab]) F.tab = ui.tab; if (ui && ui.mode) P.mode = ui.mode; } catch (e) {}
+function persist() { try { localStorage.setItem(LS, JSON.stringify(S)); localStorage.setItem(LS + '-ui', JSON.stringify({ tab: F.tab, mode: P.mode })); } catch (e) {} }
+function $(i) { return document.getElementById(i); }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function norm(s) { return String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); }
+function kindOf(o) { return o.k || 'pelis'; }
+function items(k) {
+  return (S.cat[k] || []).map(function (o) { return Object.assign({ k: k }, o); })
+    .concat(Object.keys(S.mias).map(function (id) { return S.mias[id]; }).filter(function (o) { return kindOf(o) === k; }).map(function (o) { return Object.assign({ k: k }, o); }));
+}
+function everything() { return Object.keys(TABS).reduce(function (a, k) { return a.concat(items(k)); }, []); }
+function byId(id) { return everything().filter(function (o) { return o.id === id; })[0]; }
+function st(id) { return S.est[id] || {}; }
+function hm(m) { return m ? (m >= 60 ? Math.floor(m / 60) + 'h' + String(m % 60).padStart(2, '0') : m + ' min') : ''; }
+// One sitting: a film or single doc whole, one episode of a series or doc series, one video
+function unit(o) { return o.k === 'series' ? o.ep : o.min; }
+function avail(o) { return (o.p || []).length > 0; }
+function inProgress(o) { var e = st(o.id); return o.k === 'series' && e.curso && !e.vista; }
+function badges(p) { return (p || []).map(function (x) { return '<span class="pb ' + x + '" title="' + PLAT[x] + '">' + x.toUpperCase() + '</span>'; }).join(''); }
+function where(o) {
+  if (o.k === 'yt') return { href: 'https://www.youtube.com/results?search_query=' + encodeURIComponent(o.q || o.t), label: 'Abrir en YouTube ↗' };
+  if (o.k === 'pelis' && !o.mia) return { href: 'https://www.justwatch.com/es/pelicula/' + encodeURIComponent(o.id), label: 'Dónde verla ↗' };
+  return { href: 'https://www.justwatch.com/es/buscar?q=' + encodeURIComponent(o.t), label: o.k === 'pelis' ? 'Dónde verla ↗' : 'Dónde verlo ↗' };
+}
+
+// Reasons offered depend on the title; each one also lowers similar titles in the order
+var GTXT = { Anime: 'No me va el anime', Comedia: 'No me hace gracia este humor', 'En pareja': 'Las románticas no son lo mío', Juicios: 'Harto de juicios', Zombis: 'Ya tengo bastantes zombis', Mafia: 'Harto de mafia', 'Acción': 'No me apetece tanta acción', Crimen: 'Harto de crímenes', 'Crimen real': 'Harto de crímenes reales', Thriller: 'Harto de thrillers', Guerra: 'No me apetece guerra', 'Animación': 'No me va la animación', Naturaleza: 'Ya tengo bastante naturaleza', 'Montaña': 'No me tira la montaña', Ciencia: 'No me apetece divulgación', Salud: 'Demasiado de la carrera', Risas: 'No me hace gracia', 'Ingeniería': 'No me interesa el tema', Misterio: 'No me van los misterios', 'Música': 'No me interesa el tema' };
+function reasons(o) {
+  var r = [o.k === 'yt' ? ['vista', 'Ya lo conozco'] : ['vista', o.k === 'pelis' ? 'Ya la he visto' : 'Ya lo he visto']];
+  r.push(['genero', GTXT[o.g] || 'No me apetece este tipo de ' + (o.k === 'pelis' ? 'película' : o.k === 'series' ? 'serie' : 'cosas')]);
+  if (o.k === 'pelis' && o.min >= 140) r.push(['larga', 'Muy larga (' + hm(o.min) + ')']);
+  if (o.k !== 'pelis' && o.caps >= 50) r.push(['larga', 'Demasiados capítulos (' + o.caps + ')']);
+  if (o.y && o.y < 2000) r.push(['antigua', 'Muy antigua (' + o.y + ')']);
+  if (['Crimen', 'Mafia', 'Zombis', 'Acción', 'Guerra', 'Crimen real'].indexOf(o.g) >= 0 || /dura|bestia/i.test(o.why || '')) r.push(['dura', 'Demasiado dura o violenta']);
+  if (['Drama', 'Mafia', 'Juicios'].indexOf(o.g) >= 0) r.push(['lenta', 'Tiene pinta de lenta']);
+  if (o.l === 'EN' || /japonés con subtítulos/.test(o.why || '')) r.push(['idioma', 'No me apetece leer subtítulos']);
+  r.push(['pinta', 'No me llama nada']);
+  return r;
+}
+function lessons() {
+  var w = { g: {}, larga: 0, antigua: 0, dura: 0, lenta: 0, idioma: 0 };
+  everything().forEach(function (o) {
+    var e = st(o.id), m = e.motivos || [];
+    if (e.no) { if (m.indexOf('genero') >= 0) w.g[o.g] = (w.g[o.g] || 0) - 3; if (m.indexOf('pinta') >= 0) w.g[o.g] = (w.g[o.g] || 0) - 1; ['larga', 'antigua', 'dura', 'lenta', 'idioma'].forEach(function (k) { if (m.indexOf(k) >= 0) w[k]++; }); }
+    if (e.nota === 1) w.g[o.g] = (w.g[o.g] || 0) + 2;
+    if (e.nota === -1) w.g[o.g] = (w.g[o.g] || 0) - 2;
+    if (e.quiero) w.g[o.g] = (w.g[o.g] || 0) + 1;
+  });
+  return w;
+}
+function score(o, w) {
+  var s = (o.imdb || 7.5) / 10 + (w.g[o.g] || 0);
+  if ((o.k === 'pelis' && o.min >= 140) || (o.k !== 'pelis' && o.caps >= 50)) s -= w.larga * 2;
+  if (o.y && o.y < 2000) s -= w.antigua * 2;
+  if (['Crimen', 'Mafia', 'Zombis', 'Acción', 'Guerra', 'Crimen real'].indexOf(o.g) >= 0) s -= w.dura;
+  if (['Drama', 'Mafia', 'Juicios'].indexOf(o.g) >= 0) s -= w.lenta;
+  if (o.l === 'EN') s -= w.idioma;
+  return s;
+}
+function ranked(l) {
+  var w = lessons();
+  return l.map(function (o, i) { return { o: o, i: i, s: score(o, w) }; }).sort(function (a, b) {
+    return (inProgress(b.o) ? 1 : 0) - (inProgress(a.o) ? 1 : 0) || (st(b.o.id).quiero ? 1 : 0) - (st(a.o.id).quiero ? 1 : 0) || b.s - a.s || a.i - b.i;
+  }).map(function (x) { return x.o; });
+}
+function renderLearn() {
+  var w = lessons(), up = [], down = [];
+  Object.keys(w.g).forEach(function (g) { if (w.g[g] > 0) up.push(g); if (w.g[g] < 0) down.push(g); });
+  if (w.larga) down.push('lo muy largo'); if (w.antigua) down.push('lo antiguo'); if (w.dura) down.push('lo duro'); if (w.lenta) down.push('lo lento'); if (w.idioma) down.push('lo subtitulado');
+  $('learn').hidden = !up.length && !down.length;
+  $('learn').innerHTML = (up.length ? '<b>Te subo:</b> ' + esc(up.join(', ')) + '. ' : '') + (down.length ? '<b>Te bajo:</b> ' + esc(down.join(', ')) + '.' : '');
+}
+
+// ---------- Shelf ----------
+var nopeId = null, draft = { motivos: [], com: '' };
+function nopePanel(o) {
+  return '<div class="nope"><b>¿Por qué no te interesa?</b><div class="opts">' + reasons(o).map(function (r) { return '<button type="button" data-n="' + r[0] + '" aria-pressed="' + (draft.motivos.indexOf(r[0]) >= 0) + '">' + esc(r[1]) + '</button>'; }).join('') + '</div>' +
+    '<input id="nCom" maxlength="200" placeholder="Algo más, si quieres (opcional)" aria-label="Comentario" value="' + esc(draft.com) + '">' +
+    '<div class="row"><button type="button" data-nc>Cancelar</button><button type="button" class="yes" data-ny="' + esc(o.id) + '">Quitar de la lista</button></div></div>';
+}
+function statusChips(k) {
+  if (k === 'yt') return [['pend', 'Todos'], ['star', '★ Guardados'], ['no', 'No me interesan']];
+  var seen = k === 'pelis' ? 'Vistas' : k === 'series' ? 'Terminadas' : 'Vistos';
+  var l = [['pend', 'Por ver']];
+  if (k === 'series') l.push(['curso', '▶ Empezadas']);
+  return l.concat([['star', '★ Quiero ver'], ['vista', '✓ ' + seen], ['out', 'Fuera de tus plataformas'], ['no', 'No me interesan']]);
+}
+function matches(o) {
+  var e = st(o.id), q = norm($('q').value.trim());
+  if (q && norm(o.t).indexOf(q) < 0) return false;
+  if (F.p && (o.p || []).indexOf(F.p) < 0) return false;
+  if (F.g && o.g !== F.g) return false;
+  if (F.s === 'no') return !!e.no;
+  if (e.no) return false;
+  if (F.s === 'pend' && (e.vista || !avail(o))) return false;
+  if (F.s === 'curso' && !inProgress(o)) return false;
+  if (F.s === 'star' && !e.quiero) return false;
+  if (F.s === 'vista' && !e.vista) return false;
+  if (F.s === 'out' && avail(o)) return false;
+  return true;
+}
+function stub(o) {
+  var b = o.imdb ? '<div><b>' + o.imdb.toFixed(1).replace('.', ',') + '</b><span>IMDb</span></div>' : '';
+  if (o.k === 'series') return b + (o.ep ? '<div><span>' + o.ep + ' min<br>por cap.</span></div>' : '') + (o.caps ? '<div><span>' + o.caps + ' caps</span></div>' : '');
+  if (o.k === 'yt') return (o.min ? '<div><b>' + o.min + '</b><span>min aprox.</span></div>' : '') + (o.l ? '<div><span>' + esc(o.l) + '</span></div>' : '');
+  if (o.k === 'docus') return b + (o.min ? '<div><span>' + hm(o.min) + (o.caps ? '<br>por cap.' : '') + '</span></div>' : '') + (o.caps ? '<div><span>' + o.caps + ' caps</span></div>' : o.y ? '<div><span>' + o.y + '</span></div>' : '');
+  return b + (o.min ? '<div><span>' + hm(o.min) + '</span></div>' : '') + (o.y ? '<div><span>' + o.y + '</span></div>' : '');
+}
+function card(o) {
+  var e = st(o.id), w = where(o);
+  var labels = {}; reasons(o).forEach(function (r) { labels[r[0]] = r[1]; });
+  var gone = e.no ? '<p class="gone">' + esc((e.motivos || []).map(function (k) { return labels[k]; }).filter(Boolean).concat(e.com ? ['«' + e.com + '»'] : []).join(' · ') || 'No te interesa') + '</p>' : '';
+  var prog = inProgress(o) ? '<div class="prog"><button type="button" data-a="capm" data-id="' + esc(o.id) + '" aria-label="Capítulo anterior">−</button><span>Te toca el capítulo ' + (e.cap || 1) + (o.caps ? ' de ' + o.caps : '') + '</span><button type="button" data-a="capp" data-id="' + esc(o.id) + '" aria-label="Siguiente capítulo">+</button></div>' : '';
+  var seen = o.k === 'pelis' ? '✓ Vista' : o.k === 'series' ? '✓ Terminada' : '✓ Visto';
+  var acts = (e.no ? '<button type="button" data-a="back" data-id="' + esc(o.id) + '">Volver a la lista</button>' : '<button type="button" data-a="nope" data-id="' + esc(o.id) + '">✕ No me interesa</button>') +
+    (o.k === 'series' && !e.vista ? '<button type="button" data-a="curso" data-id="' + esc(o.id) + '" aria-pressed="' + !!e.curso + '">▶ Empezada</button>' : '') +
+    '<button type="button" data-a="quiero" data-id="' + esc(o.id) + '" aria-pressed="' + !!e.quiero + '">' + (o.k === 'yt' ? '★ Guardar' : '★ Quiero verla') + '</button>' +
+    (o.k !== 'yt' ? '<button type="button" data-a="vista" data-id="' + esc(o.id) + '" aria-pressed="' + !!e.vista + '">' + seen + '</button>' : '') +
+    (e.vista ? '<button type="button" data-a="love" data-id="' + esc(o.id) + '" aria-pressed="' + (e.nota === 1) + '" aria-label="Me ha encantado">♥</button><button type="button" data-a="hate" data-id="' + esc(o.id) + '" aria-pressed="' + (e.nota === -1) + '" aria-label="No me ha gustado">✕</button>' : '');
+  return '<article class="tk' + ((e.quiero || inProgress(o)) && !e.vista ? ' star' : '') + '"><div class="stub">' + stub(o) + '</div>' +
+    '<div class="tb"><h2>' + esc(o.t) + '</h2><div class="meta">' + badges(o.p) + (!avail(o) ? 'Ahora en ninguna de tus plataformas' : '') + ' · ' + esc(o.g) + '</div>' + (o.why ? '<p class="why">' + esc(o.why) + '</p>' : '') +
+    (o.prox ? '<p class="gone">Próximamente: ' + esc(o.prox) + '.</p>' : '') + prog + gone + (nopeId === o.id ? nopePanel(o) : '') + '<div class="acts">' + acts + '<a href="' + esc(w.href) + '" target="_blank" rel="noopener">' + w.label + '</a></div></div></article>';
+}
+function chips(el, list, val, key) { $(el).innerHTML = list.map(function (x) { return '<button type="button" class="chip" data-f="' + key + '" data-v="' + esc(x[0]) + '" aria-pressed="' + (val === x[0]) + '">' + x[1] + '</button>'; }).join(''); }
+function render() {
+  var k = F.tab, mine = items(k);
+  $('tabs').innerHTML = Object.keys(TABS).map(function (t) {
+    var n = items(t).filter(function (o) { var e = st(o.id); return !e.no && !e.vista && avail(o); }).length;
+    return '<button type="button" class="tab" role="tab" data-tab="' + t + '" aria-selected="' + (F.tab === t) + '">' + TABS[t] + (n ? '<small>' + n + '</small>' : '') + '</button>';
+  }).join('');
+  $('tabSub').textContent = SUBS[k];
+  var plats = Object.keys(PLAT).filter(function (p) { return mine.some(function (o) { return (o.p || []).indexOf(p) >= 0; }); });
+  if (F.p && plats.indexOf(F.p) < 0) F.p = '';
+  var gens = []; mine.forEach(function (o) { if (o.g && gens.indexOf(o.g) < 0) gens.push(o.g); });
+  if (F.g && gens.indexOf(F.g) < 0) F.g = '';
+  var sts = statusChips(k); if (!sts.some(function (x) { return x[0] === F.s; })) F.s = 'pend';
+  chips('fP', [['', 'Todas']].concat(plats.map(function (p) { return [p, '<span class="pb ' + p + '">' + p.toUpperCase() + '</span>' + PLAT[p]]; })), F.p, 'p');
+  $('fP').hidden = plats.length < 2;
+  chips('fG', [['', 'Todo']].concat(gens.map(function (g) { return [g, esc(g)]; })), F.g, 'g');
+  chips('fS', sts, F.s, 's');
+  chips('pMode', [['comer', '🍽 Para comer'], ['pelis', 'Una peli'], ['series', 'Una serie'], ['docus', 'Un documental'], ['', 'Da igual']], P.mode, 'mode');
+  $('pWho').innerHTML = '<button type="button" class="chip" data-ys aria-pressed="' + P.ys + '">Con Yesenia</button>';
+  var l = ranked(mine.filter(matches)); renderLearn();
+  var any = Object.keys(S.cat).some(function (t) { return (S.cat[t] || []).length; });
+  $('count').textContent = any ? l.length + ' ' + (l.length === 1 ? 'título' : 'títulos') : '';
+  $('list').innerHTML = l.map(card).join('') || '<p class="empty">' + (any ? 'Nada con estos filtros.' : 'Cargando tu programación…') + '</p>';
+  renderNews();
+  $('note').textContent = S.fecha ?'Disponibilidad en España comprobada el ' + S.fecha.split('-').reverse().join('/') + '. Cambia cada mes: «Dónde verla» abre JustWatch España, gratis y sin cuenta. Si ya has visto algo, márcalo y desaparece.' : '';
+}
+
+// ---------- New seasons: a notice for series you follow, until you dismiss it ----------
+function renderNews() {
+  var today = day(Date.now()), l = items('series').filter(function (o) {
+    var e = st(o.id);
+    if (!o.nueva || o.nueva > today || e.no || e.avisada === o.nueva || Date.now() - Date.parse(o.nueva) > 365 * 864e5) return false;
+    if (e.vista && e.vistaEl && e.vistaEl >= o.nueva) return false;
+    return e.curso || e.vista || e.quiero;
+  });
+  $('news').innerHTML = l.map(function (o) {
+    return '<div class="news"><p><b>Nueva temporada de ' + esc(o.t) + '.</b> ' + esc(o.nuevaTxt || '') + '</p><div class="acts">' +
+      (st(o.id).vista ? '<button type="button" data-a="retomar" data-id="' + esc(o.id) + '">Seguir con ella</button>' : '') +
+      '<button type="button" data-a="avisada" data-id="' + esc(o.id) + '">Entendido</button></div></div>';
+  }).join('');
+}
+
+// ---------- This week: filled in by itself when you choose, finish or move on an episode ----------
+function day(ts) { var d = new Date(ts); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function logHist(o, cap) {
+  var now = Date.now(), today = day(now);
+  var dup = Object.keys(S.hist).some(function (h) { var x = S.hist[h]; return x.id === o.id && (x.cap || 0) === (cap || 0) && day(x.ts) === today; });
+  if (dup) return;
+  var hid = 'h' + now.toString(36), x = { id: o.id, t: o.t, k: o.k, ts: now };
+  if (cap) x.cap = cap;
+  S.hist[hid] = x; persist(); if (db) db.doc('hist/' + hid).set(x).catch(function () {});
+  renderHist();
+}
+function renderHist() {
+  var week = Date.now() - 7 * 864e5, l = Object.keys(S.hist).map(function (h) { return Object.assign({ hid: h }, S.hist[h]); }).filter(function (x) { return x.ts >= week; }).sort(function (a, b) { return b.ts - a.ts; });
+  var n = { pelis: 0, series: 0, docus: 0, yt: 0 }, parts = [];
+  l.forEach(function (x) { n[x.k] = (n[x.k] || 0) + 1; });
+  if (n.pelis) parts.push(n.pelis + (n.pelis === 1 ? ' peli' : ' pelis'));
+  if (n.series) parts.push(n.series + (n.series === 1 ? ' capítulo' : ' capítulos'));
+  if (n.docus) parts.push(n.docus + (n.docus === 1 ? ' documental' : ' documentales'));
+  if (n.yt) parts.push(n.yt + (n.yt === 1 ? ' vídeo' : ' vídeos'));
+  $('histSum').textContent = 'Esta semana' + (parts.length ? ': ' + parts.join(', ') : '');
+  $('hist').innerHTML = l.length ? '<ul class="hl">' + l.map(function (x) {
+    return '<li><span>' + esc(new Date(x.ts).toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric' })) + '</span><b>' + esc(x.t) + (x.cap ? ', cap. ' + x.cap : '') + '</b><button type="button" data-hdel="' + esc(x.hid) + '" aria-label="Quitar ' + esc(x.t) + ' del historial">✕</button></li>';
+  }).join('') + '</ul>' : '<p class="note" style="margin-top:8px">Aún nada. Se apunta solo cuando eliges algo con «Esta ✓», lo marcas como visto o pasas de capítulo.</p>';
+}
+
+// ---------- What do I put on: three options, then commit to one ----------
+function poolFor() {
+  var kinds = P.mode === 'comer' || !P.mode ? Object.keys(TABS) : [P.mode];
+  return kinds.reduce(function (a, k) { return a.concat(items(k)); }, []).filter(function (o) {
+    var e = st(o.id);
+    if (e.no || !avail(o)) return false;
+    if (e.vista && o.k !== 'yt') return false;
+    if (P.mode === 'comer' && !(unit(o) && unit(o) <= COMER)) return false;
+    if (P.ys && S.pareja.indexOf(o.id) < 0) return false;
+    return true;
+  });
+}
+// One option card. "choice" while choosing among three, "done" once chosen. It can ask how it went or why not, in place.
+function mini(o, cont, mode) {
+  var e = st(o.id), w = where(o), u = unit(o), id = esc(o.id);
+  var len = o.k === 'series' ? (u ? u + ' min por capítulo' : '') : o.k === 'docus' && o.caps ? hm(u) + ' por capítulo' : hm(u);
+  var head = '<div class="mini' + (cont ? ' cont' : '') + '"><span class="k">' + (cont ? 'Sigue con' : KIND1[o.k]) + (len ? ' · ' + esc(len) : '') + '</span><h3>' + esc(o.t) + '</h3>';
+  if (P.ask === o.id) return head + '<p><b>' + (o.k === 'yt' ? '¿Te ha gustado?' : o.k === 'pelis' ? '¿Te gustó?' : '¿Te gustó?') + '</b> Así afino lo que te sale.</p><div class="qa">' +
+    '<button type="button" data-pk="like" data-id="' + id + '">♥ Sí</button><button type="button" data-pk="dislike" data-id="' + id + '">✕ No</button><button type="button" data-pk="skip" data-id="' + id + '">Ni fu ni fa</button></div></div>';
+  if (P.nope === o.id) return head + nopePanel(o) + '</div>';
+  var body = (cont || (mode === 'done' && o.k === 'series') ? '<p><b>Te toca el capítulo ' + (e.cap || 1) + (o.caps ? ' de ' + o.caps : '') + '.</b></p>' : o.why ? '<p>' + esc(o.why) + '</p>' : '') +
+    '<div class="meta" style="color:var(--ticket-soft)">' + badges(o.p) + ' · ' + esc(o.g) + '</div>';
+  if (mode === 'done') return head + body + '<a class="this go-link" href="' + esc(w.href) + '" target="_blank" rel="noopener">' + w.label + '</a><div class="qa">' +
+    (o.k === 'series' ? '<button type="button" data-pk="ep" data-id="' + id + '">✓ Capítulo visto</button>' : '<button type="button" data-pk="seen" data-id="' + id + '">✓ ' + (o.k === 'yt' ? 'Visto' : o.k === 'pelis' ? 'Ya la he visto' : 'Ya lo he visto') + '</button>') +
+    '<button type="button" data-pk="nope" data-id="' + id + '">✕ Al final no</button></div></div>';
+  return head + body + '<button type="button" class="this" data-this="' + id + '">Esta ✓</button><div class="qa">' +
+    (o.k !== 'yt' && !cont ? '<button type="button" data-pk="seen" data-id="' + id + '">' + (o.k === 'pelis' ? 'Ya la he visto' : o.k === 'series' ? 'Ya la vi entera' : 'Ya lo he visto') + '</button>' : '') +
+    '<button type="button" data-pk="want" data-id="' + id + '" aria-pressed="' + !!e.quiero + '">★ Me apetece</button>' +
+    '<button type="button" data-pk="nope" data-id="' + id + '">✕ No ' + (o.k === 'pelis' || o.k === 'series' ? 'la' : 'lo') + ' quiero ver</button></div></div>';
+}
+// Swap one of the three for a fresh option, keeping the other two where they are
+function replace(id) {
+  var at = P.ids.indexOf(id); if (at < 0) return;
+  var pool = ranked(poolFor()).filter(function (o) { return P.ids.indexOf(o.id) < 0; });
+  pool = pool.slice(0, Math.max(8, Math.ceil(pool.length / 2)));
+  if (pool.length) P.ids[at] = pool[Math.floor(Math.random() * pool.length)].id; else P.ids.splice(at, 1);
+}
+function pickThree() {
+  var pool = ranked(poolFor()), out = [];
+  // At lunch, a series already under way is always the first option: no decision needed
+  var cont = pool.filter(inProgress);
+  if (cont.length && P.mode !== 'pelis' && P.mode !== 'docus') out.push(cont[Math.floor(Math.random() * cont.length)]);
+  var rest = pool.filter(function (o) { return out.indexOf(o) < 0 && P.ids.indexOf(o.id) < 0; });
+  if (rest.length < 3 - out.length) rest = pool.filter(function (o) { return out.indexOf(o) < 0; });
+  rest = rest.slice(0, Math.max(8, Math.ceil(rest.length / 2)));
+  // Mix kinds so the three feel like real alternatives
+  while (out.length < 3 && rest.length) {
+    var kinds = out.map(function (o) { return o.k; }), fresh = rest.filter(function (o) { return kinds.indexOf(o.k) < 0; });
+    var from = fresh.length ? fresh : rest, o = from[Math.floor(Math.random() * from.length)];
+    out.push(o); rest.splice(rest.indexOf(o), 1);
+  }
+  P.ids = out.map(function (o) { return o.id; }); P.chosen = '';
+  renderPick();
+}
+function pickRandom() {
+  var pool = ranked(poolFor());
+  if (!pool.length) { P.ids = []; P.chosen = ''; $('pick').innerHTML = '<p class="sub" style="color:var(--ink)">No queda nada con estos filtros.</p>'; return; }
+  pool = pool.slice(0, Math.max(6, Math.ceil(pool.length / 2)));
+  choose(pool[Math.floor(Math.random() * pool.length)].id);
+}
+function choose(cid) {
+  var co = byId(cid); if (!co) return;
+  if (co.k === 'series' && !st(cid).curso) { S.est[cid] = Object.assign({}, st(cid), { curso: true, cap: st(cid).cap || 1 }); save(cid); render(); }
+  P.chosen = cid; P.ids = [cid];
+  logHist(co, co.k === 'series' ? st(cid).cap || 1 : 0);
+  renderPick();
+}
+function renderPick() {
+  if (P.chosen) {
+    var c = byId(P.chosen); if (!c) { $('pick').innerHTML = ''; return; }
+    var w = where(c), e = st(c.id);
+    $('pick').innerHTML = '<div class="done"><p>Decidido: ' + esc(c.t) + (c.k === 'series' ? ', capítulo ' + (e.cap || 1) : '') + '. ' + (P.mode === 'comer' ? 'Buen provecho.' : 'A disfrutar.') + '</p>' +
+      '<div class="three">' + mini(c, false, 'done') + '</div>' +
+      (c.k === 'series' ? '<p class="sub" style="color:var(--ink)">Cuando acabes, pulsa «Capítulo visto» y la próxima vez te esperará el siguiente.</p>' : '') +
+      '<button type="button" class="reroll" data-reroll>Elegir otra cosa</button></div>';
+    return;
+  }
+  if (!P.ids.length) { $('pick').innerHTML = ''; return; }
+  var l = P.ids.map(byId).filter(Boolean);
+  if (!l.length) { $('pick').innerHTML = '<p class="sub" style="color:var(--ink)">No queda nada con estos filtros.</p>'; return; }
+  $('pick').innerHTML = '<div class="three">' + l.map(function (o, i) { return mini(o, i === 0 && inProgress(o), 'choice'); }).join('') + '</div>' +
+    (l.length < 3 ? '<p class="sub" style="color:var(--ink)">Solo hay ' + l.length + ' con estos filtros.</p>' : '') +
+    '<button type="button" class="reroll" data-reroll style="margin-top:8px">Otras 3</button>';
+}
+
+// ---------- Actions ----------
+function save(id) { persist(); if (db) { var e = S.est[id]; (e ? db.doc('estado/' + id).set(e) : db.doc('estado/' + id).delete()).catch(function () {}); } }
+document.addEventListener('click', function (e) {
+  var tb = e.target.closest('[data-tab]');
+  if (tb) { F.tab = tb.getAttribute('data-tab'); F.g = ''; F.p = ''; nopeId = null; persist(); render(); return; }
+  var f = e.target.closest('[data-f]');
+  if (f) { var key = f.getAttribute('data-f'), v = f.getAttribute('data-v'); if (key === 'mode') { P.mode = v; P.ids = []; P.chosen = ''; persist(); renderPick(); } else F[key] = v; render(); return; }
+  if (e.target.closest('[data-ys]')) { P.ys = !P.ys; P.ids = []; P.chosen = ''; render(); renderPick(); return; }
+  if (e.target.closest('[data-reroll]')) { pickThree(); return; }
+  var th = e.target.closest('[data-this]');
+  if (th) { choose(th.getAttribute('data-this')); return; }
+  var hd = e.target.closest('[data-hdel]');
+  if (hd) { var h = hd.getAttribute('data-hdel'); delete S.hist[h]; persist(); if (db) db.doc('hist/' + h).delete().catch(function () {}); renderHist(); return; }
+  var n = e.target.closest('[data-n]');
+  if (n) { var k0 = n.getAttribute('data-n'), at = draft.motivos.indexOf(k0); if (at >= 0) draft.motivos.splice(at, 1); else draft.motivos.push(k0); n.setAttribute('aria-pressed', at < 0); return; }
+  if (e.target.closest('[data-nc]')) { if (P.nope) { P.nope = ''; renderPick(); } else { nopeId = null; render(); } return; }
+  var pk = e.target.closest('[data-pk]');
+  if (pk) {
+    var pid = pk.getAttribute('data-id'), act = pk.getAttribute('data-pk'), po = byId(pid), ps = Object.assign({}, st(pid)); if (!po) return;
+    if (act === 'want') { ps.quiero = !ps.quiero; S.est[pid] = ps; save(pid); render(); renderPick(); return; }
+    if (act === 'nope') { P.nope = pid; P.ask = ''; draft = { motivos: [], com: '' }; renderPick(); return; }
+    if (act === 'ep') { logHist(po, ps.cap || 1); ps.cap = (ps.cap || 1) + 1; if (po.caps && ps.cap > po.caps) { ps.cap = po.caps; ps.vista = true; ps.curso = false; ps.vistaEl = day(Date.now()); P.ask = pid; } S.est[pid] = ps; save(pid); render(); renderPick(); return; }
+    if (act === 'seen') {
+      ps.vista = true; ps.quiero = false; ps.curso = false; ps.vistaEl = day(Date.now());
+      if (P.chosen === pid) logHist(po, 0);
+      S.est[pid] = ps; P.ask = pid; save(pid); render(); renderPick(); return;
+    }
+    if (act === 'like' || act === 'dislike') { ps.nota = act === 'like' ? 1 : -1; S.est[pid] = ps; save(pid); }
+    P.ask = '';
+    if (P.chosen === pid) { P.chosen = ''; P.ids = []; $('pick').innerHTML = '<p class="sub" style="color:var(--ink)">Apuntado. Cuando quieras otra cosa, pide opciones.</p>'; }
+    else { replace(pid); renderPick(); }
+    render(); return;
+  }
+  var ny = e.target.closest('[data-ny]');
+  if (ny) {
+    var nid = ny.getAttribute('data-ny'), ns = Object.assign({}, st(nid), { motivos: draft.motivos.slice(), com: draft.com.trim() });
+    if (draft.motivos.indexOf('vista') >= 0) ns.vista = true;
+    ns.no = draft.motivos.join() !== 'vista' || !!ns.com; ns.quiero = false; ns.curso = false;
+    S.est[nid] = ns; nopeId = null; P.nope = ''; save(nid); render();
+    if (P.chosen === nid) { P.chosen = ''; P.ids = []; $('pick').innerHTML = '<p class="sub" style="color:var(--ink)">Quitada. Pide otras opciones cuando quieras.</p>'; }
+    else if (P.ids.indexOf(nid) >= 0) { replace(nid); renderPick(); }
+    return;
+  }
+  var a = e.target.closest('[data-a]'); if (!a) return;
+  var id = a.getAttribute('data-id'), k = a.getAttribute('data-a'), s = Object.assign({}, st(id)), o = byId(id);
+  if (k === 'nope') { nopeId = id; draft = { motivos: [], com: '' }; render(); return; }
+  if (k === 'back') { delete s.no; delete s.motivos; delete s.com; }
+  if (k === 'quiero') s.quiero = !s.quiero;
+  if (k === 'curso') { s.curso = !s.curso; if (s.curso && !s.cap) s.cap = 1; }
+  if (k === 'capp') { if (o) logHist(o, s.cap || 1); s.cap = (s.cap || 1) + 1; if (o && o.caps && s.cap > o.caps) { s.cap = o.caps; s.vista = true; s.curso = false; s.vistaEl = day(Date.now()); } }
+  if (k === 'capm') s.cap = Math.max(1, (s.cap || 1) - 1);
+  if (k === 'vista') { s.vista = !s.vista; if (s.vista) { s.quiero = false; s.curso = false; s.vistaEl = day(Date.now()); if (o && o.k !== 'series') logHist(o, 0); } else { delete s.nota; delete s.vistaEl; } }
+  if (k === 'avisada' && o) s.avisada = o.nueva;
+  if (k === 'retomar' && o) { s.vista = false; s.curso = true; s.cap = o.nuevaCap || s.cap || 1; s.avisada = o.nueva; delete s.vistaEl; }
+  if (k === 'love') s.nota = s.nota === 1 ? 0 : 1;
+  if (k === 'hate') s.nota = s.nota === -1 ? 0 : -1;
+  S.est[id] = s; save(id); render();
+  if (P.ids.indexOf(id) >= 0 || P.chosen === id) renderPick();
+});
+document.addEventListener('input', function (e) { if (e.target.id === 'nCom') draft.com = e.target.value; });
+$('goBtn').addEventListener('click', function () { P.ids = []; pickThree(); });
+$('randBtn').addEventListener('click', pickRandom);
+$('q').addEventListener('input', render);
+$('aK').innerHTML = Object.keys(TABS).map(function (k) { return '<option value="' + k + '">' + KIND1[k] + '</option>'; }).join('');
+$('aP').innerHTML = Object.keys(PLAT).map(function (k) { return '<option value="' + k + '">' + PLAT[k] + '</option>'; }).join('');
+function fillGens() { var g = []; everything().forEach(function (o) { if (o.g && g.indexOf(o.g) < 0) g.push(o.g); }); $('gens').innerHTML = g.map(function (x) { return '<option value="' + esc(x) + '">'; }).join(''); }
+$('aK').addEventListener('change', function () { $('aP').value = this.value === 'yt' ? 'y' : $('aP').value; });
+$('addF').addEventListener('submit', function (e) {
+  e.preventDefault(); var t = $('aT').value.trim(); if (!t) return;
+  var k = $('aK').value, m = parseInt($('aM').value, 10) || 0, id = 'm' + Date.now().toString(36);
+  var o = { id: id, k: k, t: t, g: $('aG').value.trim() || 'Otros', p: [$('aP').value], mia: true };
+  if (m) { if (k === 'series') o.ep = m; else o.min = m; }
+  if (k === 'yt') o.q = t;
+  S.mias[id] = o; persist(); if (db) db.doc('mias/' + id).set(o).catch(function () {});
+  $('aT').value = ''; $('aM').value = ''; F.tab = k; F.s = 'pend'; render(); fillGens();
+});
+render(); fillGens(); renderHist();
+if (window.claude && window.claude.use) (async function () {
+  try {
+    var d = await window.claude.use('db'); if (!d) return; db = d;
+    db.doc('config/catalogo').onSnapshot(function (x) {
+      if (!x.exists) return;
+      var c = x.data();
+      S.cat = { pelis: c.pelis || [], series: c.series || [], docus: c.docus || [], yt: c.yt || [] };
+      S.pareja = c.pareja || []; S.fecha = c.actualizado || '';
+      persist(); render(); fillGens();
+    }, function () {});
+    db.collection('estado').onSnapshot(function (s) { if (s.metadata.fromCache && !s.size) return; var n = {}; s.docs.forEach(function (x) { n[x.id] = x.data(); }); S.est = n; persist(); render(); renderPick(); }, function () {});
+    db.collection('mias').onSnapshot(function (s) { if (s.metadata.fromCache && !s.size) return; var n = {}; s.docs.forEach(function (x) { n[x.id] = x.data(); }); S.mias = n; persist(); render(); fillGens(); }, function () {});
+    db.collection('hist').onSnapshot(function (s) { if (s.metadata.fromCache && !s.size) return; var n = {}; s.docs.forEach(function (x) { n[x.id] = x.data(); }); S.hist = n; persist(); renderHist(); }, function () {});
+  } catch (e) {}
+})();
+</script>
+
+</body></html>
