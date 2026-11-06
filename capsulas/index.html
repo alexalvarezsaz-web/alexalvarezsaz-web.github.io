@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<title>Cápsulas nº 4</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: una sola columna tipo hoja de elaboración — fórmula arriba, pesadas abajo, total que cuadra */
+:root {
+  --bg: #f3f5f4;
+  --card: #ffffff;
+  --fg: #16201d;
+  --muted: #5b6b66;
+  --line: #d6dedb;
+  --accent: #1f6f5c;
+  --accent-soft: #e1efe9;
+  --ribo: #c98a00;
+  --bad: #b3261e;
+  --bad-soft: #fbe9e7;
+  --f-body: "Atkinson Hyperlegible", system-ui, sans-serif;
+  --f-num: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f1513; --card: #18211e; --fg: #e6eeeb; --muted: #94a59f; --line: #2b3834;
+  --accent: #5cc2a5; --accent-soft: #1d3a32; --ribo: #f0b429; --bad: #ff8a80; --bad-soft: #3a1d1b; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0f1513; --card: #18211e; --fg: #e6eeeb; --muted: #94a59f; --line: #2b3834;
+  --accent: #5cc2a5; --accent-soft: #1d3a32; --ribo: #f0b429; --bad: #ff8a80; --bad-soft: #3a1d1b; color-scheme: dark }
+
+:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+* { box-sizing: border-box; }
+body { margin: 0; }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 16px; line-height: 1.45; }
+.wrap { max-width: 560px; margin: 0 auto; padding-block: 20px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 18px; }
+h1 { font-size: 1.5rem; margin: 0; text-wrap: balance; }
+.sub { color: var(--muted); margin: 2px 0 0; font-size: .95rem; }
+.label { font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 700; }
+
+.formulas { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.formulas button { font: inherit; font-weight: 700; text-align: left; padding: 12px; border-radius: 10px;
+  border: 1.5px solid var(--line); background: var(--card); color: var(--fg); cursor: pointer; min-height: 56px; }
+.formulas button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+.formulas button:focus-visible, input:focus-visible, .chip:focus-visible, .copy:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.panel { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 14px; }
+.field { display: grid; gap: 6px; }
+.field label { font-weight: 700; }
+.row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+input { font-family: var(--f-num); font-size: 1.15rem; width: 7.5em; padding: 10px 12px; border-radius: 8px;
+  border: 1.5px solid var(--line); background: var(--bg); color: var(--fg); }
+.unit { color: var(--muted); font-family: var(--f-num); }
+.chip { font-family: var(--f-num); font-size: .9rem; padding: 6px 10px; border-radius: 999px; border: 1px solid var(--line);
+  background: transparent; color: var(--muted); cursor: pointer; }
+.chip[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+.sheet { background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.sheet-head { display: flex; justify-content: space-between; align-items: baseline; padding: 14px 16px; border-bottom: 1px solid var(--line); gap: 8px; flex-wrap: wrap; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+td { padding: 12px 16px; border-bottom: 1px solid var(--line); vertical-align: baseline; }
+td.g { text-align: right; font-family: var(--f-num); font-size: 1.25rem; font-weight: 700; white-space: nowrap; }
+td small { display: block; color: var(--muted); font-size: .8rem; }
+tr.avicel td.g { color: var(--accent); font-size: 1.5rem; }
+tr.total td { border-bottom: 0; color: var(--muted); }
+tr.total td.g { font-size: 1rem; font-weight: 500; color: var(--muted); }
+.dot { display: inline-block; width: .6em; height: .6em; border-radius: 50%; margin-right: 6px; background: var(--accent); }
+.dot.ribo { background: var(--ribo); }
+.dot.exc { background: transparent; border: 2px solid var(--accent); }
+.warn { margin: 0; padding: 12px 16px; background: var(--bad-soft); color: var(--bad); font-weight: 700; }
+
+.bar { display: flex; height: 10px; border-radius: 5px; overflow: hidden; background: var(--line); margin: 0 16px 14px; }
+.bar span { display: block; height: 100%; }
+.copy { font: inherit; font-weight: 700; padding: 12px; border-radius: 10px; border: 0; background: var(--accent); color: var(--card); cursor: pointer; }
+.foot { color: var(--muted); font-size: .85rem; margin: 0; }
+@media (max-width: 380px) { .two { grid-template-columns: 1fr; } }
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Cápsulas nº 4</h1>
+    <p class="sub">Cálculo rápido de principio activo, riboflavina y Avicel.</p>
+  </header>
+
+  <section class="field">
+    <span class="label">Fórmula</span>
+    <div class="formulas" id="formulas"></div>
+  </section>
+
+  <section class="panel" id="doses"></section>
+
+  <section class="panel two">
+    <div class="field">
+      <label for="n">Nº de cápsulas</label>
+      <div class="row"><input id="n" inputmode="numeric" value="90"><span class="unit">caps</span></div>
+    </div>
+    <div class="field">
+      <label for="cap">Capacidad nº 4</label>
+      <div class="row"><input id="cap" inputmode="decimal" value="0,08"><span class="unit">g/cap</span></div>
+    </div>
+    <div class="field">
+      <label for="ribo">Riboflavina</label>
+      <div class="row"><input id="ribo" inputmode="decimal" value="0,021"><span class="unit">g total</span></div>
+    </div>
+  </section>
+
+  <section class="sheet" aria-live="polite">
+    <div class="sheet-head">
+      <span class="label">Pesadas</span>
+      <span class="unit" id="capTotal"></span>
+    </div>
+    <div class="bar" id="bar" style="margin-top:14px"></div>
+    <table><tbody id="rows"></tbody></table>
+    <p class="warn" id="warn" hidden></p>
+  </section>
+
+  <button class="copy" id="copy">Copiar pesadas</button>
+  <p class="foot">Por defecto: 90 cápsulas × 0,08 g = 7,2 g. Avicel = capacidad total − principios activos − riboflavina.</p>
+</div>
+
+<script>
+const ACTIVES = {
+  min: { name: "Minoxidilo", chips: [0.5, 1, 2.5, 5], def: 1 },
+  fin: { name: "Finasterida", chips: [0.5, 1], def: 1 },
+  dut: { name: "Dutasterida", chips: [0.25, 0.5], def: 0.5 }
+};
+const FORMULAS = [
+  { id: "min", label: "Minoxidilo", act: ["min"] },
+  { id: "fin", label: "Finasterida", act: ["fin"] },
+  { id: "minfin", label: "Minoxidilo + Finasterida", act: ["min", "fin"] },
+  { id: "mindut", label: "Minoxidilo + Dutasterida", act: ["min", "dut"] }
+];
+const COLORS = { min: "var(--accent)", fin: "#4a7fc1", dut: "#8a5cc2" };
+
+const store = {
+  get() { try { return JSON.parse(localStorage.getItem("caps4") || "{}"); } catch { return {}; } },
+  set(v) { try { localStorage.setItem("caps4", JSON.stringify(v)); } catch {} }
+};
+const saved = store.get();
+let formula = saved.formula || "minfin";
+const dose = { min: ACTIVES.min.def, fin: ACTIVES.fin.def, dut: ACTIVES.dut.def, ...(saved.dose || {}) };
+
+const num = s => parseFloat(String(s).replace(",", ".").trim());
+const fmt = (x, d = 4) => x.toFixed(d).replace(".", ",");
+const $ = id => document.getElementById(id);
+
+function renderFormulas() {
+  $("formulas").innerHTML = FORMULAS.map(f =>
+    `<button type="button" data-f="${f.id}" aria-pressed="${f.id === formula}">${f.label}</button>`).join("");
+}
+function renderDoses() {
+  const f = FORMULAS.find(x => x.id === formula);
+  $("doses").innerHTML = f.act.map(k => {
+    const a = ACTIVES[k];
+    return `<div class="field">
+      <label for="d-${k}">${a.name} por cápsula</label>
+      <div class="row"><input id="d-${k}" data-k="${k}" inputmode="decimal" value="${String(dose[k]).replace(".", ",")}"><span class="unit">mg</span></div>
+      <div class="row">${a.chips.map(c => `<button type="button" class="chip" data-k="${k}" data-v="${c}" aria-pressed="${c === dose[k]}">${String(c).replace(".", ",")} mg</button>`).join("")}</div>
+    </div>`;
+  }).join("");
+}
+
+let lastText = "";
+function calc() {
+  const f = FORMULAS.find(x => x.id === formula);
+  const n = num($("n").value), cap = num($("cap").value), ribo = num($("ribo").value);
+  const ok = n > 0 && cap > 0 && ribo >= 0 && f.act.every(k => dose[k] >= 0);
+  if (!ok) { $("rows").innerHTML = ""; $("bar").innerHTML = ""; $("warn").hidden = false;
+    $("warn").textContent = "Revisa los datos: hay un campo vacío o con un número no válido."; return; }
+
+  const total = n * cap;
+  const acts = f.act.map(k => ({ k, name: ACTIVES[k].name, mg: dose[k], g: dose[k] * n / 1000 }));
+  const sumAct = acts.reduce((s, a) => s + a.g, 0);
+  const avicel = total - sumAct - ribo;
+
+  $("capTotal").textContent = `${n} × ${fmt(cap, 3)} g = ${fmt(total, 3)} g`;
+  $("rows").innerHTML =
+    acts.map(a => `<tr><td><span class="dot" style="background:${COLORS[a.k]}"></span>${a.name}<small>${fmt(a.mg, 2).replace(/,?0+$/, "")} mg × ${n}</small></td><td class="g">${fmt(a.g)} g</td></tr>`).join("") +
+    `<tr><td><span class="dot ribo"></span>Riboflavina<small>colorante</small></td><td class="g">${fmt(ribo)} g</td></tr>` +
+    `<tr class="avicel"><td><span class="dot exc"></span><strong>Avicel</strong><small>${fmt(total, 3)} − ${fmt(sumAct + ribo)}</small></td><td class="g">${fmt(Math.max(avicel, 0))} g</td></tr>` +
+    `<tr class="total"><td>Total</td><td class="g">${fmt(sumAct + ribo + Math.max(avicel, 0))} g</td></tr>`;
+
+  const pct = g => Math.max(0, g / total * 100) + "%";
+  $("bar").innerHTML = acts.map(a => `<span style="width:${pct(a.g)};background:${COLORS[a.k]}"></span>`).join("") +
+    `<span style="width:${pct(ribo)};background:var(--ribo)"></span><span style="width:${pct(avicel)};background:var(--accent-soft)"></span>`;
+
+  $("warn").hidden = avicel >= 0;
+  if (avicel < 0) $("warn").textContent = `Los activos y la riboflavina (${fmt(sumAct + ribo)} g) no caben en ${fmt(total, 3)} g. Usa una cápsula más grande.`;
+
+  lastText = [`${f.label} — ${n} caps nº 4`, ...acts.map(a => `${a.name} (${fmt(a.mg, 2)} mg): ${fmt(a.g)} g`),
+    `Riboflavina: ${fmt(ribo)} g`, `Avicel: ${fmt(Math.max(avicel, 0))} g`, `Total: ${fmt(total, 3)} g`].join("\n");
+  store.set({ formula, dose });
+}
+
+$("formulas").addEventListener("click", e => {
+  const b = e.target.closest("button[data-f]"); if (!b) return;
+  formula = b.dataset.f; renderFormulas(); renderDoses(); calc();
+});
+$("doses").addEventListener("click", e => {
+  const b = e.target.closest(".chip"); if (!b) return;
+  dose[b.dataset.k] = +b.dataset.v; renderDoses(); calc();
+});
+$("doses").addEventListener("input", e => {
+  const k = e.target.dataset.k; if (!k) return;
+  dose[k] = num(e.target.value);
+  e.target.closest(".field").querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", +c.dataset.v === dose[k]));
+  calc();
+});
+["n", "cap", "ribo"].forEach(id => $(id).addEventListener("input", calc));
+$("copy").addEventListener("click", async () => {
+  const b = $("copy");
+  try { await navigator.clipboard.writeText(lastText); b.textContent = "Copiado"; }
+  catch { b.textContent = "No se pudo copiar"; }
+  setTimeout(() => b.textContent = "Copiar pesadas", 1500);
+});
+
+renderFormulas(); renderDoses(); calc();
+</script>
+
+</body>
+</html>
