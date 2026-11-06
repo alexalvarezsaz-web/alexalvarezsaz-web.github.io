@@ -1,4 +1,20 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <rect width="512" height="512" fill="#1f2a22"/>
-  <path d="M168 112h88v200h88v88H168z" fill="#f5e8c8"/>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2b4233"/>
+      <stop offset="1" stop-color="#141c17"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <g fill="#f5e8c8" opacity=".7">
+    <circle cx="92" cy="96" r="5"/><circle cx="420" cy="118" r="4"/><circle cx="372" cy="62" r="3"/>
+    <circle cx="136" cy="176" r="3"/><circle cx="452" cy="214" r="3"/><circle cx="60" cy="300" r="3"/>
+  </g>
+  <ellipse cx="256" cy="448" rx="170" ry="34" fill="#0f1511"/>
+  <rect x="245" y="120" width="22" height="330" rx="6" fill="#f5e8c8"/>
+  <circle cx="256" cy="114" r="18" fill="#f2c222"/>
+  <path transform="rotate(-6 256 180)" d="M236 152H372L404 180L372 208H236Z" fill="#2f8f46"/>
+  <path transform="rotate(5 256 254)" d="M276 226H140L108 254L140 282H276Z" fill="#d32f2f"/>
+  <path transform="rotate(-4 256 328)" d="M236 300H360L392 328L360 356H236Z" fill="#2a78c8"/>
+  <g fill="#1f2a22"><circle cx="256" cy="180" r="6"/><circle cx="256" cy="254" r="6"/><circle cx="256" cy="328" r="6"/></g>
 </svg>
