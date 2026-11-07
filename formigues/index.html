@@ -216,7 +216,7 @@ details.dayc > summary::-webkit-details-marker { display: none; }
 details.dayc > summary::after { content: "▾"; grid-row: 1 / span 3; grid-column: 2; color: var(--muted); transition: transform .2s; }
 details.dayc[open] > summary::after { transform: rotate(180deg); }
 details.dayc > summary > span { grid-column: 1; min-width: 0; }
-details.dayc > summary::after { grid-row: 1 / span 4; }
+details.dayc > summary::after { grid-row: 1 / span 5; }
 .dayc .dt { font: 800 16px var(--body); }
 .dayc .ds { font-size: 13.5px; color: var(--muted); }
 .dayc .dn { font-size: 13.5px; font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -226,6 +226,35 @@ details.dayc > summary::after { grid-row: 1 / span 4; }
 .day > h3 { font: 800 16px var(--body); }
 .day > p.small { margin: 0; }
 .day .log li:first-child { border-top: 1px solid var(--line); }
+/* Diary as a timeline: months as headings, a dot per day coloured by what mattered most */
+.log > li.month { display: block; padding: 14px 0 2px; border-top: 0; font: 800 12.5px var(--body); letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
+.log > li.month:first-child { padding-top: 0; }
+.log > li.month span { font-weight: 600; letter-spacing: 0; text-transform: none; }
+.log > li.day { position: relative; padding-left: 28px; border-top: 0; }
+.log > li.day::before { content: ""; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: var(--line); }
+.log > li.day > .dot { position: absolute; left: 2px; top: 25px; width: 14px; height: 14px; border-radius: 50%; background: var(--surface); border: 3px solid var(--muted); }
+.dot.k-hito { border-color: var(--honey); background: var(--honey); }
+.dot.k-problema { border-color: var(--warn); background: var(--warn); }
+.dot.k-recuento { border-color: var(--hum); }
+.dot.k-zona { border-color: var(--leaf); }
+.dayc .thumbs { display: flex; gap: 4px; }
+.dayc .thumbs img { width: 46px; height: 46px; margin: 3px 0 1px; object-fit: cover; border-radius: 8px; }
+.log > li.day.flash details { animation: flash 1.6s ease-out; border-radius: 10px; }
+@keyframes flash { from { background: color-mix(in srgb, var(--honey) 35%, transparent); } to { background: transparent; } }
+.memory { width: 100%; padding: 12px 14px; border-radius: 14px; border: 1px dashed color-mix(in srgb, var(--honey) 70%, transparent); background: color-mix(in srgb, var(--honey) 13%, var(--bg)); text-align: left; display: grid; gap: 3px; }
+.memory .lab { color: var(--honey); }
+.memory p { margin: 0; }
+.memory small { color: var(--muted); font-weight: 700; }
+/* In numbers: a calendar of the days you looked at them, and the totals */
+#heat svg { display: block; width: 100%; height: auto; }
+#heat rect[data-d] { cursor: pointer; }
+#heat text { font-family: var(--body); }
+.streak { margin: 0; font-size: 15px; }
+.streak b { color: var(--acc); font-size: 17px; }
+.nums { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.nums div { padding: 10px; border-radius: 14px; background: var(--bg); display: grid; gap: 2px; align-content: start; min-width: 0; }
+.nums b { font: 800 clamp(19px, 6vw, 24px)/1.1 var(--display); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.nums span { font-size: 12px; line-height: 1.25; color: var(--muted); }
 #setup text, .mapbig text { font-family: var(--body); }
 [data-mod], [data-zone], [data-point] { cursor: pointer; }
 [data-mod]:focus-visible, [data-zone]:focus-visible, [data-point]:focus-visible { outline: 3px solid var(--honey); }
@@ -311,8 +340,17 @@ details.dayc > summary::after { grid-row: 1 / span 4; }
       <div class="badges" id="logros"></div>
     </section>
 
+    <section class="sect" id="statsBox" style="margin-top:14px" hidden>
+      <div class="sect-h"><h2>En números</h2><span class="small" id="statsSince"></span></div>
+      <p class="streak" id="streak"></p>
+      <div id="heat"></div>
+      <p class="tip" id="heatTip" aria-live="polite"></p>
+      <div class="nums" id="nums"></div>
+    </section>
+
     <section class="sect" style="margin-top:14px">
       <h2>Diario</h2>
+      <div id="memory"></div>
       <ul class="log" id="log"></ul>
       <p class="small" id="logEmpty">Aquí irá todo lo que apuntes: cuidados, revisiones y notas.</p>
       <button type="button" class="linkb" id="more" hidden>Ver más</button>
@@ -768,6 +806,8 @@ function render() {
   $('logEmpty').hidden = all.length > 0; $('more').hidden = all.length <= shown;
   $('log').innerHTML = days(all.slice(0, shown));
   renderLogros(c);
+  renderStats(c, all);
+  $('memory').innerHTML = memory(c, all);
   renderTail(c);
 }
 // One line per entry, as it appears inside a day
@@ -791,21 +831,100 @@ function entry(e) {
     return '<li class="' + esc(e.kind || '') + '"><span class="ic" aria-hidden="true">' + ic + '</span><div><button type="button" class="when" data-when="' + esc(e.id) + '" aria-label="Cambiar la fecha: ' + fmtT(e.t) + '">' + fmtT(e.t) + '</button>' + txt + '</div><button type="button" class="x" data-del="' + esc(e.id) + '" aria-label="Borrar">×</button></li>';
 }
 // The diary by day: each day folded into one line, open it to see every entry
+// What a day held, in one line: the check, then the care
+function dayParts(es) {
+  var parts = [], care = {}, rv = es.filter(function (e) { return e.tipo === 'recuento'; })[0];
+  es.forEach(function (e) { if (e.tipo === 'comida') { var n = careName(e.que)[1]; care[n] = (care[n] || 0) + 1; } });
+  if (rv) { var w = []; if (rv.n.obreras != null) w.push(workersTxt(rv.n) + ' obreras'); BROOD.forEach(function (k) { var l = lvl(rv.n, k); if (l) w.push(k + ' ' + LEVELS[l].toLowerCase()); }); if (rv.temp != null) w.push(String(rv.temp).replace('.', ',') + ' °C'); parts.push(w.length ? w.join(', ') : 'revisión'); }
+  var cn = Object.keys(care); if (cn.length) parts.push(cn.map(function (k) { return k + (care[k] > 1 ? ' ×' + care[k] : ''); }).join(', '));
+  return parts;
+}
+function byDay(list) { var groups = [], by = {}; list.forEach(function (e) { var k = dayStart(e.t); if (!by[k]) { by[k] = []; groups.push([k, by[k]]); } by[k].push(e); }); return groups; }
+function dayTitle(t) { var d = new Date(t); return daysAgo(t) === 0 ? 'Hoy' : daysAgo(t) === 1 ? 'Ayer' : d.getDate() + ' de ' + MONTHS_L[d.getMonth()] + (d.getFullYear() !== new Date().getFullYear() ? ' de ' + d.getFullYear() : ''); }
 function days(list) {
-  var groups = [], by = {};
-  list.forEach(function (e) { var k = dayStart(e.t); if (!by[k]) { by[k] = []; groups.push([k, by[k]]); } by[k].push(e); });
+  var groups = byDay(list), perMonth = {}, lastM = '';
+  groups.forEach(function (g) { var d = new Date(g[0]), mk = d.getFullYear() + '-' + d.getMonth(); perMonth[mk] = (perMonth[mk] || 0) + 1; });
   return groups.map(function (g) {
-    var es = g[1], parts = [], cnt = { zona: 0, comida: 0, nota: 0, recuento: 0 }, care = {};
-    es.forEach(function (e) { cnt[e.tipo] = (cnt[e.tipo] || 0) + 1; if (e.tipo === 'comida') { var n = careName(e.que)[1]; care[n] = (care[n] || 0) + 1; } });
-    var rv = es.filter(function (e) { return e.tipo === 'recuento'; })[0], note = es.filter(function (e) { return e.tipo === 'nota' && e.texto; }).pop();
-    if (rv) { var w = []; if (rv.n.obreras != null) w.push(workersTxt(rv.n) + ' obreras'); BROOD.forEach(function (k) { var l = lvl(rv.n, k); if (l) w.push(k + ' ' + LEVELS[l].toLowerCase()); }); if (rv.temp != null) w.push(String(rv.temp).replace('.', ',') + ' °C'); parts.push(w.length ? w.join(', ') : 'revisión'); }
-    var cn = Object.keys(care); if (cn.length) parts.push(cn.map(function (k) { return k + (care[k] > 1 ? ' ×' + care[k] : ''); }).join(', '));
+    var es = g[1], cnt = { zona: 0, comida: 0, nota: 0, recuento: 0 }, parts = dayParts(es);
+    es.forEach(function (e) { cnt[e.tipo] = (cnt[e.tipo] || 0) + 1; });
+    var note = es.filter(function (e) { return e.tipo === 'nota' && e.texto; }).pop(), pics = es.filter(function (e) { return e.foto; }).slice(0, 4);
     var icons = [cnt.recuento && '🔍', cnt.zona && '📍' + cnt.zona, cnt.comida && '🍯' + cnt.comida, cnt.nota && (es.some(function (e) { return e.kind === 'hito'; }) ? '⭐' : '📝') + cnt.nota].filter(Boolean).join('  ');
-    var d = new Date(g[0]), title = daysAgo(g[0]) === 0 ? 'Hoy' : daysAgo(g[0]) === 1 ? 'Ayer' : d.getDate() + ' de ' + MONTHS_L[d.getMonth()] + (d.getFullYear() !== new Date().getFullYear() ? ' de ' + d.getFullYear() : '');
-    return '<li class="day"><details class="dayc"><summary><span class="dt">' + title + '</span>' + (parts.length ? '<span class="ds">' + esc(parts.join(' · ')) + '</span>' : '') +
-      (note ? '<span class="dn">«' + esc(note.texto) + '»</span>' : '') + '<span class="icons">' + icons + '</span></summary><ul class="log">' + es.map(entry).join('') + '</ul></details></li>';
+    var has = function (k) { return es.some(function (e) { return e.kind === k; }); }, kind = has('hito') ? 'hito' : has('problema') ? 'problema' : cnt.recuento ? 'recuento' : cnt.zona ? 'zona' : '';
+    var d = new Date(g[0]), mk = d.getFullYear() + '-' + d.getMonth(), head = '';
+    if (mk !== lastM) { lastM = mk; head = '<li class="month">' + MONTHS_L[d.getMonth()] + (d.getFullYear() !== new Date().getFullYear() ? ' ' + d.getFullYear() : '') + ' <span>· ' + perMonth[mk] + (perMonth[mk] === 1 ? ' día' : ' días') + '</span></li>'; }
+    return head + '<li class="day" id="day-' + g[0] + '"><i class="dot k-' + kind + '" aria-hidden="true"></i><details class="dayc"><summary><span class="dt">' + dayTitle(g[0]) + '</span>' + (parts.length ? '<span class="ds">' + esc(parts.join(' · ')) + '</span>' : '') +
+      (note ? '<span class="dn">«' + esc(note.texto) + '»</span>' : '') + (pics.length ? '<span class="thumbs">' + pics.map(function (e) { return '<img src="/_blob/' + esc(e.foto) + '" alt="" loading="lazy">'; }).join('') + '</span>' : '') +
+      '<span class="icons">' + icons + '</span></summary><ul class="log">' + es.map(entry).join('') + '</ul></details></li>';
   }).join('');
 }
+// Opens a day in the diary, loading older pages if it is further back than what is shown
+function jumpDay(t) {
+  var need = evs(S.cur).filter(function (e) { return dayStart(e.t) >= t; }).length;
+  if (need > shown) { shown = Math.ceil(need / PAGE) * PAGE; render(); }
+  var li = $('day-' + t); if (!li) return;
+  li.querySelector('details').open = true; li.classList.remove('flash'); void li.offsetWidth; li.classList.add('flash');
+  li.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'center' });
+}
+// A look back: what the diary held on this same day a year, half a year, three months, a month or a week ago
+var BACK = [[365, 'Hace un año'], [182, 'Hace medio año'], [91, 'Hace tres meses'], [30, 'Hace un mes'], [7, 'Hace una semana']];
+function memory(c, all) {
+  var today0 = dayStart(Date.now()), now = state(c.id);
+  for (var i = 0; i < BACK.length; i++) {
+    var t = dayStart(today0 - BACK[i][0] * DAY + 12 * 3600000), es = all.filter(function (e) { return dayStart(e.t) === t; });
+    if (!es.length) continue;
+    var note = es.filter(function (e) { return e.tipo === 'nota' && e.texto; })[0], rv = es.filter(function (e) { return e.tipo === 'recuento' && e.n.obreras != null; })[0], parts = dayParts(es);
+    var then = rv && now.obreras != null && workersTxt(rv.n) !== workersTxt(now) ? 'Entonces ' + workersTxt(rv.n) + ' obreras, ahora ' + workersTxt(now) + '.' : '';
+    return '<button type="button" class="memory" data-mem="' + t + '"><span class="lab">' + BACK[i][1] + ' · ' + fmtD(t) + '</span>' +
+      (note ? '<p>«' + esc(note.texto) + '»</p>' : parts.length ? '<p>' + esc(parts.join(' · ')) + '</p>' : '') + (then ? '<small>' + esc(then) + '</small>' : '') + '</button>';
+  }
+  return '';
+}
+$('memory').addEventListener('click', function (e) { var b = e.target.closest('[data-mem]'); if (b) jumpDay(+b.getAttribute('data-mem')); });
+
+// ---------- In numbers: every day you looked at them, and the totals of what you did ----------
+var HEAT_C = 13, HEAT_G = 3, HEAT_L = 16, HEAT_T = 16, heatDays = {};
+function renderStats(c, all) {
+  $('statsBox').hidden = !all.length; if (!all.length) return;
+  var per = {}; all.forEach(function (e) { var k = dayStart(e.t); per[k] = (per[k] || 0) + 1; }); heatDays = per;
+  var keys = Object.keys(per).map(Number).sort(function (a, b) { return a - b; }), today0 = dayStart(Date.now()), next = function (t) { return dayStart(t + 36 * 3600000); };
+  // Weeks run Monday to Sunday down each column; at most 26 weeks so it stays readable on a phone
+  var s = new Date(Math.max(keys[0], today0 - 25 * 7 * DAY)); s.setDate(s.getDate() - (s.getDay() + 6) % 7);
+  var t = dayStart(s.getTime()), col = 0, cells = '', heads = '', lastMon = -1, step = HEAT_C + HEAT_G;
+  for (; t <= today0; t = next(t)) {
+    var d = new Date(t), row = (d.getDay() + 6) % 7, n = per[t] || 0;
+    if (row === 0 && cells) col++;
+    if (row === 0 && d.getMonth() !== lastMon) { lastMon = d.getMonth(); heads += '<text x="' + (HEAT_L + col * step) + '" y="11" font-size="10.5" fill="var(--muted)">' + MONTHS[lastMon] + '</text>'; }
+    var op = n === 0 ? '' : ' fill-opacity="' + (n === 1 ? .35 : n < 4 ? .62 : 1) + '"';
+    cells += '<rect data-d="' + t + '" x="' + (HEAT_L + col * step) + '" y="' + (HEAT_T + row * step) + '" width="' + HEAT_C + '" height="' + HEAT_C + '" rx="3" fill="' + (n ? 'var(--acc)' : 'var(--line)') + '"' + op + (t === today0 ? ' stroke="var(--ink)" stroke-width="1.5"' : '') + '><title>' + fmtD(t) + ': ' + (n ? n + (n === 1 ? ' cosa' : ' cosas') : 'nada') + '</title></rect>';
+  }
+  var W = HEAT_L + (col + 1) * step + 10, H = HEAT_T + 7 * step;
+  $('heat').innerHTML = '<svg viewBox="0 0 ' + W + ' ' + H + '" style="max-width:' + W * 1.7 + 'px" role="img" aria-label="Calendario de los días que apuntaste algo, ' + keys.length + ' en total">' + heads +
+    [[0, 'L'], [2, 'X'], [4, 'V']].map(function (r) { return '<text x="0" y="' + (HEAT_T + r[0] * step + 10) + '" font-size="10" fill="var(--muted)">' + r[1] + '</text>'; }).join('') + cells + '</svg>';
+  $('heatTip').textContent = 'Cada cuadro es un día; más oscuro, más cosas apuntadas. Toca uno para abrirlo en el diario.';
+  $('statsSince').textContent = 'desde el ' + fmtD(keys[0]);
+  // Streaks: days in a row with something written, the current one counting from today or yesterday
+  var best = 0, run = 0, prev = null;
+  keys.forEach(function (k) { run = prev != null && next(prev) === k ? run + 1 : 1; best = Math.max(best, run); prev = k; });
+  var now = 0, k = per[today0] ? today0 : dayStart(today0 - 12 * 3600000); while (per[k]) { now++; k = dayStart(k - 12 * 3600000); }
+  $('streak').innerHTML = now ? '🔥 <b>' + now + (now === 1 ? ' día' : ' días') + '</b> seguidos apuntando' + (best > now ? ' · tu mejor racha, ' + best : now > 1 ? ' · ¡tu mejor racha!' : '') : 'Tu mejor racha: <b>' + best + (best === 1 ? ' día' : ' días') + '</b> seguidos. Apunta algo hoy para empezar otra.';
+  var count = function (f) { return all.filter(f).length; }, care = function (q) { return count(function (e) { return e.tipo === 'comida' && e.que === q; }); };
+  var wild = count(function (e) { return e.tipo === 'comida' && e.que === 'proteina' && (e.origen === 'vivo' || e.origen === 'congelado'); });
+  var top = all.filter(function (e) { return e.tipo === 'recuento' && e.n.obreras != null; }).sort(function (a, b) { return lowB(b.n) - lowB(a.n) || b.n.obreras - a.n.obreras; })[0];
+  var age = c.reina ? daysAgo(new Date(c.reina + 'T12:00').getTime()) : 0, cl = climaRows(c.clima), ts = cl.map(function (r) { return r.temp; });
+  var tiles = [
+    [nf(age), 'días contigo'], [keys.length, 'días apuntando'], [care('azucar'), '🍯 veces azúcar'], [care('proteina'), '🦗 presas' + (wild ? ', ' + wild + ' silvestres' : '')],
+    [care('hydra') + care('deposito') + care('agua'), '💧 veces agua'], [care('cinis') + care('limpieza'), '🧹 limpiezas'], [count(function (e) { return e.tipo === 'recuento'; }), '🔍 revisiones'],
+    [count(function (e) { return e.tipo === 'zona'; }), '📍 zonas apuntadas'], [count(function (e) { return e.tipo === 'nota'; }), '📝 notas'], [count(function (e) { return e.foto; }), '📸 fotos'],
+    [top ? workersTxt(top.n) : 0, '🐜 récord de obreras' + (top ? ', ' + fmtD(top.t) : '')],
+    [ts.length ? dec(Math.max.apply(null, ts)) + '°' : 0, '🌡️ el día más caluroso'], [ts.length ? dec(Math.min.apply(null, ts)) + '°' : 0, '❄️ el día más frío']
+  ].filter(function (x) { return x[0]; });
+  $('nums').innerHTML = tiles.map(function (x) { return '<div><b>' + esc(x[0]) + '</b><span>' + esc(x[1]) + '</span></div>'; }).join('');
+}
+$('heat').addEventListener('click', function (e) {
+  var r = e.target.closest('[data-d]'); if (!r) return; var t = +r.getAttribute('data-d'), n = heatDays[t] || 0;
+  $('heatTip').textContent = fmtD(t) + ': ' + (n ? n + (n === 1 ? ' cosa apuntada' : ' cosas apuntadas') : 'no apuntaste nada');
+  if (n) jumpDay(t);
+});
 // ---------- Achievements: worked out from the diary, celebrated once ----------
 function lowB(n) { if (!n) return 0; if (n.rango) return parseInt(String(n.rango).replace(/\./g, '').replace(/^Más de /, ''), 10) || 0; return n.obreras || 0; }
 function logros(c) {
