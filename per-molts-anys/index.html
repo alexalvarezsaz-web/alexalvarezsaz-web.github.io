@@ -1,0 +1,534 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="../shared/firebase-config.js"></script>
+<script src="../shared/claude-firebase.js" data-app="per-molts-anys"></script>
+</head><body>
+<title>Per molts anys</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="icon" type="image/svg+xml" href="icon.svg?v=1">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=1">
+<link rel="manifest" href="manifest.webmanifest?v=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Cumples">
+<meta name="theme-color" content="#c7306a">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,800&display=swap">
+<style>
+/* Layout: the next birthdays first, as a countdown list; a year calendar and the import/export tools in their own tabs. Each person opens in a sheet with the ways to congratulate them and their gift ideas */
+:root {
+  --bg: #fff6f0; --card: #ffffff; --ink: #2b1a24; --muted: #7a6470; --line: #f0dcd9; --soft: #fbe9e6;
+  --berry: #c7306a; --berry-ink: #ffffff; --sun: #f7b538; --mint: #1f9b80; --sky: #3f7fd9; --plum: #5b2a3f;
+  --display: "Fredoka", "Trebuchet MS", sans-serif; --body: "Nunito Sans", "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #1a1116; --card: #24181f; --ink: #f6e9ee; --muted: #b59eaa; --line: #3a2a33; --soft: #2f2029;
+  --berry: #ff6f9f; --berry-ink: #2a0716; --sun: #f7c25a; --mint: #5fd0b3; --sky: #7fb0ff; --plum: #e9b6c9; color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --bg: #1a1116; --card: #24181f; --ink: #f6e9ee; --muted: #b59eaa; --line: #3a2a33; --soft: #2f2029;
+  --berry: #ff6f9f; --berry-ink: #2a0716; --sun: #f7c25a; --mint: #5fd0b3; --sky: #7fb0ff; --plum: #e9b6c9; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 400 16.5px/1.45 var(--body); }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; touch-action: manipulation; }
+:focus-visible { outline: 3px solid var(--sun); outline-offset: 2px; }
+.wrap { max-width: 640px; margin: 0 auto; display: grid; gap: 14px; padding-block: 10px 90px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.top { position: relative; display: grid; gap: 4px; padding: 54px 18px 16px; border-radius: 22px; background: var(--card); box-shadow: 0 10px 30px -18px rgba(91, 42, 63, .5); overflow: hidden; }
+.garland { position: absolute; left: 0; right: 0; top: 0; width: 100%; height: 46px; }
+h1 { margin: 0; font: 700 clamp(32px, 9vw, 44px)/1 var(--display); letter-spacing: -.01em; }
+h1 i { font-style: normal; color: var(--berry); }
+.lead { margin: 0; color: var(--muted); font-weight: 600; }
+.lead b { color: var(--ink); }
+.sync { font-size: 13px; color: var(--muted); }
+.tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 5px; border-radius: 16px; background: var(--soft); }
+.tab { min-height: 48px; border: 0; border-radius: 12px; background: transparent; font-weight: 800; color: var(--muted); }
+.tab[aria-pressed="true"] { background: var(--card); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+.bar { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+.bar input { min-width: 0; min-height: 50px; padding: 0 14px; border-radius: 14px; border: 2px solid var(--line); background: var(--card); font-size: 17px; }
+.btn { min-height: 50px; padding: 0 18px; border: 0; border-radius: 14px; background: var(--berry); color: var(--berry-ink); font-weight: 800; }
+.ghost { min-height: 44px; padding: 0 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); font-weight: 700; }
+.ghost.danger { color: var(--berry); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { min-height: 38px; padding: 0 12px; border: 1px solid var(--line); border-radius: 19px; background: var(--card); font-weight: 700; font-size: 14.5px; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.sec { display: grid; gap: 6px; }
+.sec h2 { margin: 8px 0 0; font: 800 13px var(--body); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.row { display: grid; grid-template-columns: 46px minmax(0, 1fr) auto; gap: 12px; align-items: center; width: 100%; min-height: 64px; padding: 8px 12px 8px 8px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); text-align: left; }
+.av { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%; background: hsl(var(--h) 70% 86%); color: hsl(var(--h) 55% 28%); font: 700 17px var(--display); }
+.who { min-width: 0; }
+.who b { display: block; font-weight: 800; overflow-wrap: anywhere; }
+.who small { display: block; color: var(--muted); font-size: 14px; font-weight: 600; }
+.when { text-align: right; line-height: 1.05; }
+.when b { display: block; font: 700 24px var(--display); color: var(--berry); }
+.when small { font-size: 12.5px; font-weight: 700; color: var(--muted); }
+.when.far b { color: var(--muted); font-size: 20px; }
+.tag { display: inline-block; margin-left: 4px; padding: 0 7px; border-radius: 8px; background: var(--sun); color: #3a2400; font-size: 12px; font-weight: 800; vertical-align: 1px; }
+/* Today's birthdays get a party card with confetti and the buttons to send the message right there */
+.today { position: relative; display: grid; gap: 10px; padding: 16px; border-radius: 20px; background: var(--berry); color: var(--berry-ink); overflow: hidden; }
+.today h3 { margin: 0; font: 700 24px/1.15 var(--display); position: relative; }
+.today p { margin: 0; font-weight: 700; opacity: .9; position: relative; }
+.today .acts { position: relative; display: flex; flex-wrap: wrap; gap: 6px; }
+.today .acts a, .today .acts button { display: inline-grid; place-items: center; min-height: 44px; padding: 0 14px; border-radius: 12px; border: 0; background: var(--berry-ink); color: var(--berry); font-weight: 800; text-decoration: none; }
+.today .acts .done { background: transparent; color: var(--berry-ink); border: 2px solid currentColor; }
+.confetti i { position: absolute; top: -12px; width: 8px; height: 12px; border-radius: 2px; animation: fall 2.6s ease-in forwards; }
+@keyframes fall { to { transform: translateY(260px) rotate(540deg); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .confetti { display: none; } }
+.empty { margin: 0; padding: 24px 14px; text-align: center; color: var(--muted); border: 2px dashed var(--line); border-radius: 16px; display: grid; gap: 10px; justify-items: center; }
+.empty svg { width: 86px; height: 86px; }
+.note { margin: 0; font-size: 14.5px; color: var(--muted); }
+.card { display: grid; gap: 10px; padding: 16px; border-radius: 18px; background: var(--card); border: 1px solid var(--line); }
+.card h3 { margin: 0; font: 700 20px var(--display); }
+.card textarea { width: 100%; min-height: 110px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); font-size: 16px; resize: vertical; }
+.month { display: grid; gap: 2px; padding: 12px 14px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); }
+.month h3 { margin: 0 0 4px; font: 700 19px var(--display); display: flex; justify-content: space-between; align-items: baseline; }
+.month h3 small { font: 700 13px var(--body); color: var(--muted); }
+.month button { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 8px; align-items: center; min-height: 40px; padding: 2px 4px; border: 0; border-radius: 8px; background: transparent; text-align: left; }
+.month button:hover { background: var(--soft); }
+.month .d { font: 700 18px var(--display); color: var(--berry); text-align: center; }
+.month .past { opacity: .5; }
+.month .em { color: var(--muted); font-size: 14px; margin: 0; }
+/* The person sheet slides over the list; on a phone it fills the screen */
+.sheet { position: fixed; inset: 0; z-index: 20; display: grid; align-items: end; justify-items: center; background: rgba(43, 26, 36, .45); }
+.panel { width: 100%; max-width: 640px; max-height: 94vh; overflow-y: auto; overscroll-behavior: contain; display: grid; gap: 14px; padding: 18px max(18px, env(safe-area-inset-right, 0px)) calc(90px + env(safe-area-inset-bottom, 0px)) max(18px, env(safe-area-inset-left, 0px)); border-radius: 24px 24px 0 0; background: var(--bg); }
+.phead { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 12px; align-items: center; }
+.phead .av { width: 64px; height: 64px; font-size: 24px; }
+.phead h2 { margin: 0; font: 700 26px/1.1 var(--display); overflow-wrap: anywhere; }
+.phead small { color: var(--muted); font-weight: 700; }
+.x { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); background: var(--card); font-size: 18px; font-weight: 800; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.stats div { padding: 10px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); text-align: center; }
+.stats b { display: block; font: 700 22px var(--display); color: var(--berry); }
+.stats small { font-size: 13px; font-weight: 700; color: var(--muted); }
+.send { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
+.send a, .send button { display: grid; place-items: center; min-height: 50px; padding: 0 10px; border-radius: 14px; border: 0; font-weight: 800; text-decoration: none; text-align: center; }
+.wa { background: #25a35a; color: #fff; }
+.sms { background: var(--sky); color: #fff; }
+.tel { background: var(--card); color: var(--ink); border: 1px solid var(--line) !important; }
+.msg { display: grid; gap: 6px; }
+.msg .chip { min-height: 44px; padding: 8px 14px; border-radius: 14px; text-align: left; }
+.idea { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; min-height: 48px; padding: 4px 6px 4px 12px; border-radius: 12px; background: var(--bg); border: 1px solid var(--line); }
+.idea span { overflow-wrap: anywhere; font-weight: 600; }
+.idea .mini { display: flex; gap: 4px; }
+.idea .mini button { min-width: 40px; min-height: 40px; padding: 0 9px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); font-size: 13.5px; font-weight: 700; }
+.given { margin: 0; padding-left: 18px; color: var(--muted); }
+.panel, .form { grid-template-columns: minmax(0, 1fr); }
+.form { display: grid; gap: 12px; }
+.form label { display: grid; gap: 5px; min-width: 0; font-weight: 800; font-size: 14.5px; }
+.form input, .form select, .form textarea { width: 100%; min-width: 0; min-height: 50px; padding: 0 12px; border-radius: 12px; border: 2px solid var(--line); background: var(--card); font-size: 17px; font-weight: 600; }
+.form textarea { padding: 10px 12px; min-height: 80px; }
+.date3 { display: grid; grid-template-columns: 1fr 1.6fr 1.2fr; gap: 8px; }
+.duo { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.err { margin: 0; color: var(--berry); font-weight: 800; }
+.toast { position: fixed; z-index: 30; left: max(12px, env(safe-area-inset-left, 0px)); right: max(12px, env(safe-area-inset-right, 0px)); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); max-width: 616px; margin: 0 auto; padding: 8px 8px 8px 14px; border-radius: 14px; background: var(--ink); color: var(--bg); font-weight: 700; display: flex; gap: 10px; align-items: center; min-height: 56px; }
+.toast span { flex: 1; }
+.toast button { min-height: 40px; padding: 0 12px; border: 1px solid currentColor; border-radius: 10px; background: transparent; color: inherit; font-weight: 800; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+</style>
+
+<main class="wrap">
+  <header class="top">
+    <svg class="garland" viewBox="0 0 400 46" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M0 6Q200 30 400 6" fill="none" stroke="var(--muted)" stroke-width="1.5" opacity=".5"/>
+      <g><path d="M14 8l16 1-7 22z" fill="#c7306a"/><path d="M44 12l16 2-9 22z" fill="#f7b538"/><path d="M76 15l16 1-8 22z" fill="#1f9b80"/><path d="M108 18l16 1-8 22z" fill="#3f7fd9"/><path d="M140 19l16 1-8 22z" fill="#c7306a"/><path d="M172 20l16 0-8 22z" fill="#f7b538"/><path d="M204 21l16-1-8 22z" fill="#1f9b80"/><path d="M236 20l16-1-8 22z" fill="#3f7fd9"/><path d="M268 19l16-1-8 22z" fill="#c7306a"/><path d="M300 17l16-2-8 22z" fill="#f7b538"/><path d="M332 14l16-2-8 22z" fill="#1f9b80"/><path d="M364 11l16-2-7 21z" fill="#3f7fd9"/></g>
+    </svg>
+    <h1>Per molts <i>anys</i></h1>
+    <p class="lead" id="lead">Los cumpleaños de tu gente</p>
+    <span class="sync" id="sync"></span>
+  </header>
+  <nav class="tabs" aria-label="Secciones">
+    <button class="tab" type="button" data-tab="proximos">Próximos</button>
+    <button class="tab" type="button" data-tab="calendario">Calendario</button>
+    <button class="tab" type="button" data-tab="datos">Avisos</button>
+  </nav>
+  <div id="view" style="display:grid;gap:14px"></div>
+</main>
+<div class="sheet" id="sheet" hidden><div class="panel" id="panel" role="dialog" aria-modal="true" aria-labelledby="ptitle"></div></div>
+<div class="toast" id="toast" role="status" hidden></div>
+<input type="file" id="fileVcf" accept=".vcf,text/vcard,text/x-vcard" class="sr" tabindex="-1" aria-hidden="true">
+<input type="file" id="fileJson" accept=".json,application/json" class="sr" tabindex="-1" aria-hidden="true">
+
+<script>
+// ---------- Calendar helpers ----------
+var MES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+var DIA = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+var TIPOS = { cumple: { t: 'Cumpleaños', e: '🎂' }, santo: { t: 'Santo', e: '😇' }, aniv: { t: 'Aniversario', e: '💍' }, otro: { t: 'Otra fecha', e: '⭐' } };
+var GRUPOS = ['Familia', 'Amigos', 'Pareja', 'Trabajo', 'Clase'];
+var AVISOS = [[0, 'El mismo día'], [1, '1 día antes'], [3, '3 días antes'], [7, '1 semana antes'], [14, '2 semanas antes']];
+var SIGNOS = [[1, 20, '♑ Capricornio'], [2, 19, '♒ Acuario'], [3, 20, '♓ Piscis'], [4, 20, '♈ Aries'], [5, 21, '♉ Tauro'], [6, 21, '♊ Géminis'], [7, 22, '♋ Cáncer'], [8, 23, '♌ Leo'], [9, 23, '♍ Virgo'], [10, 23, '♎ Libra'], [11, 22, '♏ Escorpio'], [12, 21, '♐ Sagitario'], [12, 31, '♑ Capricornio']];
+function signo(p) { for (var i = 0; i < SIGNOS.length; i++) if (p.mes < SIGNOS[i][0] || (p.mes === SIGNOS[i][0] && p.dia <= SIGNOS[i][1])) return SIGNOS[i][2]; return ''; }
+function today0() { var d = new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+function leap(y) { return y % 4 === 0 && (y % 100 !== 0 || y % 400 === 0); }
+// Someone born on 29 February celebrates on the 28th in the other years
+function onYear(p, y) { return new Date(y, p.mes - 1, p.mes === 2 && p.dia === 29 && !leap(y) ? 28 : p.dia); }
+function nextOf(p) {
+  var t = today0(), y = t.getFullYear(), d = onYear(p, y);
+  if (d < t) { y++; d = onYear(p, y); }
+  return { date: d, days: Math.round((d - t) / 864e5), year: y, age: p.anio ? y - p.anio : null };
+}
+function prevOf(p) { var t = today0(), y = t.getFullYear(), d = onYear(p, y); if (d > t) { y--; d = onYear(p, y); } return { date: d, days: Math.round((t - d) / 864e5), year: y }; }
+function maxDay(m) { return [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][m - 1]; }
+
+// ---------- Store: this phone first, Firestore when signed in ----------
+var LS = 'per-molts-anys-v1', S = { p: {}, pend: {}, gone: {}, avisoDef: 3 }, db = null, tab = 'proximos', q = '', grupo = '', sheet = null, pasteOpen = false;
+try { var raw = JSON.parse(localStorage.getItem(LS) || 'null'); if (raw) S = Object.assign(S, raw); } catch (e) {}
+function persist() { try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) {} }
+function $(i) { return document.getElementById(i); }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function norm(s) { return String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim(); }
+function uid() { return 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+function people() { return Object.keys(S.p).map(function (k) { return S.p[k]; }); }
+function put(o) { S.p[o.id] = o; S.pend[o.id] = 1; delete S.gone[o.id]; persist(); render(); flush(); }
+function del(id) { var o = S.p[id]; delete S.p[id]; delete S.pend[id]; S.gone[id] = 1; persist(); render(); flush(); return o; }
+function patch(id, ch) { var o = S.p[id]; if (o) put(Object.assign({}, o, ch, { ts: Date.now() })); }
+var flushing = false;
+async function flush() {
+  if (!db || flushing || navigator.onLine === false) { status(); return; }
+  flushing = true; status();
+  try {
+    for (var id in S.pend) { if (S.p[id]) await db.doc('personas/' + id).set(strip(S.p[id])); delete S.pend[id]; persist(); }
+    for (var g in S.gone) { await db.doc('personas/' + g).delete(); delete S.gone[g]; persist(); }
+  } catch (e) {}
+  flushing = false; status();
+}
+function strip(o) { var c = Object.assign({}, o); delete c.id; return c; }
+function status() {
+  var n = Object.keys(S.pend).length + Object.keys(S.gone).length, el = $('sync'); if (!el) return;
+  el.textContent = !db ? 'Guardado en este móvil' : navigator.onLine === false ? '📵 Sin conexión' + (n ? ' · ' + n + ' por enviar' : '') : n ? 'Guardando ' + n + '…' : '✓ Guardado en tu cuenta';
+}
+window.addEventListener('online', flush); window.addEventListener('offline', status); setInterval(flush, 20000);
+function setAviso(n) { S.avisoDef = n; persist(); if (db) db.doc('ajustes/general').set({ avisoDef: n }).catch(function () {}); render(); }
+var toastT = null;
+function toast(msg, label, fn) { var el = $('toast'); clearTimeout(toastT); el.hidden = false; el.innerHTML = '<span>' + esc(msg) + '</span>' + (label ? '<button type="button" id="tb">' + esc(label) + '</button>' : ''); if (label) $('tb').onclick = function () { el.hidden = true; fn(); }; toastT = setTimeout(function () { el.hidden = true; }, 5000); }
+
+// ---------- How each date reads ----------
+function hue(s) { var h = 0; for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 360; return h; }
+function initials(n) { var w = n.trim().split(/\s+/); return ((w[0] || '?')[0] + (w.length > 1 ? w[w.length - 1][0] : '')).toUpperCase(); }
+function avatar(p) { return '<span class="av" style="--h:' + hue(p.nombre) + '" aria-hidden="true">' + esc(initials(p.nombre)) + '</span>'; }
+function first(p) { return p.nombre.trim().split(/\s+/)[0]; }
+function what(p, n) {
+  var t = p.tipo || 'cumple';
+  if (t === 'cumple') return n.age != null ? (n.days === 0 ? 'Cumple ' + n.age + ' hoy' : 'Cumple ' + n.age) : 'Cumpleaños';
+  if (t === 'aniv') return n.age != null ? n.age + '.º aniversario' : 'Aniversario';
+  if (t === 'santo') return 'Su santo';
+  return p.etiqueta || 'Otra fecha';
+}
+function round(p, n) { return n.age != null && (p.tipo || 'cumple') !== 'santo' && (n.age === 18 || (n.age >= 10 && n.age % 10 === 0) || (p.tipo === 'aniv' && n.age % 5 === 0 && n.age > 0)); }
+function fecha(d) { return DIA[d.getDay()].slice(0, 3) + ' ' + d.getDate() + ' ' + MES[d.getMonth()].slice(0, 3); }
+function sub(p, n) { return (TIPOS[p.tipo || 'cumple'] || TIPOS.cumple).e + ' ' + esc(what(p, n)) + (round(p, n) ? '<span class="tag">Redondo</span>' : '') + ' · ' + fecha(n.date); }
+function whenHtml(n) {
+  if (n.days === 0) return '<span class="when"><b>🎉</b><small>hoy</small></span>';
+  if (n.days === 1) return '<span class="when"><b>1</b><small>mañana</small></span>';
+  return '<span class="when' + (n.days > 30 ? ' far' : '') + '"><b>' + n.days + '</b><small>días</small></span>';
+}
+function row(p) { var n = nextOf(p); return '<button class="row" type="button" data-open="' + p.id + '">' + avatar(p) + '<span class="who"><b>' + esc(p.nombre) + '</b><small>' + sub(p, n) + '</small></span>' + whenHtml(n) + '</button>'; }
+
+// ---------- Ways to congratulate ----------
+function phone(p) { var d = String(p.tel || '').replace(/[^\d+]/g, ''); if (!d) return ''; if (d[0] === '+') return d.slice(1); if (d.slice(0, 2) === '00') return d.slice(2); if (d.length === 9 && /^[6789]/.test(d)) return '34' + d; return d; }
+function msgs(p) {
+  var n = first(p), t = p.tipo || 'cumple';
+  if (t === 'santo') return ['¡Feliz santo, ' + n + '! 😇', '¡Muchas felicidades por tu santo, ' + n + '!'];
+  if (t === 'aniv') return ['¡Feliz aniversario! 💍 Que sean muchos más.', '¡Felicidades por vuestro aniversario! 🥂'];
+  return ['¡Feliz cumpleaños, ' + n + '! 🎉 Que pases un día genial.', '¡Per molts anys, ' + n + '! 🎂', '¡Felicidades, ' + n + '! Disfruta mucho de tu día 🥳', '¡Feliz cumple! A ver cuándo lo celebramos 🍰'];
+}
+var IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+function sendLinks(p, text) {
+  var t = phone(p), m = encodeURIComponent(text);
+  return '<a class="wa" href="https://wa.me/' + t + '?text=' + m + '" target="_blank" rel="noopener">WhatsApp</a>' +
+    (t ? '<a class="sms" href="sms:+' + t + (IOS ? '&' : '?') + 'body=' + m + '">Mensaje</a><a class="tel" href="tel:+' + t + '">Llamar</a>' : '');
+}
+
+// ---------- Main views ----------
+function filtered() {
+  var s = norm(q);
+  return people().filter(function (p) { return (!s || norm(p.nombre).indexOf(s) >= 0 || norm(p.notas || '').indexOf(s) >= 0) && (!grupo || p.grupo === grupo); });
+}
+var CAKE = '<svg viewBox="0 0 90 90" aria-hidden="true"><rect x="42" y="14" width="6" height="20" rx="2" fill="var(--sky)"/><path d="M45 4c6 6 6 11 0 13-6-2-6-7 0-13z" fill="var(--sun)"/><rect x="18" y="34" width="54" height="20" rx="6" fill="var(--berry)"/><rect x="12" y="52" width="66" height="26" rx="7" fill="var(--soft)" stroke="var(--line)" stroke-width="2"/><path d="M12 62c6 0 6 6 11 6s6-6 11-6 6 6 11 6 6-6 11-6 6 6 11 6 6-6 11-6" fill="none" stroke="var(--sun)" stroke-width="4" stroke-linecap="round"/></svg>';
+function lead() {
+  var all = people().map(function (p) { return { p: p, n: nextOf(p) }; }).sort(function (a, b) { return a.n.days - b.n.days; }), el = $('lead');
+  var hoy = all.filter(function (x) { return x.n.days === 0; });
+  try { if (navigator.setAppBadge) hoy.length ? navigator.setAppBadge(hoy.length) : navigator.clearAppBadge(); } catch (e) {}
+  if (!all.length) { el.textContent = 'Los cumpleaños de tu gente'; return; }
+  if (hoy.length) { el.innerHTML = 'Hoy es el día de <b>' + hoy.map(function (x) { return esc(first(x.p)); }).join(', ') + '</b> 🎉'; return; }
+  var x = all[0]; el.innerHTML = 'El próximo: <b>' + esc(first(x.p)) + '</b> ' + (x.n.days === 1 ? 'mañana' : 'en ' + x.n.days + ' días');
+}
+function confetti() {
+  var c = ['#f7b538', '#7fd8c2', '#ffffff', '#3f7fd9'], h = '';
+  for (var i = 0; i < 26; i++) h += '<i style="left:' + Math.round(Math.random() * 100) + '%;background:' + c[i % 4] + ';animation-delay:' + (Math.random() * .9).toFixed(2) + 's;transform:rotate(' + Math.round(Math.random() * 90) + 'deg)"></i>';
+  return '<div class="confetti" aria-hidden="true">' + h + '</div>';
+}
+var partyShown = false;
+function render() {
+  lead();
+  Array.prototype.forEach.call(document.querySelectorAll('[data-tab]'), function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-tab') === tab); });
+  var all = people(), h = '';
+  if (tab === 'proximos') {
+    var groups = GRUPOS.concat(all.map(function (p) { return p.grupo; })).filter(function (g, i, a) { return g && a.indexOf(g) === i && all.some(function (p) { return p.grupo === g; }); });
+    h = '<div class="bar"><input id="q" type="search" placeholder="Buscar a alguien" value="' + esc(q) + '" autocomplete="off" aria-label="Buscar"><button class="btn" type="button" data-new>＋ Añadir</button></div>';
+    if (groups.length > 1) h += '<div class="chips">' + ['', ].concat(groups).map(function (g) { return '<button class="chip" type="button" data-grupo="' + esc(g) + '" aria-pressed="' + (grupo === g) + '">' + (g ? esc(g) : 'Todos') + '</button>'; }).join('') + '</div>';
+    var list = filtered().map(function (p) { return { p: p, n: nextOf(p) }; }).sort(function (a, b) { return a.n.days - b.n.days || a.p.nombre.localeCompare(b.p.nombre); });
+    if (!all.length) h += '<div class="empty">' + CAKE + '<b>Aún no hay nadie</b><span>Añade el primer cumpleaños, o tráelos todos de golpe desde tus contactos.</span><button class="btn" type="button" data-new>＋ Añadir un cumpleaños</button><button class="ghost" type="button" data-tab="datos">Importar contactos</button></div>';
+    else if (!list.length) h += '<p class="empty">Nadie coincide con «' + esc(q || grupo) + '».</p>';
+    var y = new Date().getFullYear();
+    list.filter(function (x) { return x.n.days === 0; }).forEach(function (x) {
+      var p = x.p, done = p.felic === y, m = msgs(p)[0];
+      h += '<section class="today">' + (partyShown ? '' : confetti()) + '<h3>' + (TIPOS[p.tipo || 'cumple'] || TIPOS.cumple).e + ' ' + esc(p.nombre) + '</h3><p>' + esc(what(p, x.n)) + (p.anio && (p.tipo || 'cumple') === 'cumple' ? ' · nació en ' + p.anio : '') + '</p>' +
+        '<div class="acts">' + sendLinks(p, m).replace(/class="(wa|sms|tel)"/g, '') + '<button type="button" data-felic="' + p.id + '" class="' + (done ? 'done' : '') + '">' + (done ? '✓ Felicitado' : 'Ya le he felicitado') + '</button><button type="button" data-open="' + p.id + '">Ver</button></div></section>';
+    });
+    partyShown = partyShown || list.some(function (x) { return x.n.days === 0; });
+    // Birthdays of the last week that were not marked as congratulated, in case one slipped by
+    var missed = filtered().filter(function (p) { var v = prevOf(p); return v.days > 0 && v.days <= 7 && p.felic !== v.year; });
+    if (missed.length) h += '<div class="sec"><h2>¿Le felicitaste? Fue hace poco</h2>' + missed.map(function (p) { var v = prevOf(p); return '<div class="row">' + avatar(p) + '<span class="who"><b>' + esc(p.nombre) + '</b><small>' + (v.days === 1 ? 'Ayer' : 'Hace ' + v.days + ' días') + '</small></span><button class="ghost" type="button" data-felic-prev="' + p.id + '">Sí ✓</button></div>'; }).join('') + '</div>';
+    var parts = [['Esta semana', 1, 7], ['Este mes', 8, 31], ['Más adelante', 32, 400]];
+    parts.forEach(function (s) { var l = list.filter(function (x) { return x.n.days >= s[1] && x.n.days <= s[2]; }); if (l.length) h += '<div class="sec"><h2>' + s[0] + '</h2>' + l.map(function (x) { return row(x.p); }).join('') + '</div>'; });
+  }
+  if (tab === 'calendario') {
+    var t = today0();
+    h = '<p class="note">El año empezando por este mes. Toca un nombre para abrirlo.</p>';
+    for (var i = 0; i < 12; i++) {
+      var m = (t.getMonth() + i) % 12 + 1, ml = all.filter(function (p) { return p.mes === m; }).sort(function (a, b) { return a.dia - b.dia; });
+      h += '<section class="month"><h3>' + MES[m - 1].charAt(0).toUpperCase() + MES[m - 1].slice(1) + '<small>' + (ml.length ? ml.length + (ml.length === 1 ? ' fecha' : ' fechas') : '') + '</small></h3>' +
+        (ml.length ? ml.map(function (p) { var n = nextOf(p), past = i === 0 && n.days > 31; return '<button type="button" class="' + (past ? 'past' : '') + '" data-open="' + p.id + '"><span class="d">' + p.dia + '</span><span>' + (TIPOS[p.tipo || 'cumple'] || TIPOS.cumple).e + ' ' + esc(p.nombre) + '</span><span class="note">' + (n.age != null && !past ? esc(what(p, n).replace(' hoy', '')) : '') + '</span></button>'; }).join('') : '<p class="em">Nada este mes</p>') + '</section>';
+    }
+  }
+  if (tab === 'datos') {
+    h = '<section class="card"><h3>🔔 Avisos</h3><p class="note">Una web no puede avisarte con el móvil bloqueado, pero el calendario del móvil sí. Mete todas las fechas en tu calendario y te avisará cada año, aunque no abras la app.</p>' +
+      '<b>Avisarme</b><div class="chips">' + AVISOS.map(function (a) { return '<button class="chip" type="button" data-aviso="' + a[0] + '" aria-pressed="' + (S.avisoDef === a[0]) + '">' + a[1] + '</button>'; }).join('') + '</div>' +
+      '<p class="note">Siempre te avisa también el mismo día a las 9:00. Cada persona puede tener su propio aviso.</p>' +
+      '<button class="btn" type="button" id="icsAll"' + (all.length ? '' : ' disabled') + '>📅 Añadir ' + all.length + (all.length === 1 ? ' fecha' : ' fechas') + ' al calendario</button>' +
+      '<p class="note">Si añades a alguien nuevo, vuelve a tocarlo: las fechas que ya estaban se actualizan en vez de duplicarse en el iPhone.</p></section>' +
+      '<section class="card"><h3>📇 Importar de tus contactos</h3><p class="note"><b>iPhone:</b> Contactos → Listas → mantén pulsado «Todos los contactos» → Exportar. <b>Android:</b> Contactos → Gestionar contactos → Exportar a archivo .vcf. Luego elige el archivo aquí. Solo se traen los que tienen cumpleaños o aniversario.</p><button class="ghost" type="button" id="pickVcf">Elegir archivo .vcf</button></section>' +
+      '<section class="card"><h3>📝 Pegar una lista</h3><p class="note">Una persona por línea, con la fecha como quieras: «Ana García 15/03/1990», «Marc 2-11», «Abuela 3 de mayo».</p>' +
+      (pasteOpen ? '<textarea id="paste" aria-label="Lista de cumpleaños"></textarea><div class="duo"><button class="btn" type="button" id="doPaste">Importar</button><button class="ghost" type="button" id="noPaste">Cancelar</button></div>' : '<button class="ghost" type="button" id="openPaste">Pegar lista</button>') + '</section>' +
+      '<section class="card"><h3>💾 Copia de seguridad</h3><p class="note">Todo ya se guarda en tu cuenta de Google. Por si acaso, puedes bajarte un archivo con todo.</p><div class="duo"><button class="ghost" type="button" id="backup">Descargar copia</button><button class="ghost" type="button" id="restore">Restaurar copia</button></div></section>';
+  }
+  var focus = document.activeElement && document.activeElement.id === 'q', pos = focus ? document.activeElement.selectionStart : 0;
+  $('view').innerHTML = h;
+  if (focus && $('q')) { $('q').focus(); try { $('q').setSelectionRange(pos, pos); } catch (e) {} }
+  if (sheet) renderSheet();
+}
+
+// ---------- Person sheet: details, gift ideas and the edit form ----------
+function openSheet(s) { sheet = s; $('sheet').hidden = false; document.body.style.overflow = 'hidden'; renderSheet(); var f = $('panel').querySelector('input,button'); if (f) f.focus(); }
+function closeSheet() { sheet = null; $('sheet').hidden = true; document.body.style.overflow = ''; }
+function renderSheet() {
+  var p = sheet.id ? S.p[sheet.id] : null, h = '';
+  if (sheet.mode === 'ver' && !p) { closeSheet(); return; }
+  if (sheet.mode === 'ver') {
+    var n = nextOf(p), t = p.tipo || 'cumple', y = new Date().getFullYear(), m = sheet.msg != null ? sheet.msg : 0, v = prevOf(p), felYear = n.days === 0 ? n.year : v.year;
+    h = '<div class="phead">' + avatar(p) + '<div><h2 id="ptitle">' + esc(p.nombre) + '</h2><small>' + TIPOS[t].e + ' ' + (t === 'otro' && p.etiqueta ? esc(p.etiqueta) : TIPOS[t].t) + ' · ' + p.dia + ' de ' + MES[p.mes - 1] + (p.anio ? ' de ' + p.anio : '') + (p.grupo ? ' · ' + esc(p.grupo) : '') + '</small></div><button class="x" type="button" data-close aria-label="Cerrar">✕</button></div>' +
+      '<div class="stats"><div><b>' + (n.days === 0 ? '¡Hoy!' : n.days) + '</b><small>' + (n.days === 0 ? DIA[n.date.getDay()] : n.days === 1 ? 'día · mañana' : 'días · ' + DIA[n.date.getDay()]) + '</small></div>' +
+      '<div><b>' + (n.age != null && t !== 'santo' ? n.age : '—') + '</b><small>' + (n.age == null || t === 'santo' ? 'sin año' : t === 'aniv' ? 'años juntos' : t === 'cumple' ? (n.days === 0 ? 'cumple hoy' : 'va a cumplir') : 'años') + '</small></div>' +
+      '<div><b style="font-size:17px;line-height:1.6">' + (t === 'cumple' ? signo(p) : (n.date.getDate() + ' ' + MES[n.date.getMonth()].slice(0, 3))) + '</b><small>' + (t === 'cumple' ? 'signo' : 'próxima') + '</small></div></div>';
+    h += '<section class="card"><h3>Felicitar</h3><div class="msg" role="group" aria-label="Mensaje">' + msgs(p).map(function (x, i) { return '<button class="chip" type="button" data-msg="' + i + '" aria-pressed="' + (i === m) + '">' + esc(x) + '</button>'; }).join('') + '</div>' +
+      '<div class="send">' + sendLinks(p, msgs(p)[m] || msgs(p)[0]) + '</div>' + (p.tel ? '' : '<p class="note">Sin teléfono, WhatsApp te deja elegir a quién mandarlo. Añádelo en Editar para ir directo.</p>') +
+      (n.days === 0 || v.days <= 7 ? '<button class="ghost" type="button" data-felic-sheet="' + p.id + '">' + (p.felic === felYear ? '✓ Ya le has felicitado este año' : 'Marcar como felicitado') + '</button>' : '') + '</section>';
+    var ideas = p.ideas || [], pend = ideas.filter(function (x) { return !x.y; }), given = ideas.filter(function (x) { return x.y; }).sort(function (a, b) { return b.y - a.y; });
+    h += '<section class="card"><h3>🎁 Ideas de regalo</h3><form class="bar" id="ideaF"><input id="ideaI" placeholder="Apunta una idea cuando se te ocurra" autocomplete="off" aria-label="Idea de regalo"><button class="btn" type="submit">Añadir</button></form>' +
+      pend.map(function (x) { var i = ideas.indexOf(x); return '<div class="idea"><span>' + esc(x.t) + '</span><span class="mini"><button type="button" data-given="' + i + '">Regalado</button><button type="button" data-rmidea="' + i + '" aria-label="Quitar idea">✕</button></span></div>'; }).join('') +
+      (!pend.length ? '<p class="note">Cuando te diga «me encantaría…», apúntalo aquí.</p>' : '') +
+      (given.length ? '<b>Ya le regalaste</b><ul class="given">' + given.map(function (x) { return '<li>' + x.y + ' · ' + esc(x.t) + ' <button class="chip" type="button" data-rmidea="' + ideas.indexOf(x) + '" aria-label="Quitar">✕</button></li>'; }).join('') + '</ul>' : '') + '</section>';
+    h += '<section class="card"><h3>📝 Notas</h3><textarea id="notas" placeholder="Gustos, tallas, alergias, el nombre de sus hijos…" aria-label="Notas">' + esc(p.notas || '') + '</textarea></section>';
+    h += '<div class="duo"><button class="ghost" type="button" data-ics="' + p.id + '">📅 Al calendario</button><button class="ghost" type="button" data-edit="' + p.id + '">✏️ Editar</button></div><button class="ghost danger" type="button" data-del="' + p.id + '">Borrar a ' + esc(first(p)) + '</button>';
+  } else {
+    var f = sheet.form || (sheet.form = p ? Object.assign({}, p) : { nombre: '', tipo: 'cumple', dia: '', mes: '', anio: '', grupo: '', tel: '', aviso: null });
+    var gOther = f.grupo && GRUPOS.indexOf(f.grupo) < 0;
+    h = '<div class="phead"><span></span><h2 id="ptitle">' + (p ? 'Editar' : 'Nueva fecha') + '</h2><button class="x" type="button" data-close aria-label="Cerrar">✕</button></div><form class="form" id="editF">' +
+      '<label>Nombre<input id="fNombre" value="' + esc(f.nombre) + '" autocomplete="off" required></label>' +
+      '<div><b>Qué es</b><div class="chips">' + Object.keys(TIPOS).map(function (k) { return '<button class="chip" type="button" data-ftipo="' + k + '" aria-pressed="' + (f.tipo === k) + '">' + TIPOS[k].e + ' ' + TIPOS[k].t + '</button>'; }).join('') + '</div></div>' +
+      (f.tipo === 'otro' ? '<label>¿Qué se celebra?<input id="fEtiqueta" value="' + esc(f.etiqueta || '') + '" placeholder="Graduación, adopción del perro…"></label>' : '') +
+      '<div class="date3"><label>Día<select id="fDia"><option value="">—</option>' + Array.from({ length: 31 }, function (_, i) { return '<option' + (+f.dia === i + 1 ? ' selected' : '') + '>' + (i + 1) + '</option>'; }).join('') + '</select></label>' +
+      '<label>Mes<select id="fMes"><option value="">—</option>' + MES.map(function (x, i) { return '<option value="' + (i + 1) + '"' + (+f.mes === i + 1 ? ' selected' : '') + '>' + x + '</option>'; }).join('') + '</select></label>' +
+      '<label>Año<input id="fAnio" inputmode="numeric" maxlength="4" value="' + esc(f.anio || '') + '" placeholder="opcional"></label></div>' +
+      '<div><b>Grupo</b><div class="chips">' + GRUPOS.map(function (g) { return '<button class="chip" type="button" data-fgrupo="' + g + '" aria-pressed="' + (f.grupo === g) + '">' + g + '</button>'; }).join('') + '<button class="chip" type="button" data-fgrupo="__otro" aria-pressed="' + !!(gOther || sheet.gOther) + '">Otro</button></div></div>' +
+      (gOther || sheet.gOther ? '<label>Nombre del grupo<input id="fGrupo" value="' + esc(gOther ? f.grupo : '') + '" placeholder="Fútbol, vecinos…"></label>' : '') +
+      '<label>Teléfono <small class="note">para felicitar con un toque</small><input id="fTel" type="tel" value="' + esc(f.tel || '') + '" placeholder="612 345 678"></label>' +
+      '<div><b>Aviso en el calendario</b><div class="chips"><button class="chip" type="button" data-faviso="" aria-pressed="' + (f.aviso == null) + '">Como siempre</button>' + AVISOS.map(function (a) { return '<button class="chip" type="button" data-faviso="' + a[0] + '" aria-pressed="' + (f.aviso === a[0]) + '">' + a[1] + '</button>'; }).join('') + '</div></div>' +
+      '<p class="err" id="fErr" role="alert"></p><div class="duo"><button class="btn" type="submit">Guardar</button><button class="ghost" type="button" data-' + (p ? 'back' : 'close') + '>Cancelar</button></div></form>';
+  }
+  var top = $('panel').scrollTop; $('panel').innerHTML = h; $('panel').scrollTop = top;
+}
+// The edit form lives in sheet.form so tapping a chip does not lose what was typed
+function readForm() {
+  var f = sheet.form; if (!f || !$('fNombre')) return f;
+  f.nombre = $('fNombre').value; f.dia = $('fDia').value; f.mes = $('fMes').value; f.anio = $('fAnio').value; f.tel = $('fTel').value;
+  if ($('fEtiqueta')) f.etiqueta = $('fEtiqueta').value;
+  if ($('fGrupo')) f.grupo = $('fGrupo').value.trim();
+  return f;
+}
+function saveForm() {
+  var f = readForm(), nombre = f.nombre.trim(), dia = +f.dia, mes = +f.mes, anio = f.anio ? +String(f.anio).replace(/\D/g, '') : null, err = '';
+  if (!nombre) err = 'Falta el nombre.';
+  else if (!dia || !mes) err = 'Elige el día y el mes.';
+  else if (dia > maxDay(mes)) err = MES[mes - 1].charAt(0).toUpperCase() + MES[mes - 1].slice(1) + ' no tiene ' + dia + ' días.';
+  else if (anio && (anio < 1900 || anio > new Date().getFullYear())) err = 'El año no cuadra. Déjalo vacío si no lo sabes.';
+  else if (anio && dia === 29 && mes === 2 && !leap(anio)) err = anio + ' no fue bisiesto.';
+  if (err) { $('fErr').textContent = err; return; }
+  var old = sheet.id ? S.p[sheet.id] : null;
+  var o = Object.assign({}, old || { id: uid(), ideas: [], notas: '' }, { nombre: nombre, tipo: f.tipo, dia: dia, mes: mes, anio: anio || null, grupo: f.grupo || '', tel: (f.tel || '').trim(), aviso: f.aviso == null ? null : f.aviso, ts: Date.now() });
+  if (f.tipo === 'otro') o.etiqueta = (f.etiqueta || '').trim(); else delete o.etiqueta;
+  put(o); sheet = { mode: 'ver', id: o.id }; renderSheet();
+  if (!old) toast(first(o) + ' añadido. Recuerda volver a pasar las fechas al calendario.');
+}
+
+// ---------- Calendar file (.ics), one yearly event per person with its reminders ----------
+function icsText(list) {
+  var L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Per molts anys//ES', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'X-WR-CALNAME:Cumpleaños'], t = today0(), y = t.getFullYear(), stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
+  function d8(d) { return d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0'); }
+  function tx(s) { return String(s).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n'); }
+  list.forEach(function (p) {
+    var tp = p.tipo || 'cumple', st = onYear(p, y), en = new Date(st.getFullYear(), st.getMonth(), st.getDate() + 1), av = p.aviso == null ? S.avisoDef : p.aviso;
+    var title = TIPOS[tp].e + ' ' + (tp === 'cumple' ? 'Cumple de ' : tp === 'santo' ? 'Santo de ' : tp === 'aniv' ? 'Aniversario: ' : (p.etiqueta || 'Fecha') + ': ') + p.nombre;
+    var desc = (p.anio ? (tp === 'cumple' ? 'Nació en ' : 'Desde ') + p.anio : '') + (p.tel ? (p.anio ? '\n' : '') + 'Tel. ' + p.tel : '');
+    L.push('BEGIN:VEVENT', 'UID:' + p.id + '@per-molts-anys', 'DTSTAMP:' + stamp, 'DTSTART;VALUE=DATE:' + d8(st), 'DTEND;VALUE=DATE:' + d8(en),
+      'RRULE:FREQ=YEARLY' + (p.mes === 2 && p.dia === 29 ? ';BYMONTH=2;BYMONTHDAY=-1' : ''), 'SUMMARY:' + tx(title), 'TRANSP:TRANSPARENT');
+    if (desc) L.push('DESCRIPTION:' + tx(desc));
+    // All-day events start at 00:00, so 9:00 n days before is n-1 days and 15 hours earlier
+    if (av > 0) L.push('BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:' + tx(title + (av === 1 ? ' mañana' : ' en ' + av + ' días')), 'TRIGGER:-P' + (av - 1) + 'DT15H', 'END:VALARM');
+    L.push('BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:' + tx(title + ' es hoy'), 'TRIGGER:PT9H', 'END:VALARM', 'END:VEVENT');
+  });
+  L.push('END:VCALENDAR');
+  return L.join('\r\n') + '\r\n';
+}
+function download(name, text, type) {
+  var a = document.createElement('a'), u = URL.createObjectURL(new Blob([text], { type: type }));
+  a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(u); }, 4000);
+}
+
+// ---------- Importing: contacts (.vcf), pasted lists and backups ----------
+function qp(s) { try { return decodeURIComponent(s.replace(/=\r?\n/g, '').replace(/=([0-9A-F]{2})/gi, '%$1')); } catch (e) { return s; } }
+// vCard dates: 1990-03-15, 19900315, --0315, --03-15; Apple writes 1604 when the year is unknown
+function vDate(s) {
+  var m = /^(\d{4}|--)-?(\d{2})-?(\d{2})/.exec(String(s).trim()); if (!m) return null;
+  var y = m[1] === '--' ? null : +m[1]; if (y && (y < 1900 || y > new Date().getFullYear())) y = null;
+  var mes = +m[2], dia = +m[3]; if (!mes || mes > 12 || !dia || dia > maxDay(mes)) return null;
+  return { dia: dia, mes: mes, anio: y };
+}
+function parseVcf(text) {
+  var out = [], lines = text.replace(/\r\n[ \t]/g, '').replace(/\n[ \t]/g, '').split(/\r?\n/), c = null;
+  lines.forEach(function (ln) {
+    if (/^BEGIN:VCARD/i.test(ln)) { c = { tel: '', labels: {}, dates: [] }; return; }
+    if (!c) return;
+    if (/^END:VCARD/i.test(ln)) {
+      var nombre = c.fn || c.n || '';
+      c.dates.forEach(function (d) { var lab = d.item && c.labels[d.item]; if (d.kind === 'abdate' && !(lab && /anniversary|aniversario/i.test(lab))) return; if (nombre) out.push(Object.assign({ nombre: nombre, tipo: d.kind === 'bday' ? 'cumple' : 'aniv', tel: c.tel }, d.date)); });
+      c = null; return;
+    }
+    var i = ln.indexOf(':'); if (i < 0) return;
+    var key = ln.slice(0, i), val = ln.slice(i + 1), parts = key.split(';'), item = '', name = parts[0].toUpperCase();
+    if (name.indexOf('.') > 0) { item = name.split('.')[0]; name = name.split('.')[1]; }
+    if (/ENCODING=QUOTED-PRINTABLE/i.test(key)) val = qp(val);
+    val = val.replace(/\\,/g, ',').replace(/\\;/g, ';');
+    if (name === 'FN') c.fn = val.trim();
+    else if (name === 'N' && !c.n) c.n = val.split(';').slice(0, 2).reverse().join(' ').trim();
+    else if (name === 'TEL' && (!c.tel || /CELL|MOBILE|iPhone/i.test(key))) c.tel = val.trim();
+    else if (name === 'BDAY') { var d = vDate(val); if (d) c.dates.push({ kind: 'bday', date: d }); }
+    else if (name === 'ANNIVERSARY' || name === 'X-ANNIVERSARY') { var a = vDate(val); if (a) c.dates.push({ kind: 'aniv', date: a }); }
+    else if (name === 'X-ABDATE') { var b = vDate(val); if (b) c.dates.push({ kind: 'abdate', item: item, date: b }); }
+    else if (name === 'X-ABLABEL') c.labels[item] = val;
+  });
+  return out;
+}
+var MESRE = MES.join('|');
+function parsePaste(text) {
+  var out = [], bad = 0, Y = new Date().getFullYear();
+  text.split(/\r?\n/).forEach(function (ln) {
+    ln = ln.trim(); if (!ln) return;
+    var m = new RegExp('(\\d{1,2})\\s+de\\s+(' + MESRE + ')(?:\\s+(?:de\\s+)?(\\d{4}))?', 'i').exec(ln), dia, mes, anio = null;
+    if (m) { dia = +m[1]; mes = MES.indexOf(m[2].toLowerCase()) + 1; anio = m[3] ? +m[3] : null; }
+    else if ((m = /(\d{1,2})[\/\-.](\d{1,2})(?:[\/\-.](\d{2,4}))?/.exec(ln))) { dia = +m[1]; mes = +m[2]; if (m[3]) { anio = +m[3]; if (anio < 100) anio += anio > Y % 100 ? 1900 : 2000; } }
+    var nombre = m ? ln.replace(m[0], '').replace(/[,;:\-–·|\t]+/g, ' ').replace(/\s+/g, ' ').trim() : '';
+    if (!m || !nombre || !mes || mes > 12 || !dia || dia > maxDay(mes)) { bad++; return; }
+    if (anio && (anio < 1900 || anio > Y)) anio = null;
+    out.push({ nombre: nombre.charAt(0).toUpperCase() + nombre.slice(1), tipo: 'cumple', dia: dia, mes: mes, anio: anio, tel: '' });
+  });
+  return { list: out, bad: bad };
+}
+// Brings people in without duplicating anyone already here with the same name and date
+function importList(list, from) {
+  var have = {}, added = [];
+  people().forEach(function (p) { have[norm(p.nombre) + '|' + p.dia + '|' + p.mes + '|' + (p.tipo || 'cumple')] = 1; });
+  list.forEach(function (x) {
+    var k = norm(x.nombre) + '|' + x.dia + '|' + x.mes + '|' + x.tipo; if (have[k]) return; have[k] = 1;
+    var o = { id: uid(), nombre: x.nombre, tipo: x.tipo, dia: x.dia, mes: x.mes, anio: x.anio || null, grupo: x.grupo || '', tel: x.tel || '', aviso: x.aviso == null ? null : x.aviso, ideas: x.ideas || [], notas: x.notas || '', ts: Date.now() };
+    if (x.felic) o.felic = x.felic; if (x.etiqueta) o.etiqueta = x.etiqueta;
+    S.p[o.id] = o; S.pend[o.id] = 1; added.push(o.id);
+  });
+  persist(); render(); flush();
+  var skip = list.length - added.length;
+  if (!list.length) toast('No he encontrado ninguna fecha en ' + from + '.');
+  else toast(added.length + (added.length === 1 ? ' fecha importada' : ' fechas importadas') + (skip ? ' · ' + skip + ' ya estaban' : ''), added.length ? 'Deshacer' : '', function () { added.forEach(function (id) { delete S.p[id]; delete S.pend[id]; S.gone[id] = 1; }); persist(); render(); flush(); });
+}
+function readFile(input, fn) { var f = input.files[0]; input.value = ''; if (!f) return; var r = new FileReader(); r.onload = function () { fn(String(r.result)); }; r.readAsText(f); }
+$('fileVcf').addEventListener('change', function () { readFile(this, function (t) { importList(parseVcf(t), 'el archivo'); }); });
+$('fileJson').addEventListener('change', function () {
+  readFile(this, function (t) {
+    try { var d = JSON.parse(t), l = (d.personas || []).filter(function (x) { return x && x.nombre && x.dia && x.mes; }); importList(l, 'la copia'); }
+    catch (e) { toast('Ese archivo no es una copia de Per molts anys.'); }
+  });
+});
+
+// ---------- Events ----------
+document.addEventListener('click', function (e) {
+  var t = e.target, x, p;
+  if (t === $('sheet')) { closeSheet(); return; }
+  if ((x = t.closest('[data-tab]'))) { tab = x.getAttribute('data-tab'); if (sheet) closeSheet(); render(); window.scrollTo(0, 0); return; }
+  if ((x = t.closest('[data-grupo]'))) { grupo = x.getAttribute('data-grupo'); render(); return; }
+  if (t.closest('[data-new]')) { openSheet({ mode: 'editar', id: null }); return; }
+  if ((x = t.closest('[data-open]'))) { openSheet({ mode: 'ver', id: x.getAttribute('data-open') }); return; }
+  if (t.closest('[data-close]')) { closeSheet(); return; }
+  if (t.closest('[data-back]')) { sheet = { mode: 'ver', id: sheet.id }; renderSheet(); return; }
+  if ((x = t.closest('[data-felic]'))) { p = S.p[x.getAttribute('data-felic')]; var y = new Date().getFullYear(); patch(p.id, { felic: p.felic === y ? null : y }); return; }
+  if ((x = t.closest('[data-felic-prev]'))) { p = S.p[x.getAttribute('data-felic-prev')]; patch(p.id, { felic: prevOf(p).year }); return; }
+  if ((x = t.closest('[data-felic-sheet]'))) { p = S.p[x.getAttribute('data-felic-sheet')]; var n = nextOf(p), fy = n.days === 0 ? n.year : prevOf(p).year; patch(p.id, { felic: p.felic === fy ? null : fy }); return; }
+  if ((x = t.closest('[data-msg]'))) { sheet.msg = +x.getAttribute('data-msg'); renderSheet(); return; }
+  if ((x = t.closest('[data-given]'))) { p = S.p[sheet.id]; var ideas = (p.ideas || []).slice(), i = +x.getAttribute('data-given'), nx = nextOf(p); ideas[i] = Object.assign({}, ideas[i], { y: nx.days <= 60 ? nx.year : new Date().getFullYear() }); patch(p.id, { ideas: ideas }); return; }
+  if ((x = t.closest('[data-rmidea]'))) { p = S.p[sheet.id]; var il = (p.ideas || []).slice(), gone = il.splice(+x.getAttribute('data-rmidea'), 1)[0]; patch(p.id, { ideas: il }); toast('Idea quitada', 'Deshacer', function () { var q2 = S.p[p.id]; if (q2) patch(p.id, { ideas: (q2.ideas || []).concat(gone) }); }); return; }
+  if ((x = t.closest('[data-ics]'))) { p = S.p[x.getAttribute('data-ics')]; download(norm(p.nombre).replace(/[^a-z0-9]+/g, '-') + '.ics', icsText([p]), 'text/calendar;charset=utf-8'); return; }
+  if ((x = t.closest('[data-edit]'))) { sheet = { mode: 'editar', id: x.getAttribute('data-edit') }; renderSheet(); $('panel').scrollTop = 0; return; }
+  if ((x = t.closest('[data-del]'))) { var g = del(x.getAttribute('data-del')); closeSheet(); toast(first(g) + ' borrado', 'Deshacer', function () { put(g); }); return; }
+  if ((x = t.closest('[data-ftipo]'))) { readForm().tipo = x.getAttribute('data-ftipo'); renderSheet(); return; }
+  if ((x = t.closest('[data-fgrupo]'))) { var f = readForm(), gv = x.getAttribute('data-fgrupo'); if (gv === '__otro') { sheet.gOther = true; if (GRUPOS.indexOf(f.grupo) >= 0) f.grupo = ''; } else { sheet.gOther = false; f.grupo = f.grupo === gv ? '' : gv; } renderSheet(); if (sheet.gOther && $('fGrupo')) $('fGrupo').focus(); return; }
+  if ((x = t.closest('[data-faviso]'))) { var v = x.getAttribute('data-faviso'); readForm().aviso = v === '' ? null : +v; renderSheet(); return; }
+  if ((x = t.closest('[data-aviso]'))) { setAviso(+x.getAttribute('data-aviso')); return; }
+  if (t.closest('#icsAll')) { download('cumpleanos.ics', icsText(people()), 'text/calendar;charset=utf-8'); toast('Abre el archivo y pulsa «Añadir todo» en el calendario.'); return; }
+  if (t.closest('#pickVcf')) { $('fileVcf').click(); return; }
+  if (t.closest('#openPaste')) { pasteOpen = true; render(); $('paste').focus(); return; }
+  if (t.closest('#noPaste')) { pasteOpen = false; render(); return; }
+  if (t.closest('#doPaste')) { var r = parsePaste($('paste').value); if (!r.list.length) { toast(r.bad ? 'No entiendo ninguna línea. Pon el nombre y la fecha, como «Ana 15/03».' : 'La lista está vacía.'); return; } pasteOpen = false; importList(r.list, 'la lista'); if (r.bad) setTimeout(function () { toast(r.bad + (r.bad === 1 ? ' línea no se ha entendido' : ' líneas no se han entendido') + ' y no se ha importado.'); }, 5200); return; }
+  if (t.closest('#backup')) { download('per-molts-anys-' + new Date().toISOString().slice(0, 10) + '.json', JSON.stringify({ app: 'per-molts-anys', fecha: new Date().toISOString(), personas: people().map(strip) }, null, 1), 'application/json'); return; }
+  if (t.closest('#restore')) { $('fileJson').click(); return; }
+});
+document.addEventListener('input', function (e) { if (e.target.id === 'q') { q = e.target.value; render(); } });
+document.addEventListener('change', function (e) {
+  if (e.target.id === 'notas' && sheet && S.p[sheet.id]) patch(sheet.id, { notas: e.target.value.slice(0, 2000) });
+});
+document.addEventListener('submit', function (e) {
+  e.preventDefault();
+  if (e.target.id === 'editF') saveForm();
+  if (e.target.id === 'ideaF') { var v = $('ideaI').value.trim(), p = S.p[sheet.id]; if (!v || !p) return; patch(p.id, { ideas: (p.ideas || []).concat({ t: v.slice(0, 200), y: null }) }); $('ideaI').focus(); }
+});
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && sheet) closeSheet(); });
+// The day changes while the app sits open on the phone
+document.addEventListener('visibilitychange', function () { if (!document.hidden && !sheet) render(); });
+render(); status();
+
+if (window.claude && window.claude.use) (async function () {
+  try {
+    var d = await window.claude.use('db'); if (!d) return; db = d; status(); flush();
+    db.doc('ajustes/general').get().then(function (s) { var a = s.exists && s.data(); if (a && typeof a.avisoDef === 'number') { S.avisoDef = a.avisoDef; persist(); if (tab === 'datos') render(); } }).catch(function () {});
+    db.collection('personas').onSnapshot(function (s) {
+      if (s.metadata.fromCache && !s.size) return;
+      var n = {}; s.docs.forEach(function (x) { if (S.gone[x.id]) return; var o = Object.assign({}, x.data()); o.id = x.id; n[x.id] = o; });
+      Object.keys(S.pend).forEach(function (k) { if (S.p[k]) n[k] = S.p[k]; });
+      S.p = n; persist(); status();
+      var a = document.activeElement; if (a && /^(notas|ideaI|paste|f[A-Z])/.test(a.id)) return; render();
+    }, function () { toast('No se han podido cargar las fechas. Recarga la página.'); });
+  } catch (e) {}
+})();
+</script>
+
+</body></html>
