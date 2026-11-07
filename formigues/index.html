@@ -730,7 +730,7 @@ function overviewSvg(c) {
     // tubes, then the ants walking them, then the modules on top so ants disappear into them
     Object.keys(TUBES).map(function (k) { return '<path id="' + k + '" d="' + TUBES[k] + '" ' + tube + '/>'; }).join('') +
     '<g pointer-events="none">' + walkers(c) + '</g>' +
-    cross(285, 150) + cross(285, 215) + jarEl(c) + '<rect x="560" y="331" width="11" height="18" rx="2" fill="#111"/><rect x="630" y="331" width="11" height="18" rx="2" fill="#111"/>' +
+    cross(285, 150) + cross(285, 215) + '<rect x="560" y="331" width="11" height="18" rx="2" fill="#111"/><rect x="630" y="331" width="11" height="18" rx="2" fill="#111"/>' +
     // tube in its wooden box
     '<g data-mod="tubo" role="button" tabindex="0" aria-label="Tubo de ensayo, en la caja de madera: ' + esc(zoneWords(zone(c, 'tubo'))) + '"><rect x="18" y="104" width="112" height="92" rx="6" fill="url(#gWood)" filter="url(#fShadow)"/><path d="M30 104 V196 M40 112 C70 108 100 116 122 110 M40 186 C70 182 96 190 122 184" stroke="#a8875c" stroke-width="2.5" fill="none"/>' +
     '<rect x="34" y="138" width="90" height="24" rx="12" fill="#e9f3f6" fill-opacity=".6" stroke="#fff"/><rect x="38" y="141" width="12" height="18" rx="5" fill="#fff"/>' + marks('tubo', zone(c, 'tubo'), 84, 150, 36, 10, .7) + label(74, 228, 'Tubo') + '</g>' +
@@ -742,24 +742,18 @@ function overviewSvg(c) {
     '<g data-mod="cinis" role="button" tabindex="0" aria-label="Cinis, el basurero: ' + esc(zoneWords(zone(c, 'cinis'))) + '"><rect x="255" y="255" width="62" height="62" rx="5" fill="#efe9dd" filter="url(#fShadow)"/><circle cx="292" cy="294" r="13" fill="#8c8c8c"/><circle cx="292" cy="294" r="13" fill="none" stroke="#6d6d6d" stroke-width="3" stroke-dasharray="3 3"/>' + marks('cinis', zone(c, 'cinis'), 286, 286, 26, 26, .8) + pointEl(c, 'cinis', 310, 262, 7) + label(286, 346, 'Cinis') + '</g>' +
     '<g data-mod="v1" role="button" tabindex="0" aria-label="Forrajeo V1: ' + esc(zoneWords(zone(c, 'v1'))) + '"><rect x="345" y="226" width="160" height="82" rx="6" fill="#6f8597" filter="url(#fShadow)"/><rect x="353" y="234" width="144" height="66" rx="3" fill="#5a4636"/>' + [[372, 246], [392, 286], [478, 290], [470, 242], [410, 258]].map(function (s, i) { return '<circle cx="' + s[0] + '" cy="' + s[1] + '" r="' + (5 + i % 3 * 2) + '" fill="' + ['#b7a08a', '#8f7a66', '#c9b29a'][i % 3] + '"/>'; }).join('') + '<circle cx="455" cy="268" r="17" fill="#4a3a2c"/>' + marks('v1', zone(c, 'v1'), 425, 267, 70, 30, .8) + '<rect x="353" y="234" width="144" height="66" rx="3" fill="url(#gGlare)" pointer-events="none"/>' + label(425, 334, 'Forrajeo V1') + '</g>' +
     '<g data-mod="fg" role="button" tabindex="0" aria-label="Forrajeo grande: toca para ver sus dos partes"><g transform="translate(700 70) scale(.9333)" filter="url(#fShadow)">' + fgSvg(c, 1) + '<rect width="300" height="220" fill="url(#gGlare)" pointer-events="none"/></g>' + label(840, 306, 'Forrajeo grande') + '</g>' +
-    queenBadge(c) + '<rect class="tint" width="1000" height="360" fill="#ff8a3d"/><rect class="veil" width="1000" height="360" fill="#ff3030"/>';
+    seedBadges(c) + queenBadge(c) + '<rect class="tint" width="1000" height="360" fill="#ff8a3d"/><rect class="veil" width="1000" height="360" fill="#ff3030"/>';
 }
-// The granary: a jar that fills with every seed store marked in the zones
-var JAR_MAX = 9;
-function seedStores(c) { var zs = c.zonas || {}; return Object.keys(zs).filter(function (k) { return ZONES[k] && zs[k].semillas; }).sort(function (a, b) { return zs[b].semillas - zs[a].semillas; }); }
-function jarEl(c) {
-  var zs = c.zonas || {}, ks = seedStores(c), sum = ks.reduce(function (a, k) { return a + zs[k].semillas; }, 0), f = Math.min(1, sum / JAR_MAX);
-  var top = 334 - f * 70, r = rng('jar' + sum), seeds = '';
-  for (var i = 0; i < Math.round(f * 90); i++) { var y = 330 - r() * (330 - top - 2), x = 172 + r() * 56; seeds += '<ellipse cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" rx="3.2" ry="2.2" fill="' + ['#8a5a2b', '#a87442', '#6e4520'][i % 3] + '" transform="rotate(' + Math.round(r() * 180) + ' ' + x.toFixed(1) + ' ' + y.toFixed(1) + ')"/>'; }
-  return '<g data-jar="1" role="button" tabindex="0" aria-label="Granero: ' + (ks.length ? 'semillas en ' + ks.length + (ks.length === 1 ? ' sitio' : ' sitios') : 'vacío') + '">' +
-    '<clipPath id="jarClip"><rect x="168" y="262" width="64" height="72" rx="12"/></clipPath>' +
-    '<rect x="166" y="258" width="68" height="78" rx="14" fill="#e9f3f6" fill-opacity=".18" stroke="#e9f3f6" stroke-opacity=".8" stroke-width="3" filter="url(#fShadow)"/>' +
-    '<g clip-path="url(#jarClip)">' + seeds + '</g><rect x="172" y="249" width="56" height="12" rx="4" fill="#a8875c"/><rect x="168" y="262" width="64" height="72" rx="12" fill="url(#gGlare)" pointer-events="none"/>' +
-    (sum ? '' : '<text x="200" y="304" text-anchor="middle" font-size="15" font-weight="800" fill="#f5e9d6">vacío</text>') + label(200, 356, 'Granero') + '</g>';
-}
-function jarTap() {
-  var c = cur(), zs = c.zonas || {}, ks = seedStores(c);
-  toast(ks.length ? '🌾 Semillas en ' + ks.map(function (k) { return (k === 'tubo' ? 'el tubo' : ZONES[k].replace(/^.*· /, '')) + ' (' + LEVELS[zs[k].semillas].toLowerCase() + ')'; }).join(', ') : '🌾 El granero está vacío: no has marcado semillas en ninguna zona');
+// Where they keep seeds: a wheat badge on each module with a zone marked "bastante" or "mucha" semillas, gold-ringed when "mucha".
+// Loose seeds ("poca", as in the forages) are food lying about, not a granary, so they get no badge.
+var SEED_BADGE = { tubo: [26, 108], antcrilic: [154, 184], nidus: [338, 52], cinis: [258, 258], v1: [352, 232], fg: [708, 80] };
+function seedBadges(c) {
+  var zs = c.zonas || {};
+  return '<g pointer-events="none">' + Object.keys(SEED_BADGE).map(function (m) {
+    var most = MODS[m][1].reduce(function (a, k) { return Math.max(a, (zs[k] || {}).semillas || 0); }, 0), p = SEED_BADGE[m];
+    if (most < 2) return '';
+    return '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="16" fill="#f5e9d6" stroke="' + (most === 3 ? '#f2c04e' : '#a8875c') + '" stroke-width="' + (most === 3 ? 4 : 2.5) + '"/><text x="' + p[0] + '" y="' + (p[1] + 7) + '" text-anchor="middle" font-size="19">🌾</text>';
+  }).join('') + '</g>';
 }
 // ---------- Time machine: the map as it was each day since you started logging ----------
 // Each zone's state on a day is its last check up to then; before its first check, what the photos of 6 Nov showed
@@ -865,14 +859,13 @@ function drawMod() {
     '<div class="sh-b" style="grid-template-columns:1fr"><button type="button" class="no" data-act="close">Cerrar</button></div>';
 }
 $('setup').addEventListener('click', function (e) {
-  if (e.target.closest('[data-jar]')) return jarTap();
   var p = e.target.closest('[data-point]'), m = e.target.closest('[data-mod]');
   if (p) return openPoint(p.getAttribute('data-point'), m ? m.getAttribute('data-mod') : null);
   if (!m) return;
   var k = m.getAttribute('data-mod');
   if (MODS[k][1].length === 1) openZone(MODS[k][1][0], k); else openMod(k);
 });
-$('setup').addEventListener('keydown', function (e) { if ((e.key === 'Enter' || e.key === ' ') && e.target.closest('[data-mod],[data-point],[data-jar]')) { e.preventDefault(); e.target.dispatchEvent(new MouseEvent('click', { bubbles: true })); } });
+$('setup').addEventListener('keydown', function (e) { if ((e.key === 'Enter' || e.key === ' ') && e.target.closest('[data-mod],[data-point]')) { e.preventDefault(); e.target.dispatchEvent(new MouseEvent('click', { bubbles: true })); } });
 $('modBody').addEventListener('click', function (e) {
   var v = modView, c = cur(), b;
   if ((b = e.target.closest('[data-zf] [data-v]'))) {
