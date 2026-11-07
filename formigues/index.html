@@ -884,17 +884,21 @@ $('memory').addEventListener('click', function (e) { var b = e.target.closest('[
 // ---------- In numbers: every day you looked at them, and the totals of what you did ----------
 var HEAT_C = 13, HEAT_G = 3, HEAT_L = 16, HEAT_T = 16, heatDays = {};
 function renderStats(c, all) {
+  // Only what was logged in the app counts: the April–July history was typed in afterwards, all at once
+  all = all.filter(function (e) { return !e.hist; });
   $('statsBox').hidden = !all.length; if (!all.length) return;
   var per = {}; all.forEach(function (e) { var k = dayStart(e.t); per[k] = (per[k] || 0) + 1; }); heatDays = per;
   var keys = Object.keys(per).map(Number).sort(function (a, b) { return a - b; }), today0 = dayStart(Date.now()), next = function (t) { return dayStart(t + 36 * 3600000); };
-  // Weeks run Monday to Sunday down each column; at most 26 weeks so it stays readable on a phone
+  // Weeks run Monday to Sunday down each column; at most 26 weeks so it stays readable on a phone,
+  // and at least 13 so a fresh start shows the weeks still to fill
   var s = new Date(Math.max(keys[0], today0 - 25 * 7 * DAY)); s.setDate(s.getDate() - (s.getDay() + 6) % 7);
-  var t = dayStart(s.getTime()), col = 0, cells = '', heads = '', lastMon = -1, step = HEAT_C + HEAT_G;
-  for (; t <= today0; t = next(t)) {
+  var t = dayStart(s.getTime()), end = Math.max(today0, t + 13 * 7 * DAY - DAY), col = 0, cells = '', heads = '', lastMon = -1, step = HEAT_C + HEAT_G;
+  for (; t <= end; t = next(t)) {
     var d = new Date(t), row = (d.getDay() + 6) % 7, n = per[t] || 0;
     if (row === 0 && cells) col++;
     if (row === 0 && d.getMonth() !== lastMon) { lastMon = d.getMonth(); heads += '<text x="' + (HEAT_L + col * step) + '" y="11" font-size="10.5" fill="var(--muted)">' + MONTHS[lastMon] + '</text>'; }
     var op = n === 0 ? '' : ' fill-opacity="' + (n === 1 ? .35 : n < 4 ? .62 : 1) + '"';
+    if (t > today0) { cells += '<rect x="' + (HEAT_L + col * step + .75) + '" y="' + (HEAT_T + row * step + .75) + '" width="' + (HEAT_C - 1.5) + '" height="' + (HEAT_C - 1.5) + '" rx="3" fill="none" stroke="var(--line)" stroke-width="1.5"/>'; continue; }
     cells += '<rect data-d="' + t + '" x="' + (HEAT_L + col * step) + '" y="' + (HEAT_T + row * step) + '" width="' + HEAT_C + '" height="' + HEAT_C + '" rx="3" fill="' + (n ? 'var(--acc)' : 'var(--line)') + '"' + op + (t === today0 ? ' stroke="var(--ink)" stroke-width="1.5"' : '') + '><title>' + fmtD(t) + ': ' + (n ? n + (n === 1 ? ' cosa' : ' cosas') : 'nada') + '</title></rect>';
   }
   var W = HEAT_L + (col + 1) * step + 10, H = HEAT_T + 7 * step;
