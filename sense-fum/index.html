@@ -125,6 +125,10 @@ details.sect summary::after { content: "▾"; margin-left: auto; color: var(--mu
 .checks i { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line); display: grid; place-items: center; font-style: normal; font-size: 13px; font-weight: 900; }
 .checks .ok i { background: var(--pine); border-color: var(--pine); color: var(--pine-ink); }
 .checks small { display: block; font-weight: 500; font-size: 13.5px; color: var(--muted); }
+.ai { display: grid; gap: 8px; }
+.ai-item { padding: 10px 12px; border-radius: 12px; background: var(--bg); display: grid; gap: 3px; }
+.ai-item p { margin: 0; font-weight: 600; }
+.ai-item .was { font-size: 13.5px; color: var(--muted); font-weight: 500; }
 .s-foto { width: 100%; max-width: 420px; max-height: 26dvh; object-fit: cover; border-radius: 14px; }
 
 /* Fixed actions */
@@ -258,6 +262,11 @@ details.sect summary::after { content: "▾"; margin-left: auto; color: var(--mu
       <label>Tu récord anterior (días)<input id="fRec" type="number" min="0" inputmode="numeric"></label>
       <label class="w">Por qué lo dejé<textarea id="fWhy" rows="4" maxlength="400" placeholder="Escríbelo con tus palabras. Te saldrá en la pantalla de respirar."></textarea></label>
       <label class="w">Frases de cada día, una por línea<textarea id="fFrases" rows="6" placeholder="Yesenia | Una frase tuya"></textarea></label>
+      <div class="w ai" id="aiBox" hidden>
+        <div class="row"><button type="button" class="ghost" id="aiBtn">Que Claude pula tus frases y proponga otras</button><button type="button" class="linkb" id="aiAll" hidden>Usar todas</button></div>
+        <p class="small" id="aiMsg">Las lee junto a tus motivos. Tú decides cuáles se quedan.</p>
+        <div class="ai" id="aiList"></div>
+      </div>
       <label class="w" id="fFotoL" hidden>Una foto que te recuerde por qué<input id="fFoto" type="file" accept="image/*"></label>
     </div>
     <p class="small" style="margin-top:10px" id="assume"></p>
@@ -420,7 +429,61 @@ $('gumBtn').addEventListener('click', function () { var id = gum(); toast('Chicl
 [['fQuit', 'quit'], ['fHour', 'hora']].forEach(function (x) { $(x[0]).addEventListener('change', function () { if (this.value) { var c = {}; c[x[1]] = this.value; setP(c); } }); });
 [['fCig', 'cig'], ['fPack', 'gasto'], ['fGum', 'gum'], ['fRec', 'record']].forEach(function (x) { $(x[0]).addEventListener('change', function () { var v = parseFloat(this.value); if (v >= 0) { var c = {}; c[x[1]] = v; setP(c); } }); });
 $('fWhy').addEventListener('change', function () { setP({ motivo: this.value.trim() }); });
-$('fFrases').addEventListener('change', function () { S.m = Object.assign({}, S.m, { frases: this.value.split('\n').map(function (l) { return l.trim(); }).filter(Boolean) }); S.mPend = true; persist(); render(); flush(); });
+function setFrases(list) { S.m = Object.assign({}, S.m, { frases: list }); S.mPend = true; persist(); fillForm(); render(); flush(); }
+$('fFrases').addEventListener('change', function () { setFrases(this.value.split('\n').map(function (l) { return l.trim(); }).filter(Boolean)); });
+
+// ---------- Claude polishes the phrases and writes new ones; nothing changes until a suggestion is used ----------
+var sample = null, aiCtl = null, aiSug = [];
+function aiPrompt() {
+  var fr = S.m.frases || [], who = {}; phrases().forEach(function (p) { if (p.m) who[p.m] = 1; });
+  return 'Una persona ha dejado de fumar y tiene una app que cada día le enseña una de sus frases. Quiere que pulas las que tiene y propongas otras nuevas. Escribe con el mismo género gramatical que usan sus frases.\n\n' +
+    'Lo que cuenta de por qué lo deja:\n' + (S.p.motivo ? '«' + S.p.motivo + '»\n' : '') +
+    (S.m.bloques || []).map(function (b) { return '- ' + b.titulo + ': ' + (b.texto || ''); }).join('\n') +
+    '\n\nDatos: lleva ' + Math.floor(numbers(Date.now()).d) + ' días sin fumar, fumaba ' + S.p.cig + ' cigarrillos al día de tabaco de liar y aún usa chicles de nicotina de 2 mg.\n\n' +
+    'Sus frases ahora, numeradas. Cada línea es «por quién | frase»; el «por quién» sale encima como «Hoy, por …»:\n' +
+    (fr.length ? fr.map(function (l, i) { return i + '. ' + l; }).join('\n') : '(aún ninguna)') +
+    '\n\nPuedes usar estos huecos, que la app rellena: {dias} días sin fumar, {euros} euros ahorrados, {vida} tiempo de vida ganado en estimación (p. ej. «3,2 días»), {horas} horas de vida que suma cada día.\n\n' +
+    'Cómo escribirlas: español de España, de tú, cortas (menos de 25 palabras), concretas y con los detalles de su vida que salen arriba. Cálidas sin ser cursis: nada de frases de taza, ni exclamaciones, ni emojis, ni sermones. No inventes datos de su vida ni cifras de salud que no sean bien conocidas. ' +
+    'Usa como «por quién» ' + (Object.keys(who).length ? 'uno de estos: ' + Object.keys(who).join(', ') : 'una palabra corta, como «ti»') + '.\n\n' +
+    'Mejoras: solo las frases que de verdad ganen algo, conservando su idea; deja las que ya están bien. Nuevas: 6, distintas de las que ya tiene y repartidas entre los «por quién».\n\n' +
+    'Responde solo con JSON así: {"mejoras":[{"n":0,"frase":"Yesenia | …"}],"nuevas":["ti | …"]}';
+}
+function aiRender() {
+  $('aiAll').hidden = aiSug.length < 2;
+  $('aiList').innerHTML = aiSug.map(function (s, i) {
+    return '<div class="ai-item">' + (s.was ? '<span class="was">Antes: ' + esc(s.was) + '</span>' : '<span class="lab">Nueva</span>') + '<p>' + esc(s.frase) + '</p>' +
+      '<div class="row"><button type="button" class="ghost" data-ai="use" data-i="' + i + '">' + (s.was ? 'Cambiarla' : 'Añadirla') + '</button><button type="button" class="linkb" data-ai="drop" data-i="' + i + '">Descartar</button></div></div>';
+  }).join('');
+}
+function aiApply(list) {
+  var fr = (S.m.frases || []).slice();
+  list.forEach(function (s) { var k = s.was ? fr.indexOf(s.was) : -1; if (k >= 0) fr[k] = s.frase; else if (fr.indexOf(s.frase) < 0) fr.push(s.frase); });
+  aiSug = aiSug.filter(function (s) { return list.indexOf(s) < 0; }); aiRender(); setFrases(fr);
+}
+$('aiList').addEventListener('click', function (e) {
+  var b = e.target.closest('[data-ai]'); if (!b) return;
+  var s = aiSug[+b.getAttribute('data-i')]; if (!s) return;
+  if (b.getAttribute('data-ai') === 'use') { aiApply([s]); toast(s.was ? 'Frase cambiada' : 'Frase añadida'); }
+  else { aiSug.splice(aiSug.indexOf(s), 1); aiRender(); }
+});
+$('aiAll').addEventListener('click', function () { var n = aiSug.length; aiApply(aiSug.slice()); toast(n + ' frases puestas'); });
+$('aiBtn').addEventListener('click', async function () {
+  if (aiCtl) { aiCtl.abort(); return; }
+  var btn = this, fr = (S.m.frases || []).slice(); aiCtl = new AbortController();
+  btn.textContent = 'Parar'; $('aiMsg').textContent = 'Claude está leyendo tus frases…';
+  try {
+    var r = await sample.json(aiPrompt(), { signal: aiCtl.signal, cache: false }), out = [];
+    (Array.isArray(r && r.mejoras) ? r.mejoras : []).forEach(function (m) { var was = fr[+m.n], f = String(m.frase || '').trim(); if (was && f && f !== was) out.push({ was: was, frase: f }); });
+    (Array.isArray(r && r.nuevas) ? r.nuevas : []).forEach(function (f) { f = String(f || '').trim(); if (f && fr.indexOf(f) < 0) out.push({ was: '', frase: f }); });
+    aiSug = out; aiRender();
+    $('aiMsg').textContent = out.length ? 'Aquí las tienes. Puedes cambiar lo que quieras después en el cuadro de arriba.' : 'Esta vez no ha propuesto nada. Prueba otra vez.';
+  } catch (e) {
+    var c = e && e.code;
+    if (['not_granted', 'sampling_disabled', 'not_declared', 'capability_disabled', 'capability_removed'].indexOf(c) >= 0) $('aiBox').hidden = true;
+    else $('aiMsg').textContent = c === 'cancelled' ? 'Parado.' : c === 'rate_limited' ? 'Claude va saturado ahora. Prueba en un rato.' : 'No ha salido bien. Prueba otra vez.';
+  }
+  aiCtl = null; btn.textContent = aiSug.length ? 'Pedir otra tanda' : 'Que Claude pula tus frases y proponga otras';
+});
 $('fFoto').addEventListener('change', async function () {
   var file = this.files && this.files[0]; this.value = ''; if (!file || !assets) return;
   toast('Subiendo la foto…');
@@ -487,6 +550,7 @@ document.addEventListener('visibilitychange', function () { if (!document.hidden
 
 // ---------- Connect the shared store when available ----------
 if (window.claude && window.claude.use) (async function () {
+  window.claude.use('sample').then(function (s) { sample = s; $('aiBox').hidden = !s; }).catch(function () {});
   try {
     var d = await window.claude.use('db'); if (!d) return;
     db = d; render();
