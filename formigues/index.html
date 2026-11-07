@@ -182,8 +182,18 @@ dialog.sheet::backdrop { background: rgba(20, 12, 6, .55); }
 .veil { opacity: 0; transition: opacity .6s; mix-blend-mode: multiply; pointer-events: none; }
 .mapwrap.night .ledglow { opacity: .9; }
 .ledglow { opacity: .35; transition: opacity .6s; }
+/* Day: room lights on, LEDs off */
+.mapwrap.day { background: #cbb99f; }
+.mapwrap.day .room { fill: #cbb99f; }
+.mapwrap.day .shelf { fill: url(#gShelfDay); }
+.mapwrap.day .edge { stroke: #b39d7e; }
+.mapwrap.day .tube { stroke: #8fb3c4; stroke-opacity: .8; }
+.mapwrap.day .led { opacity: .25; animation: none; fill: #b98a8a; }
+.mapwrap.day .ledglow { opacity: 0; }
+.mapwrap.day #setup text[fill="#f5e9d6"]:not([stroke]) { stroke: #2c2117; stroke-width: 5px; paint-order: stroke; }
 .nightbtn { position: absolute; top: 14px; right: 14px; min-width: 44px; min-height: 44px; padding: 0 12px; border-radius: 22px; border: 1px solid #5a4636; background: #2c2117; color: #fbf1e3; font: 700 14px var(--body); }
-.nightbtn[aria-pressed="true"] { background: #7a1414; border-color: #ff5a5a; color: #ffd6d6; box-shadow: 0 0 18px rgba(255, 60, 60, .55); }
+.nightbtn.day { background: #fff4d6; border-color: #e7c66a; color: #5a3d0c; box-shadow: 0 0 16px rgba(255, 214, 102, .55); }
+.nightbtn.led { background: #7a1414; border-color: #ff5a5a; color: #ffd6d6; box-shadow: 0 0 18px rgba(255, 60, 60, .55); }
 .hero { position: relative; }
 /* Achievements */
 .badges { display: grid; grid-template-columns: repeat(auto-fill, minmax(98px, 1fr)); gap: 8px; }
@@ -233,6 +243,7 @@ details.dayc > summary::after { grid-row: 1 / span 4; }
   <g id="ma"><g stroke="currentColor" stroke-width=".7" fill="none" stroke-linecap="round"><path d="M1 0 L-2 -4.5 M1 0 L-2 4.5 M2 0 L3.5 -4.5 M2 0 L3.5 4.5 M1.5 0 L.5 -5 M1.5 0 L.5 5 M6 -1 L9 -3.5 M6 1 L9 3.5"/></g><ellipse cx="-4.5" rx="3.4" ry="2.4" fill="currentColor"/><ellipse cx="1.5" rx="2" ry="1.2" fill="currentColor"/><circle cx="5.3" r="1.8" fill="currentColor"/></g>
   <linearGradient id="gWood" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d8b88a"/><stop offset="1" stop-color="#b48f60"/></linearGradient>
   <linearGradient id="gShelf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#43342a"/><stop offset="1" stop-color="#2e231b"/></linearGradient>
+  <linearGradient id="gShelfDay" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3eadb"/><stop offset="1" stop-color="#ded0b9"/></linearGradient>
   <linearGradient id="gGlare" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".45"/><stop offset=".35" stop-color="#fff" stop-opacity="0"/></linearGradient>
   <linearGradient id="gWater" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bfe6fb"/><stop offset="1" stop-color="#5fb3e0"/></linearGradient>
   <radialGradient id="gLamp"><stop offset="0" stop-color="#fffbe6" stop-opacity=".55"/><stop offset="1" stop-color="#fffbe6" stop-opacity="0"/></radialGradient>
@@ -587,10 +598,10 @@ var label = function (x, y, t) { return '<text x="' + x + '" y="' + y + '" text-
 function overviewSvg(c) {
   var lr = lastCount(c.id) ? evs(c.id, 'recuento').filter(function (e) { return e.temp != null || e.hum != null; })[0] : null, cl = climaRows(c.clima).slice(-1)[0];
   if (cl && (!lr || cl.t > lr.t)) lr = cl;
-  var tube = 'stroke="#d9eef5" stroke-opacity=".55" stroke-width="9" fill="none" stroke-linecap="round"';
+  var tube = 'class="tube" stroke="#d9eef5" stroke-opacity=".55" stroke-width="9" fill="none" stroke-linecap="round"';
   var cross = function (x, y) { return '<rect x="' + (x - 10) + '" y="' + (y - 10) + '" width="20" height="20" rx="4" fill="#f2efe8" filter="url(#fShadow)"/><circle cx="' + x + '" cy="' + (y - 13) + '" r="5" fill="#d8b98a"/>'; };
-  return '<rect width="1000" height="360" fill="#241a12"/><rect x="0" y="0" width="652" height="360" fill="url(#gShelf)"/><rect x="668" y="0" width="332" height="360" fill="url(#gShelf)"/>' +
-    '<path d="M0 356 H652 M668 356 H1000" stroke="#1a130d" stroke-width="8"/>' +
+  return '<rect class="room" width="1000" height="360" fill="#241a12"/><rect class="shelf" x="0" y="0" width="652" height="360" fill="url(#gShelf)"/><rect class="shelf" x="668" y="0" width="332" height="360" fill="url(#gShelf)"/>' +
+    '<path class="edge" d="M0 356 H652 M668 356 H1000" stroke="#1a130d" stroke-width="8"/>' +
     // red LED strip on the ceiling of the left bay
     '<rect class="ledglow" x="10" y="0" width="632" height="26" fill="#ff2a2a" filter="url(#fGlow)"/><rect class="led" x="20" y="4" width="612" height="6" rx="3" fill="#ff4a4a"/>' +
     // lamp over the big forage
@@ -724,8 +735,9 @@ function render() {
   $('heroT').innerHTML = '<h1>' + esc(c.nombre || 'Sin nombre') + '</h1>' + (c.especie ? '<span class="sp">' + esc(c.especie) + (c.casa && !map ? ' · <span style="font-style:normal">' + esc(c.casa) + '</span>' : '') + (map && age != null ? ' · <span style="font-style:normal">' + nf(age) + ' días contigo' + (age >= 60 ? ', ' + span(age) : '') + '</span>' : '') + '</span>' : '') +
     (age != null && !map ? '<div class="age num">' + nf(age) + '<small>' + (age === 1 ? 'día' : 'días') + ' con reina</small></div>' + (age >= 60 ? '<span class="sp" style="font-style:normal">' + span(age) + '</span>' : '') : '') +
     (c.hiberna ? '<span class="hiber">' + hiberText(c) + '</span>' : '') +
-    (map ? '<button type="button" class="nightbtn" id="nightBtn" aria-pressed="' + night + '" aria-label="Encender los LED rojos del mapa">' + (night ? '🔴 LED' : '🌙 Noche') + '</button>' : '');
-  $('mapWrap').classList.toggle('night', map && night);
+    (map ? '<button type="button" class="nightbtn ' + luz + '" id="nightBtn" aria-label="Luz del mapa: ' + LUZ[luz][1] + '. Toca para cambiar">' + LUZ[luz][0] + '</button>' : '');
+  $('mapWrap').classList.toggle('day', map && luz === 'dia');
+  $('mapWrap').classList.toggle('night', map && luz === 'led');
   $('heroB').textContent = map ? '' : lc ? 'Última revisión: ' + ago(lc.t) + (lc.temp != null ? ' · ' + String(lc.temp).replace('.', ',') + ' °C' : '') + '.' : 'Haz una revisión y el hormiguero se llenará con lo que veas.';
   $('heroB').hidden = map;
   renderNest(c, n);
@@ -1037,11 +1049,14 @@ $('heroB').addEventListener('submit', function (e) {
   e.preventDefault(); var f = e.target;
   newCol({ nombre: f.nombre.value.trim(), especie: f.especie.value.trim(), reina: f.reina.value });
 });
-// Night mode: the red LEDs on, as when looking at them in the dark. Remembered on this device only.
-var night = false; try { night = localStorage.getItem('formigues-noche') === '1'; } catch (e) {}
+// Map light: day (room lit), night (dim shelf) or the red LEDs on, as when looking at them in the dark.
+// Follows the clock until tapped, then the choice is remembered on this device only.
+var LUZ = { dia: ['☀️ Día', 'de día'], noche: ['🌙 Noche', 'de noche'], led: ['🔴 LED', 'LED rojos'] }, LUZ_NEXT = { dia: 'noche', noche: 'led', led: 'dia' };
+var luz = null; try { luz = localStorage.getItem('formigues-luz') || (localStorage.getItem('formigues-noche') === '1' ? 'led' : null); } catch (e) {}
+if (!LUZ[luz]) { var hh = new Date().getHours(); luz = hh >= 8 && hh < 21 ? 'dia' : 'noche'; }
 $('heroT').addEventListener('click', function (e) {
   if (!e.target.closest('#nightBtn')) return;
-  night = !night; try { localStorage.setItem('formigues-noche', night ? '1' : '0'); } catch (x) {}
+  luz = LUZ_NEXT[luz]; try { localStorage.setItem('formigues-luz', luz); } catch (x) {}
   render();
 });
 $('heroB').addEventListener('click', function (e) { if (e.target.closest('[data-hist]')) $('importHist').click(); });
