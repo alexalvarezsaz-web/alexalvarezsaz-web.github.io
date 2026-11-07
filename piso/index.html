@@ -28,6 +28,10 @@ h2 { font-weight: 800; }
 .pl h3 { font-size: 23px; font-weight: 700; overflow-wrap: anywhere; }
 .pl p { margin: 0; color: var(--muted); font-size: 15px; overflow-wrap: anywhere; }
 .pl img { width: 100%; aspect-ratio: 4 / 3; object-fit: contain; background: var(--room); display: block; }
+.mapa { margin: 0 0 14px; padding: 12px; background: #fff; border: 1px solid var(--line); border-radius: 4px; }
+.mapa a { display: block; }
+.mapa img { width: 100%; height: auto; display: block; }
+.mapa figcaption { margin-top: 8px; font-size: 13.5px; color: #6a645a; }
 .ph { display: grid; place-items: center; aspect-ratio: 4 / 3; max-width: 100%; background: var(--room); color: var(--muted); font-size: 14px; text-align: center; padding: 12px; }
 .acts { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .btn { text-decoration: none; display: inline-block; }
@@ -69,6 +73,7 @@ section.closed .shead .edit-only { display: none !important; }
   <p class="say" id="say" hidden></p>
   <section>
     <div class="shead"><h2>Los planos</h2><button class="btn ghost edit-only" type="button" data-add="planos">＋ Añadir plano</button></div>
+    <figure class="mapa"><a href="plano.jpg" target="_blank" rel="noopener"><img src="plano.jpg" width="960" height="679" alt="Plano del piso hecho en Floorplanner: 15,45 m de largo, con dormitorios, salón, cocina, lavabo, pasillo y dos terrazas"></a><figcaption>Plano de Floorplanner · toca para verlo en grande</figcaption></figure>
     <div class="plans" id="planos"></div>
     <p class="small" id="uplMsg" aria-live="polite"></p>
   </section>
