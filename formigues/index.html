@@ -192,6 +192,7 @@ dialog.sheet::backdrop { background: rgba(20, 12, 6, .55); }
 .mapwrap.day .ledglow { opacity: 0; }
 .mapwrap.day #setup text[fill="#f5e9d6"]:not([stroke]) { stroke: #2c2117; stroke-width: 5px; paint-order: stroke; }
 .nightbtn { position: absolute; top: 14px; right: 14px; min-width: 44px; min-height: 44px; padding: 0 12px; border-radius: 22px; border: 1px solid #5a4636; background: #2c2117; color: #fbf1e3; font: 700 14px var(--body); }
+.nightbtn.tarde { background: #ffcf99; border-color: #ff9a4d; color: #5a2a0c; box-shadow: 0 0 16px rgba(255, 140, 60, .55); }
 .nightbtn.day { background: #fff4d6; border-color: #e7c66a; color: #5a3d0c; box-shadow: 0 0 16px rgba(255, 214, 102, .55); }
 .nightbtn.led { background: #7a1414; border-color: #ff5a5a; color: #ffd6d6; box-shadow: 0 0 18px rgba(255, 60, 60, .55); }
 .hero { position: relative; }
@@ -208,6 +209,81 @@ dialog.sheet::backdrop { background: rgba(20, 12, 6, .55); }
 .badge .pbar i { display: block; height: 100%; background: var(--honey); }
 .confetti { position: fixed; z-index: 30; pointer-events: none; width: 8px; height: 12px; border-radius: 2px; animation: fall 1.6s ease-out forwards; }
 @keyframes fall { from { transform: translate(0, 0) rotate(0); opacity: 1; } to { transform: translate(var(--dx), 70vh) rotate(var(--r)); opacity: 0; } }
+/* Dusk: the room light fades orange and the LEDs come on by themselves */
+.tint { opacity: 0; transition: opacity 1.5s; mix-blend-mode: multiply; pointer-events: none; }
+.mapwrap.dusk .tint { opacity: .4; }
+.mapwrap.day.dusk .led { opacity: .9; fill: #ff4a4a; animation: led 4s ease-in-out infinite; }
+.mapwrap.day.dusk .ledglow { opacity: .55; }
+/* Effects drawn over the map (ants fetching food, drops, sparkles), kept apart so a re-render doesn't cut them */
+.mapwrap { position: relative; }
+#fx { position: absolute; left: 0; top: 0; width: max(100%, 820px); height: auto; pointer-events: none; }
+#fx text { font-family: var(--body); }
+.pop { animation: pop 2.6s ease-out forwards; transform-box: fill-box; transform-origin: center; }
+@keyframes pop { 0% { transform: scale(0); opacity: 0; } 15% { transform: scale(1.35); opacity: 1; } 30% { transform: scale(1); } 80% { opacity: 1; } 100% { transform: translateY(-14px); opacity: 0; } }
+.drop { animation: drop 1.1s ease-in forwards; opacity: 0; }
+@keyframes drop { 0% { transform: translateY(-46px); opacity: 0; } 20% { opacity: 1; } 100% { transform: translateY(0); opacity: .9; } }
+.ripple { animation: ripple 1.4s ease-out forwards; transform-box: fill-box; transform-origin: center; opacity: 0; }
+@keyframes ripple { 0% { transform: scale(.2); opacity: .9; } 100% { transform: scale(2.4); opacity: 0; } }
+.spark { animation: spark 1.8s ease-out forwards; transform-box: fill-box; transform-origin: center; opacity: 0; }
+@keyframes spark { 0% { transform: scale(0) rotate(0); opacity: 0; } 30% { transform: scale(1.3) rotate(40deg); opacity: 1; } 100% { transform: scale(.6) rotate(110deg); opacity: 0; } }
+/* Time machine: scrub the map back through the days you logged */
+.tm { display: flex; align-items: center; gap: 10px; padding: 10px 18px 2px; color: #e3cba8; font-size: 13.5px; font-weight: 700; }
+.tm button { flex: none; width: 40px; height: 40px; border-radius: 50%; border: 1px solid #5a4636; background: #2c2117; color: #f2c04e; font-size: 15px; }
+.tm input { flex: 1; min-width: 0; accent-color: #f2c04e; height: 32px; }
+.tm span { flex: none; min-width: 64px; text-align: right; font-variant-numeric: tabular-nums; }
+.mapwrap.past #setup { filter: sepia(.45) saturate(.85) brightness(.95); pointer-events: none; }
+.mapwrap.past::after { content: attr(data-past); position: absolute; left: 12px; top: 10px; padding: 4px 10px; border-radius: 12px; background: rgba(36, 23, 6, .82); color: #f2c04e; font: 800 13px var(--body); pointer-events: none; }
+/* The colony as a collectible card: its level grows with the workers */
+.cardwrap { perspective: 900px; margin-bottom: 14px; }
+.ccard { --c1: #b07a4a; --c2: #e9c391; --mx: 50%; --my: 30%; position: relative; overflow: hidden; padding: 16px; border-radius: 22px; color: #fbf1e3; background: radial-gradient(120% 90% at 85% 0%, color-mix(in srgb, var(--c2) 45%, transparent), transparent 60%), linear-gradient(160deg, #3b2616, #1d130b); box-shadow: 0 0 0 2px var(--c1), 0 0 0 5px color-mix(in srgb, var(--c2) 40%, transparent), 0 14px 30px rgba(30, 15, 5, .35); transition: transform .25s ease-out; transform-style: preserve-3d; display: grid; gap: 8px; }
+.ccard::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle at var(--mx) var(--my), rgba(255, 255, 255, .28), transparent 40%), linear-gradient(115deg, transparent 30%, color-mix(in srgb, var(--c2) 30%, transparent) 45%, rgba(140, 220, 255, .18) 52%, transparent 65%); background-size: 100% 100%, 250% 250%; background-position: 0 0, var(--mx) var(--my); mix-blend-mode: screen; }
+.ccard.lv-2 { --c1: #8fa7b8; --c2: #d8ecf5; } .ccard.lv-3 { --c1: #d4a018; --c2: #ffe08a; } .ccard.lv-4 { --c1: #8e5bd8; --c2: #d6b8ff; } .ccard.lv-5 { --c1: #e0503a; --c2: #ffd36b; }
+.cc-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; color: var(--c2); }
+.cc-mid { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; }
+.cc-art { width: 78px; height: 78px; border-radius: 18px; display: grid; place-items: center; font-size: 44px; background: radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--c2) 50%, transparent), transparent 70%), rgba(0, 0, 0, .25); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--c2) 55%, transparent); }
+.ccard h3 { font-size: clamp(24px, 7vw, 30px); font-weight: 800; }
+.cc-rank { font: 800 17px var(--display); color: var(--c2); }
+.cc-sp { font-style: italic; color: #e3cba8; font-size: 14px; }
+.cc-bar { height: 8px; border-radius: 4px; background: rgba(255, 255, 255, .14); overflow: hidden; }
+.cc-bar i { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--c1), var(--c2)); }
+.cc-next { font-size: 12.5px; color: #cbbba5; }
+.cc-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.cc-stats div { padding: 8px; border-radius: 12px; background: rgba(0, 0, 0, .25); display: grid; gap: 1px; min-width: 0; }
+.cc-stats b { font: 800 17px/1.1 var(--display); overflow-wrap: anywhere; }
+.cc-stats span { font-size: 11.5px; color: #cbbba5; }
+/* Monthly Wrapped: full-screen stories, one number at a time */
+.wrapbtns { display: flex; flex-wrap: wrap; gap: 8px; }
+.wrapbtns button { min-height: 48px; padding: 0 16px; border: 0; border-radius: 24px; background: linear-gradient(120deg, #e0703a, #c98a10 55%, #8e5bd8); color: #fff; font: 800 15px var(--display); box-shadow: 0 6px 16px rgba(180, 83, 31, .3); }
+dialog.wrapd { width: 100%; height: 100%; max-width: 100%; max-height: 100%; margin: 0; padding: 0; border: 0; background: #120b06; color: #fff; overflow: hidden; }
+dialog.wrapd::backdrop { background: #000; }
+.wr-bars { position: absolute; z-index: 2; left: 0; right: 0; top: 0; display: flex; gap: 4px; padding: calc(10px + env(safe-area-inset-top, 0px)) 14px 0; }
+.wr-bars i { flex: 1; height: 3px; border-radius: 2px; background: rgba(255, 255, 255, .3); overflow: hidden; }
+.wr-bars i b { display: block; height: 100%; width: 0; background: #fff; }
+.wr-bars i.done b { width: 100%; }
+.wr-bars i.on b { animation: wrfill 6s linear forwards; }
+@keyframes wrfill { to { width: 100%; } }
+.wr-x { position: absolute; z-index: 3; right: 10px; top: calc(20px + env(safe-area-inset-top, 0px)); width: 44px; height: 44px; border: 0; border-radius: 50%; background: rgba(0, 0, 0, .25); color: #fff; font-size: 26px; }
+.wr-s { position: absolute; inset: 0; display: grid; align-content: center; gap: 14px; padding: 70px max(28px, env(safe-area-inset-right, 0px)) 50px max(28px, env(safe-area-inset-left, 0px)); text-align: center; animation: wrin .5s ease-out; }
+@keyframes wrin { from { opacity: 0; transform: scale(.96); } }
+.wr-s.g0 { background: radial-gradient(120% 80% at 20% 10%, #e0703a, transparent 60%), radial-gradient(100% 80% at 90% 90%, #8e5bd8, transparent 60%), #2a1406; }
+.wr-s.g1 { background: radial-gradient(120% 80% at 80% 0%, #c98a10, transparent 60%), #2b1a05; }
+.wr-s.g2 { background: radial-gradient(120% 80% at 10% 90%, #4d7a3a, transparent 60%), radial-gradient(90% 70% at 90% 10%, #c98a10, transparent 60%), #0f1a0b; }
+.wr-s.g3 { background: radial-gradient(120% 80% at 50% 0%, #b4531f, transparent 60%), #1c0b04; }
+.wr-s.g4 { background: radial-gradient(120% 80% at 0% 0%, #2f6f9e, transparent 60%), radial-gradient(90% 70% at 100% 100%, #ef6b5b, transparent 60%), #08121b; }
+.wr-s.g5 { background: radial-gradient(120% 80% at 100% 0%, #8e5bd8, transparent 60%), #140a1e; }
+.wr-s.g6 { background: radial-gradient(120% 90% at 50% 100%, #f2c04e, transparent 60%), radial-gradient(90% 70% at 0% 0%, #e0703a, transparent 60%), #241006; }
+.wr-k { font-size: 13px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; opacity: .8; }
+.wr-big { font: 800 clamp(64px, 24vw, 120px)/.9 var(--display); letter-spacing: -.03em; }
+.wr-h { font: 800 clamp(28px, 9vw, 44px)/1.05 var(--display); }
+.wr-p { font-size: 18px; line-height: 1.4; opacity: .92; margin: 0 auto; max-width: 420px; }
+.wr-list { display: grid; gap: 10px; justify-content: center; text-align: left; font-size: 20px; font-weight: 700; }
+.wr-list b { font: 800 30px var(--display); display: inline-block; min-width: 54px; text-align: right; margin-right: 10px; }
+.wr-cal { display: grid; grid-template-columns: repeat(7, 22px); gap: 5px; justify-content: center; margin: 4px auto; }
+.wr-cal i { width: 22px; height: 22px; border-radius: 6px; background: rgba(255, 255, 255, .14); }
+.wr-cal i.on { background: #f2c04e; box-shadow: 0 0 12px rgba(242, 192, 78, .7); }
+.wr-cal i.out { visibility: hidden; }
+.wr-s img { max-width: min(100%, 360px); max-height: 42dvh; margin: 0 auto; border-radius: 18px; object-fit: cover; box-shadow: 0 16px 40px rgba(0, 0, 0, .5); transform: rotate(-2deg); }
+@media (prefers-reduced-motion: reduce) { .ccard { transition: none; } .wr-s { animation: none; } .wr-bars i.on b { animation: none; width: 100%; } }
 @media (prefers-reduced-motion: reduce) { .wig, .led, .confetti { animation: none; } .confetti { display: none; } }
 /* Diary as folded day cards */
 .log > li.day { grid-template-columns: minmax(0, 1fr); }
@@ -303,13 +379,15 @@ details.dayc > summary::after { grid-row: 1 / span 5; }
       <g id="brood"></g>
       <g id="workers"></g>
     </svg>
-    <div class="mapwrap" id="mapWrap" hidden><svg viewBox="0 0 1000 360" id="setup" role="group" aria-label="Tu montaje visto desde arriba. Toca una parte para ver qué hay o apuntarlo"></svg></div>
+    <div class="mapwrap" id="mapWrap" hidden><svg viewBox="0 0 1000 360" id="setup" role="group" aria-label="Tu montaje visto desde arriba. Toca una parte para ver qué hay o apuntarlo"></svg><svg viewBox="0 0 1000 360" id="fx" aria-hidden="true"></svg></div>
+    <div class="tm" id="tm" hidden><button type="button" id="tmPlay" aria-label="Ver cómo ha cambiado, día a día">▶</button><input type="range" id="tmR" min="0" max="1" step="1" aria-label="Día que ves en el mapa"><span id="tmL">Hoy</span></div>
     <div class="hero-b" id="heroB"></div>
     <div class="hsum" id="hsum" hidden></div>
     <div class="strip" id="strip" hidden></div>
   </section>
 
   <div id="body" hidden>
+    <div class="cardwrap" id="cardBox" hidden></div>
     <div class="tiles" id="census"></div>
 
     <section class="sect" id="feedBox" style="margin-top:14px">
@@ -346,6 +424,7 @@ details.dayc > summary::after { grid-row: 1 / span 5; }
       <div id="heat"></div>
       <p class="tip" id="heatTip" aria-live="polite"></p>
       <div class="nums" id="nums"></div>
+      <div class="wrapbtns" id="wrapBtns"></div>
     </section>
 
     <section class="sect" style="margin-top:14px">
@@ -435,6 +514,8 @@ details.dayc > summary::after { grid-row: 1 / span 5; }
 
 <dialog class="sheet" id="modD" aria-label="Parte del montaje"><div class="sh" id="modBody"></div></dialog>
 
+<dialog class="wrapd" id="wrapD" aria-label="Resumen del mes"><div class="wr-bars" id="wrBars"></div><button type="button" class="wr-x" id="wrX" aria-label="Cerrar">×</button><div class="wr-s" id="wrS"></div></dialog>
+
 <dialog class="sheet" id="whenD" aria-label="Cambiar fecha"><form class="sh" method="dialog" id="whenF">
   <h2>¿Cuándo fue?</h2>
   <input name="t" type="datetime-local" required style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:16px">
@@ -465,7 +546,7 @@ var MONTHS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oc
 function fmtD(t) { var d = new Date(t); return d.getDate() + ' ' + MONTHS[d.getMonth()] + (d.getFullYear() !== new Date().getFullYear() ? ' ' + d.getFullYear() : ''); }
 function fmtT(t) { var d = new Date(t); return fmtD(t) + ' · ' + d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0'); }
 function dayStart(t) { var d = new Date(t); d.setHours(0, 0, 0, 0); return d.getTime(); }
-function daysAgo(t) { return Math.round((dayStart(Date.now()) - dayStart(t)) / DAY); }
+function daysAgo(t) { return Math.round((dayStart(ATT || Date.now()) - dayStart(t)) / DAY); }
 function ago(t) { var d = daysAgo(t); return d === 0 ? 'hoy' : d === 1 ? 'ayer' : 'hace ' + d + ' días'; }
 function today() { var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
 function span(days) {
@@ -478,7 +559,9 @@ function uid(p) { return p + Date.now().toString(36) + Math.random().toString(36
 
 function cols() { return Object.keys(S.col).map(function (k) { return Object.assign({ id: k }, S.col[k]); }).sort(function (a, b) { return (a.creada || 0) - (b.creada || 0); }); }
 function cur() { if (!S.col[S.cur]) S.cur = (cols()[0] || {}).id || ''; return S.cur ? Object.assign({ id: S.cur }, S.col[S.cur]) : null; }
-function evs(cid, tipo) { return Object.keys(S.ev).map(function (k) { return Object.assign({ id: k }, S.ev[k]); }).filter(function (e) { return e.col === cid && (!tipo || e.tipo === tipo); }).sort(function (a, b) { return b.t - a.t; }); }
+// While the time machine draws a past day, ATT is the end of that day: entries after it don't exist yet and "today" is that day
+var ATT = 0;
+function evs(cid, tipo) { return Object.keys(S.ev).map(function (k) { return Object.assign({ id: k }, S.ev[k]); }).filter(function (e) { return e.col === cid && (!tipo || e.tipo === tipo) && (!ATT || e.t <= ATT); }).sort(function (a, b) { return b.t - a.t; }); }
 function cada(c) { return Object.assign({}, CADA, c.cada || {}); }
 
 // ---------- The nest: what the last census counted, drawn in its chambers ----------
@@ -634,7 +717,7 @@ function hydraEl(c) {
 }
 var label = function (x, y, t) { return '<text x="' + x + '" y="' + y + '" text-anchor="middle" font-size="24" font-weight="800" fill="#f5e9d6" stroke="#2c2117" stroke-width="5" paint-order="stroke">' + t + '</text>'; };
 function overviewSvg(c) {
-  var lr = lastCount(c.id) ? evs(c.id, 'recuento').filter(function (e) { return e.temp != null || e.hum != null; })[0] : null, cl = climaRows(c.clima).slice(-1)[0];
+  var lr = lastCount(c.id) ? evs(c.id, 'recuento').filter(function (e) { return e.temp != null || e.hum != null; })[0] : null, cl = climaRows(c.clima).filter(function (r) { return !ATT || r.t <= ATT; }).slice(-1)[0];
   if (cl && (!lr || cl.t > lr.t)) lr = cl;
   var tube = 'class="tube" stroke="#d9eef5" stroke-opacity=".55" stroke-width="9" fill="none" stroke-linecap="round"';
   var cross = function (x, y) { return '<rect x="' + (x - 10) + '" y="' + (y - 10) + '" width="20" height="20" rx="4" fill="#f2efe8" filter="url(#fShadow)"/><circle cx="' + x + '" cy="' + (y - 13) + '" r="5" fill="#d8b98a"/>'; };
@@ -647,7 +730,7 @@ function overviewSvg(c) {
     // tubes, then the ants walking them, then the modules on top so ants disappear into them
     Object.keys(TUBES).map(function (k) { return '<path id="' + k + '" d="' + TUBES[k] + '" ' + tube + '/>'; }).join('') +
     '<g pointer-events="none">' + walkers(c) + '</g>' +
-    cross(285, 150) + cross(285, 215) + '<rect x="560" y="331" width="11" height="18" rx="2" fill="#111"/><rect x="630" y="331" width="11" height="18" rx="2" fill="#111"/>' +
+    cross(285, 150) + cross(285, 215) + jarEl(c) + '<rect x="560" y="331" width="11" height="18" rx="2" fill="#111"/><rect x="630" y="331" width="11" height="18" rx="2" fill="#111"/>' +
     // tube in its wooden box
     '<g data-mod="tubo" role="button" tabindex="0" aria-label="Tubo de ensayo, en la caja de madera: ' + esc(zoneWords(zone(c, 'tubo'))) + '"><rect x="18" y="104" width="112" height="92" rx="6" fill="url(#gWood)" filter="url(#fShadow)"/><path d="M30 104 V196 M40 112 C70 108 100 116 122 110 M40 186 C70 182 96 190 122 184" stroke="#a8875c" stroke-width="2.5" fill="none"/>' +
     '<rect x="34" y="138" width="90" height="24" rx="12" fill="#e9f3f6" fill-opacity=".6" stroke="#fff"/><rect x="38" y="141" width="12" height="18" rx="5" fill="#fff"/>' + marks('tubo', zone(c, 'tubo'), 84, 150, 36, 10, .7) + label(74, 228, 'Tubo') + '</g>' +
@@ -659,7 +742,90 @@ function overviewSvg(c) {
     '<g data-mod="cinis" role="button" tabindex="0" aria-label="Cinis, el basurero: ' + esc(zoneWords(zone(c, 'cinis'))) + '"><rect x="255" y="255" width="62" height="62" rx="5" fill="#efe9dd" filter="url(#fShadow)"/><circle cx="292" cy="294" r="13" fill="#8c8c8c"/><circle cx="292" cy="294" r="13" fill="none" stroke="#6d6d6d" stroke-width="3" stroke-dasharray="3 3"/>' + marks('cinis', zone(c, 'cinis'), 286, 286, 26, 26, .8) + pointEl(c, 'cinis', 310, 262, 7) + label(286, 346, 'Cinis') + '</g>' +
     '<g data-mod="v1" role="button" tabindex="0" aria-label="Forrajeo V1: ' + esc(zoneWords(zone(c, 'v1'))) + '"><rect x="345" y="226" width="160" height="82" rx="6" fill="#6f8597" filter="url(#fShadow)"/><rect x="353" y="234" width="144" height="66" rx="3" fill="#5a4636"/>' + [[372, 246], [392, 286], [478, 290], [470, 242], [410, 258]].map(function (s, i) { return '<circle cx="' + s[0] + '" cy="' + s[1] + '" r="' + (5 + i % 3 * 2) + '" fill="' + ['#b7a08a', '#8f7a66', '#c9b29a'][i % 3] + '"/>'; }).join('') + '<circle cx="455" cy="268" r="17" fill="#4a3a2c"/>' + marks('v1', zone(c, 'v1'), 425, 267, 70, 30, .8) + '<rect x="353" y="234" width="144" height="66" rx="3" fill="url(#gGlare)" pointer-events="none"/>' + label(425, 334, 'Forrajeo V1') + '</g>' +
     '<g data-mod="fg" role="button" tabindex="0" aria-label="Forrajeo grande: toca para ver sus dos partes"><g transform="translate(700 70) scale(.9333)" filter="url(#fShadow)">' + fgSvg(c, 1) + '<rect width="300" height="220" fill="url(#gGlare)" pointer-events="none"/></g>' + label(840, 306, 'Forrajeo grande') + '</g>' +
-    queenBadge(c) + '<rect class="veil" width="1000" height="360" fill="#ff3030"/>';
+    queenBadge(c) + '<rect class="tint" width="1000" height="360" fill="#ff8a3d"/><rect class="veil" width="1000" height="360" fill="#ff3030"/>';
+}
+// The granary: a jar that fills with every seed store marked in the zones
+var JAR_MAX = 9;
+function seedStores(c) { var zs = c.zonas || {}; return Object.keys(zs).filter(function (k) { return ZONES[k] && zs[k].semillas; }).sort(function (a, b) { return zs[b].semillas - zs[a].semillas; }); }
+function jarEl(c) {
+  var zs = c.zonas || {}, ks = seedStores(c), sum = ks.reduce(function (a, k) { return a + zs[k].semillas; }, 0), f = Math.min(1, sum / JAR_MAX);
+  var top = 334 - f * 70, r = rng('jar' + sum), seeds = '';
+  for (var i = 0; i < Math.round(f * 90); i++) { var y = 330 - r() * (330 - top - 2), x = 172 + r() * 56; seeds += '<ellipse cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" rx="3.2" ry="2.2" fill="' + ['#8a5a2b', '#a87442', '#6e4520'][i % 3] + '" transform="rotate(' + Math.round(r() * 180) + ' ' + x.toFixed(1) + ' ' + y.toFixed(1) + ')"/>'; }
+  return '<g data-jar="1" role="button" tabindex="0" aria-label="Granero: ' + (ks.length ? 'semillas en ' + ks.length + (ks.length === 1 ? ' sitio' : ' sitios') : 'vacío') + '">' +
+    '<clipPath id="jarClip"><rect x="168" y="262" width="64" height="72" rx="12"/></clipPath>' +
+    '<rect x="166" y="258" width="68" height="78" rx="14" fill="#e9f3f6" fill-opacity=".18" stroke="#e9f3f6" stroke-opacity=".8" stroke-width="3" filter="url(#fShadow)"/>' +
+    '<g clip-path="url(#jarClip)">' + seeds + '</g><rect x="172" y="249" width="56" height="12" rx="4" fill="#a8875c"/><rect x="168" y="262" width="64" height="72" rx="12" fill="url(#gGlare)" pointer-events="none"/>' +
+    (sum ? '' : '<text x="200" y="304" text-anchor="middle" font-size="15" font-weight="800" fill="#f5e9d6">vacío</text>') + label(200, 356, 'Granero') + '</g>';
+}
+function jarTap() {
+  var c = cur(), zs = c.zonas || {}, ks = seedStores(c);
+  toast(ks.length ? '🌾 Semillas en ' + ks.map(function (k) { return (k === 'tubo' ? 'el tubo' : ZONES[k].replace(/^.*· /, '')) + ' (' + LEVELS[zs[k].semillas].toLowerCase() + ')'; }).join(', ') : '🌾 El granero está vacío: no has marcado semillas en ninguna zona');
+}
+// ---------- Time machine: the map as it was each day since you started logging ----------
+// Each zone's state on a day is its last check up to then; before its first check, what the photos of 6 Nov showed
+function zonesAt(c, T) {
+  var evz = Object.keys(S.ev).map(function (k) { return S.ev[k]; }).filter(function (e) { return e.col === c.id && e.tipo === 'zona'; }).sort(function (a, b) { return a.t - b.t; }), out = {};
+  Object.keys(ZONES).forEach(function (k) { out[k] = evz.some(function (e) { return e.zona === k; }) ? Object.assign({}, INIT_ZONES[k]) : Object.assign({}, (c.zonas || {})[k]); });
+  evz.forEach(function (e) {
+    if (e.t > T) return;
+    if (e.z && e.z.reina) Object.keys(out).forEach(function (k) { delete out[k].reina; });
+    out[e.zona] = Object.assign({ t: e.t }, e.z);
+  });
+  return out;
+}
+var tmDays = [], tmI = -1, tmTimer = null, nextDay = function (t) { return dayStart(t + 36 * 3600000); };
+function tmFirst(c) { var real = evs(c.id).filter(function (e) { return !e.hist; }); return real.length ? dayStart(real[real.length - 1].t) : 0; }
+function renderTm(c) {
+  var first = tmFirst(c), today0 = dayStart(Date.now()); tmDays = [];
+  for (var t = first; first && t <= today0; t = nextDay(t)) tmDays.push(t);
+  $('tm').hidden = tmDays.length < 2;
+  // tmI -1 is "today", so the slider stays live when a new day starts
+  if (tmI >= tmDays.length - 1) tmI = -1;
+  var past = tmI >= 0;
+  $('tmR').max = Math.max(1, tmDays.length - 1); $('tmR').value = past ? tmI : tmDays.length - 1;
+  $('tmL').textContent = past ? fmtD(tmDays[tmI]) : 'Hoy';
+  $('mapWrap').classList.toggle('past', past); $('mapWrap').setAttribute('data-past', past ? '📅 Así estaba el ' + fmtD(tmDays[tmI]) : '');
+  return past ? nextDay(tmDays[tmI]) - 1 : 0;
+}
+function drawMap(c) {
+  var T = renderTm(c), n, lc;
+  if (T) { ATT = T; c = Object.assign({}, c, { zonas: zonesAt(c, T) }); }
+  n = state(c.id); lc = lastCount(c.id);
+  $('setup').innerHTML = overviewSvg(c); $('hsum').innerHTML = mapSummary(c, n, lc);
+  ATT = 0;
+}
+function tmStop() { clearInterval(tmTimer); tmTimer = null; $('tmPlay').textContent = '▶'; }
+$('tmR').addEventListener('input', function () { tmStop(); tmI = +this.value >= tmDays.length - 1 ? -1 : +this.value; drawMap(cur()); });
+$('tmPlay').addEventListener('click', function () {
+  if (tmTimer) return tmStop();
+  if (tmI < 0) tmI = 0;
+  this.textContent = '⏸'; drawMap(cur());
+  tmTimer = setInterval(function () { tmI++; if (tmI >= tmDays.length - 1) { tmI = -1; tmStop(); } drawMap(cur()); }, 700);
+});
+// ---------- The map reacts to what you log: ants fetch the food, water drips in, Cinis sparkles ----------
+var FOOD_FX = { azucar: ['🍯', '#f2c04e'], proteina: ['🦗', '#5b7f3a'], semillas: ['🌾', '#8a5a2b'] }, WATER_FX = { hydra: [563, 66], deposito: [195, 100] }, fxN = 0;
+function mapReact(k) {
+  if (REDUCED || !isMap(cur()) || $('mapWrap').hidden) return;
+  var g = document.createElementNS('http://www.w3.org/2000/svg', 'g'), out = '', life = 3200, id = 'fxp' + (++fxN), i, w = WATER_FX[k];
+  if (FOOD_FX[k]) {
+    // Food lands in the big forage; a few ants walk out along the tube and come back carrying it
+    life = 9000;
+    out += '<path id="' + id + '" d="' + TUBES.t5 + '" fill="none"/><text class="pop" x="840" y="196" text-anchor="middle" font-size="46" style="animation-duration:8s">' + FOOD_FX[k][0] + '</text>';
+    for (i = 0; i < 6; i++) {
+      var back = i >= 3;
+      out += '<g visibility="hidden" data-at="' + (back ? 3800 + (i - 3) * 600 : i * 600) + '"><set attributeName="visibility" to="visible" begin="indefinite" dur="3.4s"/>' +
+        '<animateMotion dur="3.4s" begin="indefinite" rotate="' + (back ? 'auto-reverse' : 'auto') + '" keyPoints="' + (back ? '1;0' : '0;1') + '" keyTimes="0;1" calcMode="linear"><mpath href="#' + id + '"/></animateMotion>' +
+        '<use href="#ma" color="#1b120b" transform="scale(1.4)"/>' + (back ? '<circle cx="-11" r="3.4" fill="' + FOOD_FX[k][1] + '" stroke="#1b120b" stroke-width=".8"/>' : '') + '</g>';
+    }
+  } else if (w) {
+    for (i = 0; i < 4; i++) out += '<circle class="drop" cx="' + (w[0] - 6 + i * 4) + '" cy="' + w[1] + '" r="4.5" fill="#7fc8ef" style="animation-delay:' + i * .22 + 's"/>';
+    out += '<ellipse class="ripple" cx="' + w[0] + '" cy="' + (w[1] + 6) + '" rx="14" ry="5" fill="none" stroke="#d9f1fd" stroke-width="3" style="animation-delay:.9s"/><ellipse class="ripple" cx="' + w[0] + '" cy="' + (w[1] + 6) + '" rx="14" ry="5" fill="none" stroke="#d9f1fd" stroke-width="2" style="animation-delay:1.25s"/>';
+  } else if (k === 'cinis' || k === 'limpieza') {
+    [[286, 270], [262, 296], [312, 300], [280, 318], [300, 262], [268, 262]].forEach(function (p, j) { out += '<text class="spark" x="' + p[0] + '" y="' + p[1] + '" text-anchor="middle" font-size="' + (18 + j % 3 * 6) + '" style="animation-delay:' + j * .15 + 's">✨</text>'; });
+  } else return;
+  g.innerHTML = out; $('fx').appendChild(g);
+  g.querySelectorAll('[data-at]').forEach(function (a) { setTimeout(function () { a.querySelectorAll('set, animateMotion').forEach(function (s) { try { s.beginElement(); } catch (e) {} }); }, +a.getAttribute('data-at')); });
+  setTimeout(function () { g.remove(); }, life);
 }
 // A big crown on the module where the queen was last marked, since the zone marks are tiny on the shelf view
 var BADGE = { tubo: [112, 116], antcrilic: [236, 46], nidus: [508, 64], cinis: [312, 270], v1: [494, 240], fg: [968, 100] };
@@ -699,13 +865,14 @@ function drawMod() {
     '<div class="sh-b" style="grid-template-columns:1fr"><button type="button" class="no" data-act="close">Cerrar</button></div>';
 }
 $('setup').addEventListener('click', function (e) {
+  if (e.target.closest('[data-jar]')) return jarTap();
   var p = e.target.closest('[data-point]'), m = e.target.closest('[data-mod]');
   if (p) return openPoint(p.getAttribute('data-point'), m ? m.getAttribute('data-mod') : null);
   if (!m) return;
   var k = m.getAttribute('data-mod');
   if (MODS[k][1].length === 1) openZone(MODS[k][1][0], k); else openMod(k);
 });
-$('setup').addEventListener('keydown', function (e) { if ((e.key === 'Enter' || e.key === ' ') && e.target.closest('[data-mod],[data-point]')) { e.preventDefault(); e.target.dispatchEvent(new MouseEvent('click', { bubbles: true })); } });
+$('setup').addEventListener('keydown', function (e) { if ((e.key === 'Enter' || e.key === ' ') && e.target.closest('[data-mod],[data-point],[data-jar]')) { e.preventDefault(); e.target.dispatchEvent(new MouseEvent('click', { bubbles: true })); } });
 $('modBody').addEventListener('click', function (e) {
   var v = modView, c = cur(), b;
   if ((b = e.target.closest('[data-zf] [data-v]'))) {
@@ -773,9 +940,8 @@ function render() {
   $('heroT').innerHTML = '<h1>' + esc(c.nombre || 'Sin nombre') + '</h1>' + (c.especie ? '<span class="sp">' + esc(c.especie) + (c.casa && !map ? ' · <span style="font-style:normal">' + esc(c.casa) + '</span>' : '') + (map && age != null ? ' · <span style="font-style:normal">' + nf(age) + ' días contigo' + (age >= 60 ? ', ' + span(age) : '') + '</span>' : '') + '</span>' : '') +
     (age != null && !map ? '<div class="age num">' + nf(age) + '<small>' + (age === 1 ? 'día' : 'días') + ' con reina</small></div>' + (age >= 60 ? '<span class="sp" style="font-style:normal">' + span(age) + '</span>' : '') : '') +
     (c.hiberna ? '<span class="hiber">' + hiberText(c) + '</span>' : '') +
-    (map ? '<button type="button" class="nightbtn ' + luz + '" id="nightBtn" aria-label="Luz del mapa: ' + LUZ[luz][1] + '. Toca para cambiar">' + LUZ[luz][0] + '</button>' : '');
-  $('mapWrap').classList.toggle('day', map && luz === 'dia');
-  $('mapWrap').classList.toggle('night', map && luz === 'led');
+    (map ? '<button type="button" class="nightbtn" id="nightBtn"></button>' : '');
+  applyLuz();
   $('heroB').textContent = map ? '' : lc ? 'Última revisión: ' + ago(lc.t) + (lc.temp != null ? ' · ' + String(lc.temp).replace('.', ',') + ' °C' : '') + '.' : 'Haz una revisión y el hormiguero se llenará con lo que veas.';
   $('heroB').hidden = map;
   renderNest(c, n);
@@ -783,7 +949,8 @@ function render() {
   $('nest').toggleAttribute('hidden', map); $('mapWrap').hidden = !map; $('hsum').hidden = !map; $('strip').hidden = !map;
   document.querySelector('.hero').classList.toggle('map', map);
   $('census').hidden = map; $('feedBox').hidden = map;
-  if (map) { $('setup').innerHTML = overviewSvg(c); $('hsum').innerHTML = mapSummary(c, n, lc); $('strip').innerHTML = careStrip(c); if (modView) drawMod(); }
+  if (map) { drawMap(c); $('strip').innerHTML = careStrip(c); if (modView) drawMod(); } else $('tm').hidden = true;
+  renderCard(c, n);
   var up = prev && n.obreras > prev.n.obreras;
   $('census').innerHTML = '<div class="tile"><span>Obreras</span><b class="num' + (n.rango ? ' word' : '') + '">' + esc(workersTxt(n)) + '</b>' + (up ? '<i>↑ desde ' + esc(workersTxt(prev.n)) + '</i>' : '') + '</div>' +
     BROOD.map(function (k, i) { var l = lvl(n, k); return '<div class="tile"><span>' + STAGES[i + 1][1] + '</span><b class="word">' + (l == null ? '–' : LEVELS[l]) + '</b></div>'; }).join('');
@@ -923,7 +1090,71 @@ function renderStats(c, all) {
     [ts.length ? dec(Math.max.apply(null, ts)) + '°' : 0, '🌡️ el día más caluroso'], [ts.length ? dec(Math.min.apply(null, ts)) + '°' : 0, '❄️ el día más frío']
   ].filter(function (x) { return x[0]; });
   $('nums').innerHTML = tiles.map(function (x) { return '<div><b>' + esc(x[0]) + '</b><span>' + esc(x[1]) + '</span></div>'; }).join('');
+  $('wrapBtns').innerHTML = realMonths(c).map(function (m) { return '<button type="button" data-wm="' + m + '">▶ Tu ' + MONTHS_L[m % 12] + (Math.floor(m / 12) !== new Date().getFullYear() ? ' ' + Math.floor(m / 12) : '') + '</button>'; }).join('');
 }
+// ---------- The colony card: its level goes up with the workers ----------
+var RANKS = [[0, 'Fundadora', '🥚'], [10, 'Familia', '🐜'], [50, 'Colonia', '🏡'], [250, 'Ciudad', '🏙️'], [1000, 'Imperio', '🏰']];
+function rankOf(w) { var i = 0; RANKS.forEach(function (r, j) { if (w >= r[0]) i = j; }); return i; }
+function renderCard(c, n) {
+  var w = lowB(n), li = rankOf(w), r = RANKS[li], nx = RANKS[li + 1], zs = c.zonas || {}, q = Object.keys(zs).filter(function (k) { return zs[k].reina; })[0];
+  var age = c.reina ? Math.max(0, daysAgo(new Date(c.reina + 'T12:00').getTime())) : null, pct = nx ? Math.max(4, Math.min(100, (w - r[0]) / (nx[0] - r[0]) * 100)) : 100;
+  $('cardBox').hidden = false;
+  $('cardBox').innerHTML = '<div class="ccard lv-' + (li + 1) + '" id="ccard"><div class="cc-top"><span>Nivel ' + (li + 1) + ' de ' + RANKS.length + '</span><span>' + (age != null ? 'Desde ' + fmtD(new Date(c.reina + 'T12:00').getTime()) : '') + '</span></div>' +
+    '<div class="cc-mid"><div class="cc-art" aria-hidden="true">' + r[2] + '</div><div><h3>' + esc(c.nombre || 'Sin nombre') + '</h3>' + (c.especie ? '<div class="cc-sp">' + esc(c.especie) + '</div>' : '') + '<div class="cc-rank">' + r[1] + '</div></div></div>' +
+    '<div class="cc-bar" role="img" aria-label="' + Math.round(pct) + ' % hacia el siguiente nivel"><i style="width:' + pct.toFixed(0) + '%"></i></div><span class="cc-next">' + (nx ? 'Siguiente: ' + nx[2] + ' ' + nx[1] + ', a partir de ' + nf(nx[0]) + ' obreras' : 'Nivel máximo: un imperio entero') + '</span>' +
+    '<div class="cc-stats"><div><b>' + (age != null ? nf(age) : '–') + '</b><span>días contigo</span></div><div><b>' + esc(workersTxt(n)) + '</b><span>obreras</span></div>' +
+    '<div><b>' + (q ? (zs[q].reina === 'si' ? '👑' : '❔') : '–') + '</b><span>' + (q ? 'reina en ' + esc(q === 'tubo' ? 'el tubo' : ZONES[q].replace(/ · .*$/, '')) : 'reina sin marcar') + '</span></div></div></div>';
+  // Going up a level is celebrated once on this device; the first time only takes note
+  var key = 'formigues-nivel-' + c.id, seen = null; try { seen = localStorage.getItem(key); localStorage.setItem(key, li); } catch (e) {}
+  if (seen != null && li > +seen) setTimeout(function () { toast('⬆️ ¡Sube de nivel! Ahora es ' + r[1] + ' ' + r[2]); confetti(); }, 500);
+}
+// The card tilts and its shine follows the finger
+$('cardBox').addEventListener('pointermove', function (e) {
+  var cd = $('ccard'); if (!cd || REDUCED) return;
+  var b = cd.getBoundingClientRect(), x = (e.clientX - b.left) / b.width, y = (e.clientY - b.top) / b.height;
+  cd.style.transform = 'rotateY(' + ((x - .5) * 14).toFixed(1) + 'deg) rotateX(' + ((.5 - y) * 12).toFixed(1) + 'deg)';
+  cd.style.setProperty('--mx', (x * 100).toFixed(0) + '%'); cd.style.setProperty('--my', (y * 100).toFixed(0) + '%');
+});
+$('cardBox').addEventListener('pointerleave', function () { var cd = $('ccard'); if (cd) { cd.style.transform = ''; cd.style.removeProperty('--mx'); cd.style.removeProperty('--my'); } });
+// ---------- Monthly Wrapped: the month told in full-screen stories, only from what was logged in the app ----------
+function realMonths(c) { var by = {}; evs(c.id).forEach(function (e) { if (!e.hist) { var d = new Date(e.t); by[d.getFullYear() * 12 + d.getMonth()] = 1; } }); return Object.keys(by).map(Number).sort(function (a, b) { return b - a; }).slice(0, 6); }
+function wrapSlides(c, m) {
+  var y = Math.floor(m / 12), mo = m % 12, a = new Date(y, mo, 1).getTime(), b = new Date(y, mo + 1, 1).getTime(), mes = MONTHS_L[mo], out = [], all = evs(c.id);
+  var es = all.filter(function (e) { return !e.hist && e.t >= a && e.t < b; }), per = {};
+  es.forEach(function (e) { var k = dayStart(e.t); per[k] = (per[k] || 0) + 1; });
+  out.push(['g0', '<div class="wr-k">' + esc(c.nombre || '') + ' · ' + mes + ' ' + y + '</div><div class="wr-big">🐜</div><div class="wr-h">Tu ' + mes + '<br>con las hormigas</div>' + (c.especie ? '<p class="wr-p"><i>' + esc(c.especie) + '</i></p>' : '')]);
+  // The days you looked, on the month's own calendar
+  var nd = Object.keys(per).length, cal = '', best = 0, run = 0, dim = new Date(y, mo + 1, 0).getDate();
+  for (var i = 0; i < (new Date(y, mo, 1).getDay() + 6) % 7; i++) cal += '<i class="out"></i>';
+  for (var d = 1; d <= dim; d++) { var on = !!per[dayStart(new Date(y, mo, d, 12).getTime())]; run = on ? run + 1 : 0; best = Math.max(best, run); cal += '<i class="' + (on ? 'on' : '') + '"></i>'; }
+  out.push(['g1', '<div class="wr-k">Este mes las miraste</div><div class="wr-big">' + nd + '</div><div class="wr-h">' + (nd === 1 ? 'día' : 'días') + '</div><div class="wr-cal">' + cal + '</div>' + (best > 1 ? '<p class="wr-p">Tu mejor racha: ' + best + ' días seguidos 🔥</p>' : '')]);
+  var cnt = function (qs) { return es.filter(function (e) { return e.tipo === 'comida' && qs.indexOf(e.que) >= 0; }).length; };
+  var rows = [[cnt(['azucar']), '🍯 azúcar'], [cnt(['proteina']), '🦗 presas'], [cnt(['hydra', 'deposito', 'agua']), '💧 agua'], [cnt(['semillas']), '🌾 semillas'], [cnt(['cinis', 'limpieza']), '🧹 limpieza']].filter(function (r) { return r[0]; });
+  var total = rows.reduce(function (s, r) { return s + r[0]; }, 0);
+  out.push(['g2', '<div class="wr-k">Cuidados</div>' + (rows.length ? '<div class="wr-big">' + total + '</div><div class="wr-h">' + (total === 1 ? 'vez' : 'veces') + ' las cuidaste</div><div class="wr-list">' + rows.map(function (r) { return '<div><b>' + r[0] + '</b>' + r[1] + '</div>'; }).join('') + '</div>' : '<div class="wr-h">Este mes no apuntaste cuidados</div>')]);
+  // How the colony changed: workers when the month started against its last check
+  var recs = all.filter(function (e) { return e.tipo === 'recuento' && e.n.obreras != null; }), endR = recs.filter(function (e) { return e.t < b; })[0], startR = recs.filter(function (e) { return e.t < a; })[0];
+  var zc = es.filter(function (e) { return e.tipo === 'zona'; }).length, queen = es.some(function (e) { return e.tipo === 'zona' && e.z && e.z.reina === 'si'; });
+  if (endR || zc) out.push(['g3', '<div class="wr-k">La colonia</div>' + (endR ? (startR && workersTxt(startR.n) !== workersTxt(endR.n) ? '<div class="wr-h">De ' + esc(workersTxt(startR.n)) + '<br>a ' + esc(workersTxt(endR.n)) + '</div><div class="wr-k">obreras</div>' : '<div class="wr-big" style="font-size:clamp(48px,16vw,84px)">' + esc(workersTxt(endR.n)) + '</div><div class="wr-h">obreras</div>') : '') +
+    '<p class="wr-p">' + (zc ? 'Apuntaste ' + zc + (zc === 1 ? ' vez' : ' veces') + ' qué había en las zonas del montaje.' : '') + (queen ? ' Y viste a la reina 👑' : '') + '</p>']);
+  var cl = climaRows(c.clima).filter(function (r) { return r.t >= a && r.t < b; }), ts = cl.map(function (r) { return r.temp; });
+  if (ts.length) out.push(['g4', '<div class="wr-k">Temperatura de la habitación</div><div class="wr-big">' + dec(ts.reduce(function (s, v) { return s + v; }, 0) / ts.length) + '°</div><div class="wr-h">de media</div><p class="wr-p">Máxima ' + dec(Math.max.apply(null, ts)) + ' °C · mínima ' + dec(Math.min.apply(null, ts)) + ' °C</p>']);
+  var hito = es.filter(function (e) { return e.tipo === 'nota' && e.kind === 'hito' && e.texto; })[0] || es.filter(function (e) { return e.tipo === 'nota' && e.texto; })[0], pic = es.filter(function (e) { return e.foto; })[0];
+  if (hito || pic) out.push(['g5', '<div class="wr-k">El momento del mes</div>' + (pic ? '<img src="/_blob/' + esc(pic.foto) + '" alt="">' : '') + (hito ? '<p class="wr-p" style="font-size:21px">«' + esc(hito.texto) + '»</p><div class="wr-k">' + fmtD(hito.t) + '</div>' : '')]);
+  var top = Object.keys(per).map(Number).sort(function (p, q) { return per[q] - per[p] || q - p; })[0], live = b > Date.now();
+  out.push(['g6', '<div class="wr-k">Tu día más activo</div><div class="wr-h">' + dayTitle(top) + '</div><p class="wr-p">' + per[top] + (per[top] === 1 ? ' cosa apuntada' : ' cosas apuntadas') + '</p><div class="wr-big">🏆</div><p class="wr-p">' + (live ? 'Y el mes aún no ha acabado.' : '¡A por ' + MONTHS_L[(mo + 1) % 12] + '!') + '</p>']);
+  return out;
+}
+var wr = { s: [], i: 0 };
+function wrShow(i) {
+  if (i >= wr.s.length) return $('wrapD').close();
+  wr.i = Math.max(0, i); var sl = wr.s[wr.i], el = $('wrS');
+  $('wrBars').innerHTML = wr.s.map(function (x, j) { return '<i class="' + (j < wr.i ? 'done' : j === wr.i ? 'on' : '') + '"><b></b></i>'; }).join('');
+  el.className = 'wr-s ' + sl[0]; el.innerHTML = sl[1]; el.style.animation = 'none'; void el.offsetWidth; el.style.animation = '';
+}
+$('wrBars').addEventListener('animationend', function () { wrShow(wr.i + 1); });
+$('wrapD').addEventListener('click', function (e) { if (e.target.closest('#wrX')) return this.close(); wrShow(wr.i + (e.clientX < innerWidth / 3 ? -1 : 1)); });
+$('wrapBtns').addEventListener('click', function (e) { var b = e.target.closest('[data-wm]'); if (!b) return; wr.s = wrapSlides(cur(), +b.getAttribute('data-wm')); $('wrapD').showModal(); wrShow(0); });
 $('heat').addEventListener('click', function (e) {
   var r = e.target.closest('[data-d]'); if (!r) return; var t = +r.getAttribute('data-d'), n = heatDays[t] || 0;
   $('heatTip').textContent = fmtD(t) + ': ' + (n ? n + (n === 1 ? ' cosa apuntada' : ' cosas apuntadas') : 'no apuntaste nada');
@@ -1154,7 +1385,7 @@ window.addEventListener('online', flush); setInterval(flush, 30000);
 function touch(path) { delete S.del[path]; S.pend[path] = 1; }
 function drop(path) { if (S.pend[path]) delete S.pend[path]; S.del[path] = 1; }
 function saved() { persist(); render(); flush(); }
-function addEv(data) { var id = uid('e'); S.ev[id] = Object.assign({ col: S.cur, t: Date.now() }, data); touch('eventos/' + id); saved(); return id; }
+function addEv(data) { var id = uid('e'); S.ev[id] = Object.assign({ col: S.cur, t: Date.now() }, data); touch('eventos/' + id); saved(); if (data.tipo === 'comida') mapReact(data.que); return id; }
 function delEv(id) { var old = S.ev[id]; delete S.ev[id]; drop('eventos/' + id); saved(); return old; }
 function setCol(ch) { S.col[S.cur] = Object.assign({}, S.col[S.cur], ch); touch('colonias/' + S.cur); saved(); }
 function newCol(data) { var id = uid('c'); S.col[id] = Object.assign({ creada: Date.now(), cada: Object.assign({}, CADA) }, data); S.cur = id; touch('colonias/' + id); shown = PAGE; saved(); }
@@ -1172,11 +1403,32 @@ $('heroB').addEventListener('submit', function (e) {
   e.preventDefault(); var f = e.target;
   newCol({ nombre: f.nombre.value.trim(), especie: f.especie.value.trim(), reina: f.reina.value });
 });
-// Map light: day (room lit), night (dim shelf) or the red LEDs on, as when looking at them in the dark.
-// Follows the clock until tapped, then the choice is remembered on this device only.
-var LUZ = { dia: ['☀️ Día', 'de día'], noche: ['🌙 Noche', 'de noche'], led: ['🔴 LED', 'LED rojos'] }, LUZ_NEXT = { dia: 'noche', noche: 'led', led: 'dia' };
+// Map light: Auto follows the sun over Barcelona (day, an orange dusk as the LEDs come on, then the red LEDs at night);
+// tapping cycles to a fixed day, night or LED and back to Auto. Remembered on this device only.
+var LUZ = { auto: 'automática, según el sol', dia: 'de día', noche: 'de noche', led: 'LED rojos' }, LUZ_NEXT = { auto: 'dia', dia: 'noche', noche: 'led', led: 'auto' };
+var LUZ_ICON = { dia: '☀️', tarde: '🌅', noche: '🌙', led: '🔴' }, LUZ_NAME = { dia: 'Día', noche: 'Noche', led: 'LED' };
 var luz = null; try { luz = localStorage.getItem('formigues-luz') || (localStorage.getItem('formigues-noche') === '1' ? 'led' : null); } catch (e) {}
-if (!LUZ[luz]) { var hh = new Date().getHours(); luz = hh >= 8 && hh < 21 ? 'dia' : 'noche'; }
+if (!LUZ[luz]) luz = 'auto';
+// Sunrise and sunset for Barcelona (NOAA's approximation, within about ten minutes)
+function sunTimes(d) {
+  var lat = 41.39 * Math.PI / 180, lon = 2.17, n = Math.floor((d - new Date(d.getFullYear(), 0, 0)) / DAY), g = 2 * Math.PI / 365 * (n - 1);
+  var eq = 229.18 * (.000075 + .001868 * Math.cos(g) - .032077 * Math.sin(g) - .014615 * Math.cos(2 * g) - .040849 * Math.sin(2 * g));
+  var dc = .006918 - .399912 * Math.cos(g) + .070257 * Math.sin(g) - .006758 * Math.cos(2 * g) + .000907 * Math.sin(2 * g) - .002697 * Math.cos(3 * g) + .00148 * Math.sin(3 * g);
+  var ha = Math.acos(Math.cos(90.833 * Math.PI / 180) / (Math.cos(lat) * Math.cos(dc)) - Math.tan(lat) * Math.tan(dc)) * 180 / Math.PI;
+  var noon = 720 - 4 * lon - eq, mid = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+  return [mid + (noon - 4 * ha) * 60000, mid + (noon + 4 * ha) * 60000];
+}
+function luzNow() {
+  if (luz !== 'auto') return luz;
+  var now = Date.now(), s = sunTimes(new Date()), m = 60000;
+  return now < s[0] - 30 * m || now > s[1] + 45 * m ? 'led' : now < s[0] + 40 * m || now > s[1] - 50 * m ? 'tarde' : 'dia';
+}
+function applyLuz() {
+  var l = luzNow(), w = $('mapWrap'), b = $('nightBtn');
+  w.classList.toggle('day', l === 'dia' || l === 'tarde'); w.classList.toggle('dusk', l === 'tarde'); w.classList.toggle('night', l === 'led');
+  if (b) { b.className = 'nightbtn ' + (l === 'dia' ? 'day' : l); b.textContent = LUZ_ICON[l] + ' ' + (luz === 'auto' ? 'Auto' : LUZ_NAME[luz]); b.setAttribute('aria-label', 'Luz del mapa: ' + LUZ[luz] + '. Toca para cambiar'); }
+}
+setInterval(applyLuz, 60000);
 $('heroT').addEventListener('click', function (e) {
   if (!e.target.closest('#nightBtn')) return;
   luz = LUZ_NEXT[luz]; try { localStorage.setItem('formigues-luz', luz); } catch (x) {}
