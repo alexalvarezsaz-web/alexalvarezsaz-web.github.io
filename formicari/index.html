@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap">
 <style>
-/* Formicarium look: dark soil around, sand-coloured cards, ant-orange accents, gold pips for LV.MAX. */
+/* Dark soil around, sand-coloured cards, ant-orange accents, gold pips for LV.MAX. Each world only changes the cube and its sky. */
 :root{--ink:#2a1a10;--sand:#f6e7c8;--sand2:#e3cf9f;--acc:#e8762b;--gold:#f2c14e;--soil:#1f130b;--glass:rgba(31,19,11,.88);box-sizing:border-box;color-scheme:dark}
 *{box-sizing:border-box}
 html,body{height:100%;margin:0;background:var(--soil);color:var(--sand);font-family:'Fredoka',ui-rounded,'SF Pro Rounded',system-ui,-apple-system,'Segoe UI',sans-serif;overflow:hidden;touch-action:manipulation;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
@@ -21,7 +21,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 #app{position:fixed;inset:0;max-width:520px;margin:0 auto;display:flex;flex-direction:column;background:radial-gradient(circle at 50% 20%,#3a2415,#1f130b 75%);padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
 header{display:flex;align-items:center;gap:6px;padding:8px 12px 4px}
-.logo{font-size:22px;font-weight:700;letter-spacing:.5px;white-space:nowrap;flex:1}
+#logo{flex:1;text-align:left;background:none;border:0;padding:0;font-size:20px;font-weight:700;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 #tp{display:flex;gap:3px;align-items:center}
 #tp i{width:9px;height:9px;border-radius:50%;background:rgba(246,231,200,.18);transition:background .3s,transform .3s}
 #tp i.d{background:var(--acc)}
@@ -50,7 +50,7 @@ header{display:flex;align-items:center;gap:6px;padding:8px 12px 4px}
 #grid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
 .it{position:relative;border:3px solid var(--ink);background:var(--sand);color:var(--ink);border-radius:15px;box-shadow:0 4px 0 var(--ink);display:flex;flex-direction:column;align-items:center;padding:5px 0 5px;transition:transform .12s,box-shadow .12s,opacity .2s}
 .it .e{font-size:25px;line-height:1.15}
-.it .n{font-size:10.5px;font-weight:600;line-height:1}
+.it .n{font-size:10.5px;font-weight:600;line-height:1;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .pips{display:flex;gap:2px;margin-top:4px;height:6px}
 .pips i{width:7px;height:6px;border-radius:3px;background:rgba(42,26,16,.18)}
 .pips i.on{background:var(--acc)}
@@ -84,21 +84,32 @@ header{display:flex;align-items:center;gap:6px;padding:8px 12px 4px}
 .btn.gold{background:var(--gold);color:var(--ink);text-shadow:none}
 .btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
 .btn[disabled]{opacity:.5}
-.ov{position:absolute;inset:0;z-index:5;background:rgba(20,11,5,.9);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:calc(18px + env(safe-area-inset-top)) 22px calc(18px + env(safe-area-inset-bottom));text-align:center;overflow:auto}
+.ov{position:absolute;inset:0;z-index:5;background:rgba(20,11,5,.92);display:flex;flex-direction:column;align-items:center;padding:calc(16px + env(safe-area-inset-top)) 20px calc(16px + env(safe-area-inset-bottom));text-align:center;overflow:auto}
+.ov>:first-child{margin-top:auto}
+.ov>:last-child{margin-bottom:auto}
 .ov[hidden]{display:none}
-.ov h1{font-size:44px;margin:4px 0 0;letter-spacing:1px}
-.ov .sub{opacity:.85;margin:0 0 12px;font-size:15px;max-width:340px}
-.ov ul{text-align:left;margin:0 0 14px;padding:0 0 0 20px;max-width:340px;font-size:14px;line-height:1.4}
-.ov li{margin:3px 0}
-.big{font-size:60px;line-height:1}
-.stat{font-size:13px;opacity:.7;margin-top:12px}
-.menu3{display:flex;flex-direction:column;gap:9px;width:100%;max-width:300px}
+.ov h1{font-size:40px;margin:2px 0 0;letter-spacing:1px}
+.ov .sub{opacity:.85;margin:0 0 10px;font-size:14.5px;max-width:340px}
+.big{font-size:46px;line-height:1}
+.stat{font-size:12.5px;opacity:.7;margin-top:10px}
+.wgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;width:100%;max-width:340px;margin:0 0 12px}
+.wc{border:3px solid var(--ink);border-radius:16px;box-shadow:0 4px 0 var(--ink);padding:9px 6px 8px;color:#fff;text-align:center;text-shadow:0 2px 0 rgba(0,0,0,.35)}
+.wc:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.wc .we{font-size:32px;line-height:1.1}
+.wc b{display:block;font-size:15px}
+.wc small{display:block;font-size:11.5px;opacity:.9;line-height:1.2}
+.wc em{display:block;font-style:normal;font-size:11.5px;font-weight:700;margin-top:3px;color:var(--gold)}
+.menu3{display:flex;flex-direction:column;gap:9px;width:100%;max-width:340px}
 .menu3 .btn{width:100%}
 .menu3 small{display:block;font-size:12px;font-weight:500;opacity:.85}
 #hub{justify-content:flex-start;padding-top:calc(12px + env(safe-area-inset-top))}
-.tabs{display:flex;gap:5px;width:100%;max-width:420px;margin:0 0 8px}
-.tabs button{flex:1;border:0;background:rgba(246,231,200,.1);border-radius:12px;padding:7px 0;font-weight:600;font-size:13.5px}
+#hub>:first-child{margin-top:0}
+.tabs{display:flex;gap:5px;width:100%;max-width:420px;margin:0 0 6px}
+.tabs button{flex:1;border:0;background:rgba(246,231,200,.1);border-radius:12px;padding:7px 0;font-weight:600;font-size:13px}
 .tabs button.on{background:var(--sand);color:var(--ink)}
+.wchips{display:flex;gap:5px;width:100%;max-width:420px;margin:0 0 6px}
+.wchips button{flex:1;border:2px solid transparent;background:rgba(246,231,200,.08);border-radius:12px;padding:4px 0;font-size:20px;line-height:1.2}
+.wchips button.on{border-color:var(--gold);background:rgba(242,193,78,.16)}
 #hubc{width:100%;max-width:420px;text-align:left;flex:1;min-height:0;overflow:auto;padding-bottom:8px}
 .dg{margin:12px 0 2px;font-weight:600;font-size:15px}
 .dg small{display:block;font-weight:400;font-size:12px;opacity:.65}
@@ -112,7 +123,7 @@ header{display:flex;align-items:center;gap:6px;padding:8px 12px 4px}
 .en small{font-size:12px;opacity:.8}
 .tn{margin:10px 0 2px;font-weight:600;color:var(--gold);font-size:13.5px}
 .tl{font-size:13px;margin:2px 0 2px 8px;line-height:1.3}
-.kv{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(246,231,200,.12);font-size:14px}
+.kv{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid rgba(246,231,200,.12);font-size:14px}
 .kv b{font-weight:600}
 .tg{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
 #toast{position:absolute;left:50%;bottom:130px;transform:translateX(-50%);background:var(--sand);color:var(--ink);font-weight:600;font-size:14px;padding:7px 14px;border-radius:99px;z-index:9;opacity:0;pointer-events:none;transition:opacity .25s;max-width:86%;text-align:center}
@@ -121,7 +132,7 @@ header{display:flex;align-items:center;gap:6px;padding:8px 12px 4px}
 </style></head><body>
 <div id="app" class="busy">
   <header>
-    <div class="logo">Formicari</div>
+    <button id="logo" aria-label="Mundos">Formicari</button>
     <div id="tp" role="img" aria-label="Turno"></div>
     <button class="ib" id="bsnd" aria-label="Sonido">🔊</button>
     <button class="ib" id="bhub" aria-label="Diario y más">📖</button>
@@ -130,7 +141,7 @@ header{display:flex;align-items:center;gap:6px;padding:8px 12px 4px}
   <div id="stage">
     <canvas id="cv"></canvas>
     <div id="meter"><span>⭐</span><span id="mt">0/30</span><div class="bar"><b id="mb"></b></div></div>
-    <div id="cap">Elige la primera pieza del nido.</div>
+    <div id="cap">Elige la primera pieza.</div>
     <div id="pick" hidden></div>
   </div>
   <section id="menu"><div id="grid"></div></section>
@@ -140,20 +151,14 @@ header{display:flex;align-items:center;gap:6px;padding:8px 12px 4px}
     <div class="chips" id="ec"></div>
     <div class="seq" id="eq"></div>
     <div id="hint"></div>
-    <div class="row"><button class="btn" id="again">Otra vez</button><button class="btn alt" id="bh">💡 Pista</button><button class="btn alt" id="bshare">📋 Copiar</button><button class="btn alt" id="bcr">📜 Crónica</button></div>
+    <div class="row"><button class="btn" id="again">Otra vez</button><button class="btn alt" id="bh">💡 Pista</button><button class="btn alt" id="bshare">📋 Copiar</button><button class="btn alt" id="bcr">📜 Crónica</button><button class="btn gold" id="bworlds">🗺️ Mundos</button></div>
   </section>
   <div class="ov" id="intro">
     <div class="big">🐜</div>
     <h1>Formicari</h1>
-    <p class="sub">Un formicario de <i>Messor barbarus</i>, diez piezas y diez turnos. Todo crece solo, pero solo si el momento es el bueno.</p>
-    <ul>
-      <li>Toca una pieza para ver su ficha y pulsa <b>Colocar</b>. Sin marcha atrás.</li>
-      <li>Lo que ya está en el nido sigue creciendo con cada llegada.</li>
-      <li>A veces algo solo funciona si otra cosa <b>todavía no</b> ha llegado.</li>
-      <li>Meta: las diez en <b>LV.MAX</b> (pips dorados).</li>
-    </ul>
+    <p class="sub">Diez piezas, diez turnos. Todo crece solo, pero solo si el momento es el bueno. Toca una pieza, mira su ficha y pulsa Colocar. Sin marcha atrás.</p>
+    <div class="wgrid" id="wgrid"></div>
     <div class="menu3">
-      <button class="btn" id="go">Partida libre</button>
       <button class="btn gold" id="goD">Reto del día<small id="dtxt"></small></button>
       <button class="btn alt" id="bd3">📖 Diario y finales</button>
     </div>
@@ -161,6 +166,7 @@ header{display:flex;align-items:center;gap:6px;padding:8px 12px 4px}
   </div>
   <div class="ov" id="hub" hidden>
     <div class="tabs" id="tabs"></div>
+    <div class="wchips" id="wchips"></div>
     <div id="hubc"></div>
     <button class="btn" id="dclose">Cerrar</button>
   </div>
@@ -171,8 +177,18 @@ header{display:flex;align-items:center;gap:6px;padding:8px 12px 4px}
 const $=id=>document.getElementById(id);
 const Q=new URLSearchParams(location.search);
 const DBG=Q.get('seq');
-const KEYS='ORASLHPGDU';
-const EL={
+
+// =====================================================================
+// WORLDS. Each one: 10 pieces, a rule per level step, endings, daily options and a look.
+// RULE[piece][lv-1] = [condition to go lv -> lv+1 (s = levels, 0 = not here yet), what happens, what it needs]
+// =====================================================================
+const eW=(id,e,t,d,pos,k)=>({id,e,t,d,p:(o,l,n)=>n==10&&(pos=='first'?o[0]:o[9])==k});
+const eF=(id,e,t,d,pos,k)=>({id,e,t,d,p:o=>(pos=='first'?o[0]:o[9])==k});
+const eDone=(t,d)=>({id:'completo',e:'🏆',t,d,p:(o,l,n)=>n==10});
+const eTail=[{id:'casi',e:'🤏',t:'Casi, casi',d:'Nueve de diez en LV.MAX.',p:(o,l,n)=>n==9},{id:'nomada',e:'🧳',t:'Primer intento',d:'Tres piezas o menos en LV.MAX.',p:(o,l,n)=>n<=3}];
+
+const ANT={id:'ant',e:'🐜',n:'Nido de hormigas',sub:'Un formicario de Messor barbarus',col:'#9a5a2a',keys:'ORASLHPGDU',scene:'ant',
+EL:{
  O:{n:'Obreras',e:'🐜',max:4,d:'Obreras de Messor barbarus: cavan, acarrean y mantienen el nido.',l:['Exploradoras','Cavadoras','Acarreadoras','Plantilla completa']},
  R:{n:'Reina',e:'👑',max:4,d:'La fundadora. Sin ella no hay camadas.',l:['Fundadora','Puesta','Primera camada','Vuelo nupcial']},
  A:{n:'Agua',e:'💧',max:3,d:'Gota a gota, el nido bebe. Pero el agua también estorba.',l:['Charca','Canal','Cisterna']},
@@ -182,15 +198,12 @@ const EL={
  P:{n:'Piedra',e:'🪨',max:2,d:'Una roca pesada. Da sombra, pero también tapona.',l:['Roca','Entrada sellada']},
  G:{n:'Soldadas',e:'🛡️',max:3,d:'Cabezas enormes y mandíbulas afiladas. Defienden la entrada.',l:['Larva mayor','Soldadas','Guardia']},
  D:{n:'Lagarto',e:'🦎',max:3,d:'Un intruso con hambre. Le atrae el grano.',l:['Intruso','Merodeador','Centinela']},
- U:{n:'Pulgones',e:'🐛',max:2,d:'El ganado de las hormigas: dan miel a cambio de protección.',l:['Pulgones','Miel']}};
-const TOTAL=[...KEYS].reduce((a,k)=>a+EL[k].max,0);
-// What each piece says when it arrives (level 1).
-const ARR={
+ U:{n:'Pulgones',e:'🐛',max:2,d:'El ganado de las hormigas: dan miel a cambio de protección.',l:['Pulgones','Miel']}},
+ARR:{
  O:'Llegan las primeras obreras, curioseando.',R:'Una reina Messor fundadora se instala.',A:'Cae una gota, otra… y se forma una charca.',
  S:'Unas semillas de cereal ruedan por la tierra.',L:'Sale el sol y el nido se despierta.',H:'Esporas de hongo flotan en el aire.',
- P:'Una piedra rueda hasta el borde del nido.',G:'Una larva de cabeza enorme: futura soldada.',D:'Un lagarto asoma entre las matas.',U:'Llegan unos pulgones diminutos.'};
-// RULE[piece][lv-1] = [condition to go lv -> lv+1 (s = levels, 0 = not here yet), what happens, what it needs]
-const RULE={
+ P:'Una piedra rueda hasta el borde del nido.',G:'Una larva de cabeza enorme: futura soldada.',D:'Un lagarto asoma entre las matas.',U:'Llegan unos pulgones diminutos.'},
+RULE:{
  O:[[s=>true,'Las obreras excavan las primeras galerías.','Nada, solo tiempo.'],
     [s=>s.S>=2&&s.A>=1&&s.G==0,'Con la tierra húmeda y semillas que acarrear, abren galerías profundas.','Semillas ya brotadas, agua que ablande la tierra, y que todavía no haya soldadas.'],
     [s=>s.R>=2,'Las crías de la reina engrosan la plantilla de obreras.','Que la reina ya haya puesto huevos.']],
@@ -210,38 +223,183 @@ const RULE={
     [s=>s.D>=2,'Las soldadas salen a plantar cara al intruso.','Un lagarto ya merodeando (Lagarto LV2).']],
  D:[[s=>s.S>=1&&s.P<2&&s.L>=1,'Con el sol alto, el lagarto husmea el granero.','Olor a grano, sol que lo saque de su escondite, y la entrada aún sin sellar con la piedra.'],
     [s=>s.G>=2,'Acorralado por las soldadas, el lagarto se queda de centinela.','Soldadas que lo acorralen.']],
- U:[[s=>s.S>=3&&s.O>=3,'Los pulgones trepan a las espigas y las obreras los ordeñan: gotas de miel.','Espigas maduras (Semillas LV3) y obreras LV3 que los ordeñen.']]};
-const text=(k,to)=>to==1?ARR[k]:RULE[k][to-2][1];
-// Special outcomes. The first one that matches is shown; every match is unlocked. o = order, l = final levels, n = pieces at LV.MAX.
-const ENDS=[
+ U:[[s=>s.S>=3&&s.O>=3,'Los pulgones trepan a las espigas y las obreras los ordeñan: gotas de miel.','Espigas maduras (Semillas LV3) y obreras LV3 que los ordeñen.']]},
+ENDS:[
  {id:'amanecer',e:'🌅',t:'Amanecer en el nido',d:'Todo en LV.MAX y el sol sale casi al final.',p:(o,l,n)=>n==10&&o.indexOf('L')>=7},
- {id:'madrugadora',e:'👑',t:'Reina madrugadora',d:'Todo en LV.MAX empezando por la reina.',p:(o,l,n)=>n==10&&o[0]=='R'},
- {id:'domador',e:'🦎',t:'Domador de lagartos',d:'Todo en LV.MAX con el lagarto como primera pieza.',p:(o,l,n)=>n==10&&o[0]=='D'},
- {id:'ultima',e:'🪨',t:'La última piedra',d:'Todo en LV.MAX y la piedra cierra el nido al final.',p:(o,l,n)=>n==10&&o[9]=='P'},
- {id:'miel',e:'🍯',t:'Nido de miel',d:'Todo en LV.MAX y los pulgones llegan los últimos.',p:(o,l,n)=>n==10&&o[9]=='U'},
- {id:'completo',e:'🏆',t:'Formicari completo',d:'Las diez piezas en LV.MAX.',p:(o,l,n)=>n==10},
- {id:'huerfano',e:'🥚',t:'Nido huérfano',d:'La reina llegó la última, tarde para todo.',p:o=>o[9]=='R'},
- {id:'sequia',e:'🏜️',t:'Sequía',d:'El agua llegó en el último turno.',p:o=>o[9]=='A'},
- {id:'noche',e:'🌙',t:'Noche larga',d:'El sol salió en el último turno.',p:o=>o[9]=='L'},
- {id:'plaga',e:'🐛',t:'Plaga de pulgones',d:'Los pulgones fueron lo primero que llegó.',p:o=>o[0]=='U'},
- {id:'solazo',e:'🥵',t:'Sol de justicia',d:'Empezar con el sol lo reseca todo.',p:o=>o[0]=='L'},
- {id:'sellado',e:'🧱',t:'Nido sellado',d:'La piedra fue la primera pieza.',p:o=>o[0]=='P'},
- {id:'invasion',e:'😈',t:'Invasión',d:'El lagarto llegó antes que nadie y no ganaste.',p:o=>o[0]=='D'},
- {id:'nomada',e:'🧳',t:'Colonia nómada',d:'Tres piezas o menos en LV.MAX.',p:(o,l,n)=>n<=3},
- {id:'casi',e:'🤏',t:'A una hormiga',d:'Nueve de diez en LV.MAX.',p:(o,l,n)=>n==9}];
-const TIERS=[[10,'¡Formicari completo!','Las diez piezas en LV.MAX. Una colonia de libro.'],[9,'A una hormiga de la perfección','Solo una se quedó atrás.'],[8,'Colonia próspera','Casi todo encaja.'],
- [6,'Colonia estable','Funciona, pero hay piezas que llegaron tarde o pronto.'],[4,'Colonia modesta','El orden importa más de lo que parece.'],[0,'Nido a medias','Algo se torció desde el principio. Prueba otro orden.']];
-// Daily challenge: one forced position. Every option has winning orders.
-const DAILY=[{first:'O'},{last:'P'},{first:'R'},{last:'U'},{first:'A'},{first:'S'},{first:'D'}];
+ eW('madrugadora','👑','Reina madrugadora','Todo en LV.MAX empezando por la reina.','first','R'),
+ eW('domador','🦎','Domador de lagartos','Todo en LV.MAX con el lagarto como primera pieza.','first','D'),
+ eW('ultima','🪨','La última piedra','Todo en LV.MAX y la piedra cierra el nido al final.','last','P'),
+ eW('miel','🍯','Nido de miel','Todo en LV.MAX y los pulgones llegan los últimos.','last','U'),
+ eDone('Formicari completo','Las diez piezas en LV.MAX.'),
+ eF('huerfano','🥚','Nido huérfano','La reina llegó la última, tarde para todo.','last','R'),
+ eF('sequia','🏜️','Sequía','El agua llegó en el último turno.','last','A'),
+ eF('noche','🌙','Noche larga','El sol salió en el último turno.','last','L'),
+ eF('plaga','🐛','Plaga de pulgones','Los pulgones fueron lo primero que llegó.','first','U'),
+ eF('solazo','🥵','Sol de justicia','Empezar con el sol lo reseca todo.','first','L'),
+ eF('sellado','🧱','Nido sellado','La piedra fue la primera pieza.','first','P'),
+ eF('invasion','😈','Invasión','El lagarto llegó antes que nadie y no ganaste.','first','D'),
+ ...eTail],
+DAILY:[{first:'O'},{last:'P'},{first:'R'},{last:'U'},{first:'A'},{first:'S'},{first:'D'}]};
+
+const BOSC={id:'bosc',e:'🍄',n:'Bosc de bolets',sub:'Una ladera húmeda en otoño',col:'#3f7a3a',keys:'LPMBNSCRAZ',scene:'gen',
+EL:{
+ L:{n:'Lluvia',e:'🌧️',max:3,d:'Agua del cielo; sin ella nada crece.',l:['Llovizna','Aguacero','Arroyo'],sp:[['X',75,56,'🌧️',42,1,3],['T',.5,.5,'@river',1,3,3]]},
+ P:{n:'Pino',e:'🌲',max:4,d:'El árbol que sostiene el bosque.',l:['Brote','Joven','Árbol','Bosque'],sp:[['T',.3,.3,'🌱',16,1,1],['T',.3,.3,'🌲',24,2,2],['T',.3,.3,'🌲',34,3,4],['T',.58,.2,'🌲',27,3,4],['T',.82,.32,'🌲',30,4,4],['T',.72,.62,'🌲',25,4,4]]},
+ M:{n:'Musgo',e:'🌿',max:3,d:'Tapiza todo lo húmedo.',l:['Manchas','Alfombra','Cojín'],sp:[['T',.5,.7,'@moss',15,1,3],['T',.78,.8,'@moss',12,2,3],['T',.55,.45,'@moss',13,2,3],['T',.42,.78,'🌿',18,3,3]]},
+ B:{n:'Seta',e:'🍄',max:4,d:'Lo que se ve es solo la parte pequeña.',l:['Micelio','Primordios','Setas','Corro de brujas'],sp:[['T',.6,.6,'@spores',1,1,1],
+   ...Array.from({length:6},(_,i)=>['T',.6+Math.cos(i*1.047)*.13,.6+Math.sin(i*1.047)*.13,'🍄',i<2?12:15,i<2?2:i<4?3:4,4])]},
+ N:{n:'Niebla',e:'🌫️',max:2,d:'Hace falta humedad, pero esconde cosas.',l:['Bruma','Mar de nubes'],sp:[['T',.5,.6,'@fog',1,1,2]]},
+ S:{n:'Sol',e:'☀️',max:2,d:'Calienta, pero seca.',l:['Claro','Rayos'],sp:[['X',305,52,'☀️',42,1,2],['X',305,52,'@rays',1,2,2]]},
+ C:{n:'Ciervo',e:'🦌',max:3,d:'Pasta y deja huellas.',l:['Huellas','Cervatillo','Cérvido real'],sp:[['T',.2,.72,'🐾',13,1,1],['T',.22,.74,'🦌',21,2,2],['T',.22,.74,'🦌',31,3,3]]},
+ R:{n:'Roca',e:'🪨',max:3,d:'Cambia el curso del agua.',l:['Peñasco','Cauce','Cascada'],sp:[['T',.82,.72,'🪨',22,1,1],['T',.82,.72,'🪨',27,2,3],['T',.72,.7,'@water',8,3,3]]},
+ A:{n:'Ardilla',e:'🐿️',max:3,d:'Entierra más de lo que encuentra.',l:['Bellotas','Ardilla','Despensa'],sp:[['T',.4,.45,'🌰',12,1,1],['T',.4,.45,'🐿️',19,2,3],['T',.34,.52,'🌰',10,3,3],['T',.47,.52,'🌰',10,3,3]]},
+ Z:{n:'Boletaire',e:'🧺',max:2,d:'Sabe dónde están las setas.',l:['Botas','Cesta llena'],sp:[['T',.9,.5,'🥾',17,1,1],['T',.88,.52,'🚶',27,2,2],['T',.8,.58,'🧺',20,2,2]]}},
+ARR:{L:'Empieza a caer una llovizna fina.',P:'Un brote de pino asoma entre la hojarasca.',M:'Manchas de musgo tiñen las piedras.',B:'Un micelio blanco se extiende bajo la hojarasca.',N:'Una bruma baja se arrastra por el valle.',
+ S:'Un claro se abre entre las nubes.',C:'Unas huellas de pezuña cruzan el barro.',R:'Un peñasco se desprende de la ladera.',A:'Unas bellotas ruedan por el suelo.',Z:'Se oyen botas en el sendero: un boletaire.'},
+RULE:{
+ L:[[s=>s.P>=1,'La llovizna se vuelve aguacero sobre el brote de pino.','Un pino que recoja la lluvia.'],[s=>s.R>=2,'El agua encuentra el cauce abierto por la roca y forma un arroyo.','Roca LV2 que abra cauce.']],
+ P:[[s=>s.L>=1,'El pino bebe y se hace joven.','Lluvia.'],[s=>s.L>=2&&s.M>=1,'Con aguacero y musgo en las raíces, el pino se hace árbol.','Aguacero (Lluvia LV2) y musgo en las raíces.'],
+    [s=>s.B>=2&&s.C==0,'Las setas se unen a las raíces y nace el bosque, sin ciervos que lo ramoneen.','Setas LV2 en simbiosis y que aún no haya ciervos.']],
+ M:[[s=>s.L>=1&&s.S==0,'Con humedad y sombra, el musgo forma una alfombra.','Lluvia, y que el sol todavía no haya salido.'],[s=>s.P>=3,'Bajo el pino adulto el musgo se hace cojín.','Un pino adulto (Pino LV3).']],
+ B:[[s=>s.M>=1&&s.L>=1,'El micelio sube y echa los primeros primordios.','Musgo y lluvia.'],[s=>s.P>=2&&s.N>=1,'Con niebla y sombra de pino brotan las setas.','Pino joven y niebla.'],
+    [s=>s.P>=3&&s.Z==0,'Al pie del bosque se forma un corro de brujas, antes de que llegue el boletaire.','Pino adulto, y que el boletaire aún no haya llegado.']],
+ N:[[s=>s.L>=2&&s.S==0,'La bruma se espesa: mar de nubes sobre el valle.','Aguacero, y que el sol todavía no haya salido.']],
+ S:[[s=>s.N>=1,'Los rayos de sol atraviesan la niebla.','Niebla.']],
+ C:[[s=>s.P>=2&&s.N<2,'Un cervatillo sigue las huellas, antes de que la niebla lo esconda.','Pino joven, y que aún no haya mar de nubes.'],[s=>s.B>=3,'El ciervo adulto acude a pastar entre las setas.','Setas LV3.']],
+ R:[[s=>s.L>=2,'La lluvia abre un cauce junto a la roca.','Aguacero (Lluvia LV2).'],[s=>s.M>=2,'Con el musgo en alfombra, la roca se convierte en cascada.','Musgo LV2.']],
+ A:[[s=>s.P>=3,'La ardilla se instala en el pino adulto.','Un pino adulto (Pino LV3).'],[s=>s.B>=3,'Entierra bellotas entre las setas: despensa para el invierno.','Setas LV3.']],
+ Z:[[s=>s.B>=3,'El boletaire llena la cesta con cuidado.','Setas LV3.']]},
+ENDS:[
+ eW('madrugador','🌧️','Rocío temprano','Todo en LV.MAX empezando por la lluvia.','first','L'),
+ eW('vista','🧺','El boletaire lo vio todo','Todo en LV.MAX y el boletaire llega el último.','last','Z'),
+ eW('solfinal','☀️','Sol de última hora','Todo en LV.MAX y el sol sale al final.','last','S'),
+ eDone('Bosque completo','Las diez piezas en LV.MAX.'),
+ eF('pisadas','🥾','Setas pisadas','El boletaire llegó antes que las setas.','first','Z'),
+ eF('solsin','🥵','Sol sin sombra','Empezar con el sol reseca el bosque.','first','S'),
+ eF('ciervo','🦌','El ciervo madrugador','El ciervo llegó el primero y se lo comió todo.','first','C'),
+ eF('sinlluvia','🏜️','Bosque seco','La lluvia llegó en el último turno.','last','L'),
+ eF('sinarboles','🪵','Sin árboles','El pino llegó el último, tarde para todo.','last','P'),
+ eF('setastarde','🍂','Setas tardías','Las setas llegaron en el último turno.','last','B'),
+ ...eTail],
+DAILY:[{first:'L'},{first:'P'},{last:'Z'},{last:'S'},{first:'B'},{first:'R'}],
+vis:{sky:{n:['#7d8c96','#c5cfd4'],d:['#8fd0ff','#fff1cf'],k:'S'},top:{a:'#6b5a3a',b:'#3f7a3a',k:'P',div:4,amt:.8},fl:'#6e5436',fr:'#58402a',tex:'soil',
+ bg:(c,t,d)=>{c.fillStyle='rgba(38,70,52,.55)';for(let i=0;i<15;i++){const x=i*26-8,h=46+(i*37%30);c.beginPath();c.moveTo(x-14,310);c.lineTo(x,310-h);c.lineTo(x+14,310);c.fill()}},
+ wx:[{t:'rain',k:'L',n:[0,20,45,60]}]}};
+
+const LAB={id:'lab',e:'🧪',n:'Laboratori',sub:'Antimicrobianos fotoactivables',col:'#2f7aa8',keys:'ABIFLOXMPH',scene:'gen',
+EL:{
+ A:{n:'Agar',e:'🧫',max:3,d:'El medio de cultivo donde todo crece.',l:['Medio','Placa vertida','Placa estéril'],sp:[['T',.4,.45,'@dish',1,1,3]]},
+ B:{n:'Bacterias',e:'🦠',max:4,d:'El microorganismo del ensayo. Ojo con dejarlas libres.',l:['Inóculo','Colonia','Biofilm','Inhibición total'],sp:[['T',.4,.45,'@germs',1,1,4]]},
+ I:{n:'Incubadora',e:'🌡️',max:3,d:'Mantiene los 37 °C.',l:['Calor','37 °C','Ciclo completo'],sp:[['R',.45,.4,'♨️',20,1,1],['R',.45,.4,'🌡️',24,2,2],['R',.45,.4,'✅',24,3,3]]},
+ F:{n:'Fotosens.',e:'🧪',max:4,d:'Compuesto que absorbe luz y la convierte en arma.',l:['Gota','Dosis','Absorbido','Estado triplete'],sp:[['T',.72,.28,'🧪',17,1,1],['T',.72,.28,'🧪',21,2,2],['T',.72,.28,'🔮',23,3,3],['T',.72,.28,'⚡',22,4,4]]},
+ L:{n:'Luz azul',e:'💡',max:3,d:'Luz azul para activar el fotosensibilizador.',l:['Linterna','Irradiación','Fotoactivación'],sp:[['X',180,48,'💡',34,1,3],['X',180,48,'@beam',1,2,3]]},
+ O:{n:'Oxígeno',e:'🫧',max:2,d:'Sin oxígeno no hay especies reactivas.',l:['Burbujas','Oxígeno singlete'],sp:[['T',.55,.2,'🫧',16,1,2],['T',.5,.3,'💥',14,2,2]]},
+ X:{n:'Antibiótico',e:'💊',max:3,d:'Control de comparación clásico.',l:['Disco','Halo','Control validado'],sp:[['T',.2,.78,'💊',16,1,3],['T',.4,.45,'@halo',1,2,3]]},
+ M:{n:'Microscopio',e:'🔬',max:3,d:'Para ver lo que pasa de verdad.',l:['Enfoque','Tinción','Imagen final'],sp:[['L',.35,.4,'🔬',28,1,3],['L',.72,.55,'🖼️',24,3,3]]},
+ P:{n:'Pipeta',e:'💉',max:2,d:'Dosifica sin contaminar.',l:['Pipeta','Dosis exacta'],sp:[['T',.82,.65,'💉',20,1,2],['T',.82,.78,'💧',11,2,2]]},
+ H:{n:'Cuaderno',e:'📓',max:2,d:'Si no se apunta, no ocurrió.',l:['Cuaderno','Resultados'],sp:[['R',.28,.72,'📓',22,1,1],['R',.28,.72,'📊',24,2,2],['R',.62,.72,'🏅',20,2,2]]}},
+ARR:{A:'Se prepara un medio de agar en un matraz.',B:'Se siembra un inóculo bacteriano.',I:'La incubadora se enciende con un zumbido.',F:'Se prepara una solución de fotosensibilizador.',L:'Se enciende una lámpara de luz azul.',
+ O:'Aparecen burbujas de oxígeno disuelto.',X:'Se coloca un disco de antibiótico de control.',M:'Se enfoca el microscopio.',P:'Se prepara la pipeta.',H:'Se abre el cuaderno de laboratorio.'},
+RULE:{
+ A:[[s=>s.P>=1,'Con la pipeta se vierte el agar en la placa.','Una pipeta para verterlo.'],[s=>s.I>=1&&s.B==0,'La placa se esteriliza en la incubadora, antes de sembrar.','Incubadora encendida, y que todavía no se haya sembrado.']],
+ B:[[s=>s.A>=2,'Las bacterias se extienden por la placa y forman una colonia.','Placa vertida (Agar LV2).'],[s=>s.I>=2,'A 37 °C la colonia se hace biofilm.','Incubadora a 37 °C (LV2).'],
+    [s=>s.L>=3&&s.F>=3&&s.O>=2,'Fotoactivación completa: el biofilm queda inhibido.','Fotoactivación (Luz LV3), fotosensibilizador absorbido (LV3) y oxígeno singlete (LV2).']],
+ I:[[s=>s.A>=1,'La incubadora sube a 37 °C.','Una placa que incubar.'],[s=>s.B>=1&&s.L==0,'La incubadora completa su ciclo, antes de irradiar.','Bacterias sembradas, y que la luz todavía no haya llegado.']],
+ F:[[s=>s.P>=1,'La pipeta dosifica el fotosensibilizador.','Una pipeta.'],[s=>s.B>=2&&s.L==0,'En la oscuridad, la colonia absorbe el fotosensibilizador.','Una colonia (Bacterias LV2), y que la luz todavía no haya llegado: se incuba a oscuras.'],
+    [s=>s.L>=2,'La luz lo lleva al estado triplete.','Irradiación (Luz LV2).']],
+ L:[[s=>s.F>=2,'La luz azul incide sobre la placa.','Fotosensibilizador ya preparado (LV2).'],[s=>s.F>=3,'Fotoactivación: la placa se llena de luz.','Fotosensibilizador absorbido (LV3).']],
+ O:[[s=>s.L>=2,'El estado triplete transfiere energía al oxígeno: aparece oxígeno singlete.','Irradiación (Luz LV2).']],
+ X:[[s=>s.B>=2&&s.F<2,'Alrededor del disco aparece un halo de inhibición.','Una colonia, y que el fotosensibilizador no esté aún listo.'],[s=>s.B>=3,'El halo se mide y se valida el control.','Biofilm (Bacterias LV3).']],
+ M:[[s=>s.P>=1,'Se tiñe la muestra con ayuda de la pipeta.','Una pipeta.'],[s=>s.B>=4,'Se ve la imagen final: bacterias inhibidas.','Inhibición total (Bacterias LV4).']],
+ P:[[s=>s.A>=1&&s.F==0,'Dosis exacta calibrada, antes del fotosensibilizador.','Una placa preparada, y que el fotosensibilizador aún no esté.']],
+ H:[[s=>s.M>=3,'Se anotan los resultados en el cuaderno.','Imagen final (Microscopio LV3).']]},
+ENDS:[
+ eW('placa','🧫','Todo empieza en la placa','Todo en LV.MAX con el agar como primera pieza.','first','A'),
+ eW('cerrado','📓','Cuaderno cerrado','Todo en LV.MAX y el cuaderno se cierra el último.','last','H'),
+ eW('ultimoox','🫧','El oxígeno llega el último','Todo en LV.MAX y el oxígeno cierra el ensayo.','last','O'),
+ eDone('Ensayo publicable','Las diez piezas en LV.MAX.'),
+ eF('luzantes','💡','Luz antes de tiempo','Encender la luz primero lo estropea todo.','first','L'),
+ eF('siembra','🦠','Siembra sin placa','Las bacterias llegaron antes que el agar.','first','B'),
+ eF('placatarde','🧫','Placa tardía','El agar llegó en el último turno.','last','A'),
+ eF('sinfoto','🧪','Sin fotosensibilizador','Llegó el último, sin tiempo de actuar.','last','F'),
+ eF('incfria','🥶','Incubadora fría','La incubadora llegó en el último turno.','last','I'),
+ eF('siembratarde','🦠','Siembra tardía','Las bacterias llegaron las últimas.','last','B'),
+ ...eTail],
+DAILY:[{first:'A'},{first:'I'},{last:'H'},{last:'O'},{first:'P'}],
+vis:{sky:{n:['#1b2a3a','#2c4258'],d:['#1b2a3a','#2c4258'],k:null},top:{a:'#e8eef3',b:'#e8eef3',k:null,div:1},fl:'#cfd9e2',fr:'#b6c3cf',tex:'tile',
+ bg:(c,t)=>{c.strokeStyle='rgba(255,255,255,.05)';c.lineWidth=1;for(let x=0;x<360;x+=30){c.beginPath();c.moveTo(x,0);c.lineTo(x,400);c.stroke()}for(let y=0;y<400;y+=30){c.beginPath();c.moveTo(0,y);c.lineTo(360,y);c.stroke()}
+  c.fillStyle='rgba(120,190,255,.07)';c.fillRect(20,230,70,60);c.fillRect(270,240,70,50)},
+ wx:[]}};
+
+const CIM={id:'cim',e:'⛰️',n:'Cim i cova',sub:'Una cumbre con cueva',col:'#5a7fa8',keys:'NVRCEQMLKH',scene:'gen',
+EL:{
+ N:{n:'Nieve',e:'❄️',max:3,d:'Copos, mantos y aludes.',l:['Copos','Manto','Alud'],sp:[['T',.7,.3,'❄️',14,1,1],['T',.62,.62,'@snowpile',1,2,3],['X',95,72,'🌨️',34,3,3]]},
+ V:{n:'Viento',e:'🌬️',max:2,d:'Brisa o temporal.',l:['Brisa','Temporal'],sp:[['X',70,58,'🌬️',34,1,2],['X',125,92,'💨',26,2,2]]},
+ R:{n:'Roca',e:'🪨',max:3,d:'La roca madre de la montaña.',l:['Peñasco','Grieta','Cueva abierta'],sp:[['T',.3,.3,'🪨',24,1,1],['T',.3,.3,'⛰️',34,2,3],['L',.25,.35,'@crack',1,2,3]]},
+ C:{n:'Cueva',e:'🕳️',max:4,d:'Se abre paso bajo tierra.',l:['Boca','Galería','Sala','Catedral'],sp:[['L',.55,.5,'@cave',1,1,4]]},
+ E:{n:'Estalactitas',e:'🧊',max:3,d:'Piedra que crece gota a gota.',l:['Gotas','Colgantes','Columnas'],sp:[['L',.55,.5,'@stalac',1,1,3]]},
+ Q:{n:'Río',e:'💧',max:3,d:'El agua busca siempre abajo.',l:['Arroyo','Cascada','Lago subterráneo'],sp:[['R',.5,.15,'💧',13,1,1],['R',.5,.3,'@fall',1,2,3],['R',.5,.86,'@pool',1,3,3]]},
+ M:{n:'Murciélagos',e:'🦇',max:3,d:'Habitantes nocturnos de las cuevas.',l:['Aleteo','Colonia','Guano fértil'],sp:[['L',.55,.5,'🦇',13,1,1],['L',.4,.4,'🦇',13,2,3],['L',.7,.45,'🦇',13,2,3],['L',.55,.62,'🦇',12,3,3],['L',.35,.58,'🦇',12,3,3]]},
+ L:{n:'Liquen',e:'🟠',max:3,d:'Pinta la roca, pero tarda.',l:['Manchas','Costra','Tapiz'],sp:[['T',.35,.6,'@lichen',13,1,3],['T',.6,.4,'@lichen',11,2,3],['L',.2,.8,'@lichen',12,2,3],['L',.8,.8,'@lichen',16,3,3],['R',.3,.7,'@lichen',16,3,3]]},
+ K:{n:'Escalador',e:'🧗',max:3,d:'Abre vías y llega a la cima.',l:['Cuerda','Vía abierta','Cima'],sp:[['R',.35,.2,'🪢',16,1,1],['R',.4,.5,'🧗',28,2,2],['T',.82,.22,'🧗',24,3,3],['T',.86,.18,'🚩',16,3,3]]},
+ H:{n:'Refugio',e:'🛖',max:2,d:'Un techo para la tormenta.',l:['Cimientos','Refugio abierto'],sp:[['T',.2,.78,'🧱',18,1,1],['T',.2,.78,'🛖',32,2,2]]}},
+ARR:{N:'Caen los primeros copos sobre la cumbre.',V:'Se levanta una brisa fría.',R:'Un peñasco gris asoma entre la nieve.',C:'Se adivina la boca de una cueva.',E:'Gotea agua desde el techo de la cueva.',
+ Q:'Un arroyo aparece entre las piedras.',M:'Un murciélago revolotea en la entrada.',L:'Manchas de liquen naranja cubren la roca.',K:'Alguien deja una cuerda colgando.',H:'Se colocan los cimientos de un refugio.'},
+RULE:{
+ N:[[s=>s.R>=1,'La nieve se acumula sobre el peñasco y forma un manto.','Una roca donde acumularse.'],[s=>s.R>=2&&s.K==0,'Un alud baja por la ladera, antes de que nadie la pise.','Roca agrietada (LV2), y que todavía no haya escalador.']],
+ V:[[s=>s.N>=1,'El viento arrecia hasta convertirse en temporal.','Nieve que arrastrar.']],
+ R:[[s=>s.N>=2,'El hielo agrieta el peñasco.','Un manto de nieve (Nieve LV2).'],[s=>s.Q>=1,'El agua termina de abrir la cueva.','Un arroyo que la excave.']],
+ C:[[s=>s.R>=2,'La boca se abre en una galería.','Roca agrietada (LV2).'],[s=>s.Q>=2,'La galería se ensancha en una sala.','Cascada (Río LV2).'],[s=>s.E>=2&&s.M>=1,'La sala se convierte en una catedral de columnas con murciélagos.','Estalactitas colgantes (LV2) y murciélagos.']],
+ E:[[s=>s.C>=2&&s.Q>=1&&s.L==0,'Las gotas forman estalactitas colgantes, antes de que el liquen lo cubra todo.','Galería, agua, y que el liquen todavía no haya llegado.'],[s=>s.C>=3,'Las estalactitas se unen a las estalagmitas: columnas.','Una sala (Cueva LV3).']],
+ Q:[[s=>s.R>=2&&s.K==0,'El arroyo cae por la grieta, antes de que lleguen los escaladores.','Roca agrietada, y que todavía no haya escalador.'],[s=>s.C>=3,'El agua forma un lago en la sala.','Una sala (Cueva LV3).']],
+ M:[[s=>s.C>=3&&s.V==0,'Una colonia de murciélagos ocupa la sala, antes del temporal.','Sala (Cueva LV3), y que todavía no haya viento.'],[s=>s.C>=4,'El guano fertiliza la catedral.','Catedral (Cueva LV4).']],
+ L:[[s=>s.N>=1&&s.V==0,'El liquen forma una costra bajo la nieve, sin viento que la arranque.','Nieve, y que todavía no haya viento.'],[s=>s.R>=2,'El liquen cubre la roca agrietada como un tapiz.','Roca agrietada (LV2).']],
+ K:[[s=>s.R>=2&&s.E==0,'El escalador abre una vía por la grieta, antes de que las estalactitas lo estorben.','Roca agrietada, y que todavía no haya estalactitas.'],[s=>s.N>=3,'Alcanza la cima tras el alud.','Un alud (Nieve LV3).']],
+ H:[[s=>s.K>=2,'El refugio se abre para quien llega por la vía.','Una vía abierta (Escalador LV2).']]},
+ENDS:[
+ eW('calma','🌬️','Calma tras el temporal','Todo en LV.MAX y el viento sopla el último.','last','V'),
+ eW('refugiofin','🛖','Refugio al final','Todo en LV.MAX y el refugio cierra la historia.','last','H'),
+ eW('desdelaroca','🪨','Desde la roca','Todo en LV.MAX empezando por el peñasco.','first','R'),
+ eDone('Cumbre completa','Las diez piezas en LV.MAX.'),
+ eF('sinvia','🧗','Escalada sin vía','El escalador llegó el primero.','first','K'),
+ eF('temporal','🌪️','Temporal temprano','El viento fue lo primero que llegó.','first','V'),
+ eF('gotas','🧊','Gotas sin cueva','Las estalactitas llegaron antes que la cueva.','first','E'),
+ eF('nevadatarde','❄️','Nevada tardía','La nieve cayó en el último turno.','last','N'),
+ eF('cuevatarde','🕳️','Cueva tardía','La cueva llegó la última.','last','C'),
+ eF('sinroca','🪨','Sin roca','El peñasco llegó el último.','last','R'),
+ ...eTail],
+DAILY:[{first:'N'},{first:'R'},{last:'V'},{last:'H'},{first:'C'},{first:'Q'}],
+vis:{sky:{n:['#9ec5ee','#eaf3ff'],d:['#9ec5ee','#eaf3ff'],k:null},top:{a:'#8a8f99',b:'#f6faff',k:'N',div:3,amt:1},fl:'#6b707a',fr:'#555b66',tex:'rock',
+ bg:(c,t)=>{c.fillStyle='rgba(120,145,180,.55)';[[40,330,90],[150,330,130],[270,330,100]].forEach(m=>{c.beginPath();c.moveTo(m[0]-70,m[1]);c.lineTo(m[0],m[1]-m[2]);c.lineTo(m[0]+70,m[1]);c.fill();c.fillStyle='rgba(255,255,255,.7)';c.beginPath();c.moveTo(m[0]-18,m[1]-m[2]+26);c.lineTo(m[0],m[1]-m[2]);c.lineTo(m[0]+18,m[1]-m[2]+26);c.fill();c.fillStyle='rgba(120,145,180,.55)'})},
+ wx:[{t:'snow',k:'N',n:[0,25,45,70]}]}};
+const WORLDS={ant:ANT,bosc:BOSC,lab:LAB,cim:CIM},WORDER=['ant','bosc','lab','cim'];
+const TIERS=[[10,'¡Mundo completo!','Las diez piezas en LV.MAX. De libro.'],[9,'A una pieza de la perfección','Solo una se quedó atrás.'],[8,'Casi todo encaja','Revisa el orden de las rezagadas.'],
+ [6,'Funciona, a medias','Hay piezas que llegaron tarde o pronto.'],[4,'Resultado modesto','El orden importa más de lo que parece.'],[0,'Todo a medias','Algo se torció desde el principio. Prueba otro orden.']];
+
+// current world (globals follow it)
+let W,KEYS,EL,ARR,RULE,ENDS,DAILY,TOTAL,av,chg;
+const zero=()=>Object.fromEntries([...KEYS].map(k=>[k,0]));
+const totalOf=wd=>[...wd.keys].reduce((a,k)=>a+wd.EL[k].max,0);
+function setWorld(id){W=WORLDS[id];KEYS=W.keys;EL=W.EL;ARR=W.ARR;RULE=W.RULE;ENDS=W.ENDS;DAILY=W.DAILY;TOTAL=totalOf(W);av=zero();chg={};
+  $('logo').textContent=W.e+' '+W.n;}
+const text=(k,to)=>to==1?ARR[k]:RULE[k][to-2][1];
+const wtext=(wd,k,to)=>to==1?wd.ARR[k]:wd.RULE[k][to-2][1];
 const dayNum=()=>Math.floor((Date.now()-new Date().getTimezoneOffset()*60000)/864e5);
-const ruleTxt=r=>r.first?`Empieza con ${EL[r.first].e} ${EL[r.first].n}`:`Termina con ${EL[r.last].e} ${EL[r.last].n}`;
+const ruleTxt=(wd,r)=>r.first?`Empieza con ${wd.EL[r.first].e} ${wd.EL[r.first].n}`:`Termina con ${wd.EL[r.last].e} ${wd.EL[r.last].n}`;
+const dailyInfo=()=>{const dn=dayNum(),wd=WORLDS[WORDER[dn%WORDER.length]];return{dn,wd,rule:wd.DAILY[Math.floor(dn/WORDER.length)%wd.DAILY.length]}};
 
 // ---------- progress ----------
 const SK='formicari:v1';
-let save={seen:{},ends:{},runs:0,best:0,wins:0,win:'',snd:true,calm:false,daily:{dn:0,done:false},streak:{dn:0,n:0}};
-try{Object.assign(save,JSON.parse(localStorage.getItem(SK)||'{}'))}catch(e){}
+const blank=()=>({seen:{},ends:{},st:{},rec:{},snd:true,calm:false,daily:{dn:0,done:false},streak:{dn:0,n:0}});
+let save=blank();
+try{const o=JSON.parse(localStorage.getItem(SK)||'{}');Object.assign(save,o);
+  if(o.runs!==undefined&&!o.st){save.st={ant:{runs:o.runs,best:o.best||0,wins:o.wins||0}};if(o.win)save.rec={ant:o.win}}}catch(e){}
 const persist=()=>{if(DBG)return;try{localStorage.setItem(SK,JSON.stringify(save))}catch(e){}};
-const seenCount=()=>[...KEYS].reduce((a,k)=>a+Array.from({length:EL[k].max},(_,i)=>save.seen[k+(i+1)]?1:0).reduce((x,y)=>x+y,0),0);
+const pre=wid=>wid=='ant'?'':wid+':';
+const sk=(wid,k,to)=>pre(wid)+k+to,ek=(wid,id)=>pre(wid)+id;
+const st=wid=>save.st[wid]||(save.st[wid]={runs:0,best:0,wins:0});
+const seenCount=wd=>[...wd.keys].reduce((a,k)=>a+Array.from({length:wd.EL[k].max},(_,i)=>save.seen[sk(wd.id,k,i+1)]?1:0).reduce((x,y)=>x+y,0),0);
+const endsCount=wd=>wd.ENDS.filter(x=>save.ends[ek(wd.id,x.id)]).length;
 
 // ---------- sound ----------
 let AC=null;
@@ -262,8 +420,8 @@ function step(lv,id){
     if(L>0&&L<EL[k].max&&!done[k]&&RULE[k][L-1][0](lv)){lv[k]=L+1;done[k]=1;ch=true;ev.push({k,to:L+1});}}}
   return ev;
 }
-const zero=()=>Object.fromEntries([...KEYS].map(k=>[k,0]));
-const fresh=()=>({lv:zero(),shown:zero(),order:[],log:[],turn:0,busy:true,over:false,mode:'free',rule:null});
+setWorld(Q.get('w')||'ant');
+const fresh=()=>({wid:W.id,lv:zero(),shown:zero(),order:[],log:[],turn:0,busy:true,over:false,mode:'free',rule:null});
 let G=fresh(),sel=null;
 const maxed=lv=>[...KEYS].filter(k=>lv[k]==EL[k].max).length;
 const sumLv=lv=>[...KEYS].reduce((a,k)=>a+lv[k],0);
@@ -313,7 +471,7 @@ async function place(id){
     G.shown[e.k]=e.to;chg[e.k]=performance.now();
     spawnFx(e.k,e.to);setCap(e.k,text(e.k,e.to));
     if(e.to>1){e.to==EL[e.k].max?sfx.max():sfx.up(e.to);buzz(e.to==EL[e.k].max?[20,40,20]:10)}
-    if(!save.seen[e.k+e.to]){save.seen[e.k+e.to]=1;persist()}
+    const key=sk(W.id,e.k,e.to);if(!save.seen[key]){save.seen[key]=1;persist()}
     buildMenu();
     await wait(e.to==1?900:1250);
   }
@@ -321,24 +479,24 @@ async function place(id){
   if(G.turn==10){buildMenu();await wait(700);finish();}
   else{G.busy=false;$('app').classList.remove('busy');buildMenu();}
 }
-function tier(n){return TIERS.find(t=>n>=t[0])}
+const tier=n=>TIERS.find(t=>n>=t[0]);
 function finish(){
   G.over=true;const n=maxed(G.lv),o=G.order.join(''),T=tier(n);
-  const hits=ENDS.filter(x=>x.p(o,G.lv,n)),top=hits[0],isNew=hits.filter(x=>!save.ends[x.id]).map(x=>x.id);
+  const hits=ENDS.filter(x=>x.p(o,G.lv,n)),top=hits[0],isNew=hits.filter(x=>!save.ends[ek(W.id,x.id)]).map(x=>x.id);
   let extra='';
-  if(!DBG){save.runs++;save.best=Math.max(save.best,n);hits.forEach(x=>save.ends[x.id]=1);
-    if(n==10){save.wins++;if(!save.win)save.win=o;
+  if(!DBG){const s=st(W.id);s.runs++;s.best=Math.max(s.best,n);hits.forEach(x=>save.ends[ek(W.id,x.id)]=1);
+    if(n==10){s.wins++;if(!save.rec[W.id])save.rec[W.id]=o;
       if(G.mode=='daily'){const dn=dayNum();if(!(save.daily.dn==dn&&save.daily.done)){save.daily={dn,done:true};save.streak={n:save.streak.dn==dn-1?save.streak.n+1:1,dn};}
         extra=` Reto del día cumplido · racha de ${save.streak.n}.`}}
     persist()}
-  $('ef').innerHTML=top?`<span class="ee">${top.e}</span><div><b>${top.t}${isNew.includes(top.id)?'<span class="nw">NUEVO</span>':''}</b><small>${top.d}</small></div>`:`<span class="ee">🐜</span><div><b>${T[1]}</b><small>${T[2]}</small></div>`;
+  $('ef').innerHTML=top?`<span class="ee">${top.e}</span><div><b>${top.t}${isNew.includes(top.id)?'<span class="nw">NUEVO</span>':''}</b><small>${top.d}</small></div>`:`<span class="ee">${W.e}</span><div><b>${T[1]}</b><small>${T[2]}</small></div>`;
   $('et').textContent=T[1];$('es').textContent=`${n} de 10 en LV.MAX.${extra}`;
   $('ec').innerHTML=[...KEYS].map(k=>`<div class="chip">${EL[k].e}${pipsHTML(k)}</div>`).join('');
   $('eq').textContent=G.order.map(k=>EL[k].e).join(' › ');
   $('hint').textContent=isNew.length>1?`Finales nuevos: ${isNew.map(id=>ENDS.find(x=>x.id==id).t).join(', ')}.`:'';
   $('bh').style.display=n==10?'none':'';
   $('menu').hidden=true;$('end').hidden=false;buildMenu();
-  setCap(null,n==10?'El nido está completo. ✨':'La partida ha terminado. Mira qué pieza se quedó atrás.');
+  setCap(null,n==10?'Todo en su sitio. ✨':'La partida ha terminado. Mira qué pieza se quedó atrás.');
   if(n==10){sfx.win();confettiUntil=performance.now()+6000;buzz([30,60,30,60,60])}else sfx.lose();
 }
 function hint(){
@@ -348,83 +506,94 @@ function hint(){
     :`${EL[k].e} ${EL[k].n} (LV${L}) necesita: ${r[2]}`;
 }
 function share(){
-  const n=maxed(G.lv),t=`Formicari 🐜 ${n}/10 en LV.MAX${G.mode=='daily'?' · Reto del día':''}\n${G.order.map(k=>EL[k].e).join('›')}`;
+  const n=maxed(G.lv),t=`Formicari ${W.e} ${W.n} · ${n}/10 en LV.MAX${G.mode=='daily'?' · Reto del día':''}\n${G.order.map(k=>EL[k].e).join('›')}`;
   try{navigator.clipboard.writeText(t).then(()=>toast('Copiado'),()=>{$('hint').textContent=t})}catch(e){$('hint').textContent=t}
 }
-function start(mode){
-  G=fresh();G.mode=mode;sel=null;confettiUntil=0;
-  if(mode=='daily'){G.rule=DAILY[dayNum()%DAILY.length];$('rule').hidden=false;$('rule').textContent='🎯 Reto del día: '+ruleTxt(G.rule).toLowerCase()}
+function start(mode,wid){
+  let rule=null;
+  if(mode=='daily'){const d=dailyInfo();wid=d.wd.id;rule=d.rule}
+  setWorld(wid||W.id);
+  G=fresh();G.mode=mode;G.rule=rule;sel=null;confettiUntil=0;parts.length=0;
+  if(rule){$('rule').hidden=false;$('rule').textContent=`🎯 Reto del día: ${ruleTxt(W,rule).toLowerCase()}`}
   else $('rule').hidden=true;
   $('end').hidden=true;$('menu').hidden=false;$('intro').hidden=true;$('hub').hidden=true;
-  buildMenu();setCap(null,mode=='daily'?ruleTxt(G.rule)+'.':'Un bloque de tierra vacío. Elige la primera pieza.');
+  buildMenu();setCap(null,rule?ruleTxt(W,rule)+'.':'Un bloque vacío. Elige la primera pieza.');
   G.busy=false;$('app').classList.remove('busy');
 }
-$('again').onclick=()=>start(G.mode);$('bh').onclick=hint;$('bshare').onclick=share;
-$('go').onclick=()=>{sfx.tap();start('free')};
+function openWorlds(){if(G.busy&&!G.over)return;syncIntro();$('intro').hidden=false;$('hub').hidden=true}
+$('again').onclick=()=>start(G.mode=='daily'?'free':G.mode,G.wid);$('bh').onclick=hint;$('bshare').onclick=share;$('bcr').onclick=()=>openHub('cro');
+$('bworlds').onclick=openWorlds;$('logo').onclick=openWorlds;
 $('goD').onclick=()=>{sfx.tap();start('daily')};
-$('bcr').onclick=()=>openHub('cro');
 
 // ---------- hub (diary, endings, chronicle, data) ----------
-let hubTab='dia',resetArm=0;
+let hubTab='dia',hubW='ant',resetArm=0;
 const TABS=[['dia','📖 Diario'],['fin','🏁 Finales'],['cro','📜 Crónica'],['dat','⚙️ Datos']];
-function openHub(tab){hubTab=tab||hubTab;$('hub').hidden=false;renderHub()}
+function openHub(tab){hubTab=tab||hubTab;if(!tab||tab=='dia'||tab=='fin')hubW=G.wid||hubW;$('hub').hidden=false;renderHub()}
 function renderHub(){
+  const wd=WORLDS[hubW];
   $('tabs').innerHTML=TABS.map(t=>`<button data-t="${t[0]}" class="${t[0]==hubTab?'on':''}">${t[1]}</button>`).join('');
+  $('wchips').style.display=(hubTab=='dia'||hubTab=='fin')?'flex':'none';
+  $('wchips').innerHTML=WORDER.map(id=>`<button data-w="${id}" class="${id==hubW?'on':''}" aria-label="${WORLDS[id].n}">${WORLDS[id].e}</button>`).join('');
   const h=$('hubc');let s='';
   if(hubTab=='dia'){
-    s=`<p class="sub" style="margin:0">${seenCount()} de ${TOTAL} descubrimientos</p>`+[...KEYS].map(k=>`<div class="dg">${EL[k].e} ${EL[k].n}<small>${EL[k].d}</small></div>`+
-      Array.from({length:EL[k].max},(_,i)=>{const ok=save.seen[k+(i+1)];return `<div class="de${ok?'':' no'}"><b>LV${i+1}</b><span>${ok?text(k,i+1):'??? · '+EL[k].l[i]}</span></div>`}).join('')).join('');
+    s=`<p class="sub" style="margin:0">${wd.n}: ${seenCount(wd)} de ${totalOf(wd)} descubrimientos</p>`+[...wd.keys].map(k=>`<div class="dg">${wd.EL[k].e} ${wd.EL[k].n}<small>${wd.EL[k].d}</small></div>`+
+      Array.from({length:wd.EL[k].max},(_,i)=>{const ok=save.seen[sk(wd.id,k,i+1)];return `<div class="de${ok?'':' no'}"><b>LV${i+1}</b><span>${ok?wtext(wd,k,i+1):'??? · '+wd.EL[k].l[i]}</span></div>`}).join('')).join('');
   }else if(hubTab=='fin'){
-    const got=ENDS.filter(x=>save.ends[x.id]).length;
-    s=`<p class="sub" style="margin:0">${got} de ${ENDS.length} finales</p>`+ENDS.map(x=>{const ok=save.ends[x.id];return `<div class="en${ok?'':' no'}"><span class="ee">${ok?x.e:'❔'}</span><div><b>${ok?x.t:'Final sin descubrir'}</b><small>${ok?x.d:'Prueba otro orden.'}</small></div></div>`}).join('');
+    s=`<p class="sub" style="margin:0">${wd.n}: ${endsCount(wd)} de ${wd.ENDS.length} finales</p>`+wd.ENDS.map(x=>{const ok=save.ends[ek(wd.id,x.id)];return `<div class="en${ok?'':' no'}"><span class="ee">${ok?x.e:'❔'}</span><div><b>${ok?x.t:'Final sin descubrir'}</b><small>${ok?x.d:'Prueba otro orden.'}</small></div></div>`}).join('');
   }else if(hubTab=='cro'){
-    s=G.log.length?G.log.map((t,i)=>`<div class="tn">Turno ${i+1} · ${EL[t.id].e} ${EL[t.id].n}</div>`+t.evs.map(e=>`<div class="tl">${EL[e.k].e} ${text(e.k,e.to)}</div>`).join('')).join(''):'<p class="sub">Aún no hay nada que contar. Coloca la primera pieza.</p>';
+    s=G.log.length?`<p class="sub" style="margin:0">${W.e} ${W.n}</p>`+G.log.map((t,i)=>`<div class="tn">Turno ${i+1} · ${EL[t.id].e} ${EL[t.id].n}</div>`+t.evs.map(e=>`<div class="tl">${EL[e.k].e} ${text(e.k,e.to)}</div>`).join('')).join(''):'<p class="sub">Aún no hay nada que contar. Coloca la primera pieza.</p>';
   }else{
     const sp=(save.streak.dn==dayNum()||save.streak.dn==dayNum()-1)?save.streak.n:0;
-    s=`<div class="kv"><span>Partidas</span><b>${save.runs}</b></div><div class="kv"><span>Mejor resultado</span><b>${save.best}/10</b></div><div class="kv"><span>Completadas</span><b>${save.wins}</b></div>`
-     +`<div class="kv"><span>Racha del reto diario</span><b>${sp}</b></div><div class="kv"><span>Descubrimientos</span><b>${seenCount()}/${TOTAL}</b></div><div class="kv"><span>Finales</span><b>${ENDS.filter(x=>save.ends[x.id]).length}/${ENDS.length}</b></div>`
-     +(save.win?`<div class="kv"><span>Tu primera receta ganadora</span><b>${[...save.win].map(k=>EL[k].e).join('')}</b></div>`:'')
+    s=WORDER.map(id=>{const w=WORLDS[id],q=st(id);return `<div class="kv"><span>${w.e} ${w.n}</span><b>${q.best}/10 · ${q.wins} ✔ · ${q.runs} partidas</b></div>`}).join('')
+     +`<div class="kv"><span>Racha del reto diario</span><b>${sp}</b></div><div class="kv"><span>Descubrimientos</span><b>${WORDER.reduce((a,id)=>a+seenCount(WORLDS[id]),0)}/${WORDER.reduce((a,id)=>a+totalOf(WORLDS[id]),0)}</b></div>`
+     +`<div class="kv"><span>Finales</span><b>${WORDER.reduce((a,id)=>a+endsCount(WORLDS[id]),0)}/${WORDER.reduce((a,id)=>a+WORLDS[id].ENDS.length,0)}</b></div>`
+     +WORDER.filter(id=>save.rec[id]).map(id=>`<div class="kv"><span>Receta ${WORLDS[id].e}</span><b>${[...save.rec[id]].map(k=>WORLDS[id].EL[k].e).join('')}</b></div>`).join('')
      +`<div class="tg"><button class="btn alt" data-a="snd">${save.snd?'🔊 Sonido: sí':'🔇 Sonido: no'}</button><button class="btn alt" data-a="calm">${save.calm?'🌿 Efectos suaves: sí':'✨ Efectos suaves: no'}</button><button class="btn alt" data-a="reset">${resetArm>Date.now()?'¿Seguro? Pulsa otra vez':'Borrar progreso'}</button></div>`;
   }
   h.innerHTML=s;h.scrollTop=0;
 }
 $('tabs').onclick=e=>{const b=e.target.closest('[data-t]');if(b){hubTab=b.dataset.t;renderHub()}};
+$('wchips').onclick=e=>{const b=e.target.closest('[data-w]');if(b){hubW=b.dataset.w;renderHub()}};
 $('hubc').onclick=e=>{const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a;
   if(a=='snd'){save.snd=!save.snd;persist();syncSnd();sfx.tap()}
   else if(a=='calm'){save.calm=!save.calm;persist()}
-  else if(a=='reset'){if(resetArm>Date.now()){save={seen:{},ends:{},runs:0,best:0,wins:0,win:'',snd:true,calm:false,daily:{dn:0,done:false},streak:{dn:0,n:0}};persist();resetArm=0;syncSnd();syncIntro();toast('Progreso borrado')}else resetArm=Date.now()+4000}
+  else if(a=='reset'){if(resetArm>Date.now()){save=blank();persist();resetArm=0;syncSnd();syncIntro();toast('Progreso borrado')}else resetArm=Date.now()+4000}
   renderHub()};
-$('bhub').onclick=$('bd3').onclick=()=>openHub();
+$('bhub').onclick=$('bd3').onclick=()=>openHub('dia');
 $('dclose').onclick=()=>$('hub').hidden=true;
 function syncSnd(){$('bsnd').textContent=save.snd?'🔊':'🔇'}
 $('bsnd').onclick=()=>{save.snd=!save.snd;persist();syncSnd();sfx.tap();toast(save.snd?'Sonido activado':'Sonido apagado')};
 function syncIntro(){
-  const r=DAILY[dayNum()%DAILY.length],done=save.daily.dn==dayNum()&&save.daily.done;
-  $('dtxt').textContent=(done?'✔ Cumplido · ':'')+ruleTxt(r);
-  $('stat').textContent=save.runs?`Partidas: ${save.runs} · Mejor: ${save.best}/10 · Completadas: ${save.wins}`:'';
+  const d=dailyInfo(),done=save.daily.dn==d.dn&&save.daily.done;
+  $('dtxt').textContent=`${done?'✔ Cumplido · ':''}${d.wd.e} ${d.wd.n}: ${ruleTxt(d.wd,d.rule).toLowerCase()}`;
+  $('wgrid').innerHTML=WORDER.map(id=>{const w=WORLDS[id],q=st(id);return `<button class="wc" data-w="${id}" style="background:${w.col}"><span class="we">${w.e}</span><b>${w.n}</b><small>${w.sub}</small><em>${q.wins?'✔ ':''}${q.runs?`Mejor ${q.best}/10`:'Sin jugar'}</em></button>`}).join('');
+  $('wgrid').querySelectorAll('.wc').forEach(b=>b.onclick=()=>{sfx.tap();start('free',b.dataset.w)});
+  const tot=WORDER.reduce((a,id)=>a+st(id).runs,0);
+  $('stat').textContent=tot?`Partidas: ${tot} · Mundos completados: ${WORDER.filter(id=>st(id).wins).length}/${WORDER.length}`:'';
 }
 syncSnd();syncIntro();
 
 // ---------- canvas ----------
 const cv=$('cv'),c=cv.getContext('2d'),DPR=Math.min(2,window.devicePixelRatio||1);
-const W=360,HH=400;cv.width=W*DPR;cv.height=HH*DPR;
+const CW=360,HH=400;cv.width=CW*DPR;cv.height=HH*DPR;
 const CX=180,Y0=118,w=135,h=67,Hs=135;
 const T=(u,v)=>[CX+(u-v)*w,Y0+(u+v)*h];
 const FL=(a,b)=>[CX-w+a*w,Y0+h+a*h+b*Hs];
 const FR=(a,b)=>[CX+a*w,Y0+2*h-a*h+b*Hs];
 const EF='"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
-const av=zero(),chg={};
 let fxs=[],parts=[],rainUntil=0,confettiUntil=0;
 const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
 const lerp=(a,b,t)=>a+(b-a)*t;
 const mix=(c1,c2,t)=>{const p=s=>[1,3,5].map(i=>parseInt(s.slice(i,i+2),16)),a=p(c1),b=p(c2);return'rgb('+a.map((x,i)=>Math.round(lerp(x,b[i],t))).join(',')+')'};
 let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
-const STARS=Array.from({length:26},()=>[rnd()*W,rnd()*150,rnd()*1.6+.6,rnd()*6]);
+const STARS=Array.from({length:26},()=>[rnd()*CW,rnd()*150,rnd()*1.6+.6,rnd()*6]);
 const SPECK=Array.from({length:46},()=>[rnd(),rnd(),rnd()*2.4+.8,rnd()]);
-const FLY=Array.from({length:9},()=>[rnd()*6,.4+rnd()*.8,rnd()*W,150+rnd()*220]);
-const RAIN=Array.from({length:60},()=>[rnd()*W,rnd()*HH,.7+rnd()*.6]);
+const FLY=Array.from({length:9},()=>[rnd()*6,.4+rnd()*.8,rnd()*CW,150+rnd()*220]);
+const RAIN=Array.from({length:60},()=>[rnd()*CW,rnd()*HH,.7+rnd()*.6]);
+const SNOW=Array.from({length:80},()=>[rnd()*CW,rnd()*HH,.5+rnd()*.8,rnd()*6]);
 function em(ch,x,y,s,al=1,flip=false,rot=0){c.save();c.globalAlpha*=al;c.translate(x,y);if(rot)c.rotate(rot);if(flip)c.scale(-1,1);c.font=s+'px '+EF;c.textAlign='center';c.textBaseline='middle';c.fillText(ch,0,0);c.restore()}
 function poly(P){c.beginPath();P.forEach((p,i)=>i?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1]));c.closePath()}
+const ell=(x,y,rx,ry,rot=0)=>{c.beginPath();c.ellipse(x,y,rx,ry,rot,0,7);c.fill()};
 const faceL=()=>[FL(0,0),FL(1,0),FL(1,1),FL(0,1)],faceR=()=>[FR(0,0),FR(1,0),FR(1,1),FR(0,1)],faceT=()=>[T(0,0),T(1,0),T(1,1),T(0,1)];
 function along(P,u){let L=[0];for(let i=1;i<P.length;i++)L.push(L[i-1]+Math.hypot(P[i][0]-P[i-1][0],P[i][1]-P[i-1][1]));
   const d=u*L[L.length-1];let i=1;while(i<L.length-1&&L[i]<d)i++;const f=(d-L[i-1])/((L[i]-L[i-1])||1);
@@ -462,24 +631,95 @@ function chamber(P,al,rx=24,ry=17){c.save();c.globalAlpha=al;c.beginPath();c.ell
 const pop=(k,now)=>1+.4*Math.max(0,1-(now-(chg[k]||0))/450);
 function burst(x,y,n,cols,sp=70,life=.9,g=60,size=2.4){if(save.calm)n=Math.ceil(n/3);for(let i=0;i<n;i++){const a=Math.random()*6.28,v=sp*(.4+Math.random()*.8);
   parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-sp*.4,life:life*(.6+Math.random()*.6),max:life,col:cols[i%cols.length],sz:size*(.6+Math.random()),g})}}
+const ANTANCH={O:T(.25,.93),R:FL(.6,.5),A:T(.3,.5),S:T(.66,.28),L:[305,52],H:FR(.5,.8),P:T(.55,.75),G:T(.2,.8),D:T(.8,.3),U:T(.65,.25)};
+function anchor(k){if(W.id=='ant')return ANTANCH[k];const e=EL[k].sp[0],f=e[0];return f=='T'?T(e[1],e[2]):f=='L'?FL(e[1],e[2]):f=='R'?FR(e[1],e[2]):[e[1],e[2]]}
 function spawnFx(k,to){
-  const a={O:T(.25,.93),R:FL(.6,.5),A:T(.3,.5),S:T(.66,.28),L:[305,52],H:FR(.5,.8),P:T(.55,.75),G:T(.2,.8),D:T(.8,.3),U:T(.65,.25)}[k];
-  const mx=to==EL[k].max;
+  const a=anchor(k),mx=to==EL[k].max;
   fxs.push({x:a[0],y:a[1],t0:performance.now(),k,to,max:mx});
   burst(a[0],a[1]-6,mx?26:12,mx?['#f2c14e','#fff3b0','#ffffff']:['#ffffff','#ffd9a0'],mx?90:60);
-  if(k=='A'&&to==1&&!save.calm)rainUntil=performance.now()+2600;
-  if(k=='O'&&to>1)burst(a[0],a[1],12,['#b07c4a','#8a5a36','#d2a06a'],40,.7,90,2.8);
+  if(W.id=='ant'){
+    if(k=='A'&&to==1&&!save.calm)rainUntil=performance.now()+2600;
+    if(k=='O'&&to>1)burst(a[0],a[1],12,['#b07c4a','#8a5a36','#d2a06a'],40,.7,90,2.8);
+  }
 }
 
-function frame(now){
-  const t=now/1000,dt=Math.min(.05,(now-(frame.l||now))/1000);frame.l=now;
-  for(const k of KEYS){const g=G.shown[k];av[k]+=(g-av[k])*Math.min(1,dt*4);if(Math.abs(g-av[k])<.002)av[k]=g}
+// ---------- generic world glyphs (drawn shapes; size = s, piece level = l) ----------
+const GL={
+ moss:(x,y,s)=>{c.fillStyle='rgba(60,125,55,.9)';ell(x,y,s,s*.5);c.fillStyle='rgba(120,190,90,.8)';ell(x-s*.2,y-s*.1,s*.6,s*.3)},
+ lichen:(x,y,s)=>{c.fillStyle='rgba(227,163,58,.92)';ell(x,y,s,s*.55);c.fillStyle='#f5d27a';ell(x-s*.3,y-s*.1,s*.25,s*.15);ell(x+s*.35,y+s*.1,s*.2,s*.12)},
+ spores:(x,y,s,l,t)=>{c.fillStyle='rgba(240,235,255,.9)';for(let i=0;i<7;i++){c.beginPath();c.arc(x-14+i*5,y-2+Math.sin(t*2+i)*4,1.8,0,7);c.fill()}},
+ water:(x,y,s)=>{c.fillStyle='#2f86cc';ell(x,y,s*1.6,s*.8);c.fillStyle='#4aa8e0';ell(x-1,y-1,s*1.1,s*.5)},
+ river:(x,y,s,l,t)=>{const a=[x-w*.42,y-h*.42],b=[x+w*.42,y+h*.42];c.lineCap='round';c.strokeStyle='#2f86cc';c.lineWidth=7;c.beginPath();c.moveTo(...a);c.lineTo(...b);c.stroke();
+   c.strokeStyle='#8fd0ff';c.lineWidth=2;c.beginPath();c.moveTo(...a);c.lineTo(...b);c.stroke();for(let i=0;i<3;i++){const q=along([a,b],(t*.35+i/3)%1);c.fillStyle='#fff';c.beginPath();c.arc(q[0],q[1],1.6,0,7);c.fill()}},
+ fog:(x,y,s,l,t)=>{c.fillStyle=`rgba(255,255,255,${l==1?.16:.28})`;for(let i=0;i<4;i++)ell(x+Math.sin(t*.3+i)*14+(i-1.5)*34,y+i*9-6,52,10)},
+ rays:(x,y)=>{c.fillStyle='rgba(255,240,150,.1)';for(let i=0;i<4;i++){const a=2.15+i*.15;c.beginPath();c.moveTo(x,y);c.lineTo(x+Math.cos(a)*230-8,y+Math.sin(a)*230);c.lineTo(x+Math.cos(a)*230+8,y+Math.sin(a)*230);c.fill()}},
+ dish:(x,y,s,l)=>{c.fillStyle='rgba(190,215,232,.9)';ell(x,y+2,31,15.5);c.fillStyle=l>=2?'#f1dd96':'#e6edf2';ell(x,y,27,12.5);c.strokeStyle='#8fb0c6';c.lineWidth=1;c.beginPath();c.ellipse(x,y,31,15,0,0,7);c.stroke()},
+ germs:(x,y,s,l,t)=>{const n=[4,10,20,12][l-1];if(l==3){c.fillStyle='rgba(95,170,60,.45)';ell(x,y,22,10)}
+   for(let i=0;i<n;i++){const a=i*2.4,r=Math.sqrt(i/n)*20;c.fillStyle=l==4?'rgba(130,145,130,.8)':'#58a82c';c.beginPath();c.arc(x+Math.cos(a)*r,y+Math.sin(a)*r*.5,l==3?3:2.2,0,7);c.fill()}
+   if(l==4){c.fillStyle='#fff';for(let i=0;i<4;i++){c.globalAlpha=.5+.5*Math.sin(t*4+i);c.beginPath();c.arc(x+Math.cos(i*1.6)*18,y+Math.sin(i*1.6)*8-4,1.6,0,7);c.fill()}c.globalAlpha=1}},
+ halo:(x,y)=>{c.strokeStyle='rgba(255,255,255,.85)';c.lineWidth=2;c.beginPath();c.ellipse(x,y,37,18.5,0,0,7);c.stroke();c.strokeStyle='rgba(255,255,255,.35)';c.beginPath();c.ellipse(x,y,42,21,0,0,7);c.stroke()},
+ beam:(x,y,s,l,t)=>{const q=T(.4,.45),g=c.createLinearGradient(0,y,0,q[1]);g.addColorStop(0,`rgba(120,180,255,${l>=3?.55:.35})`);g.addColorStop(1,'rgba(120,180,255,.06)');c.fillStyle=g;
+   c.globalAlpha*=.8+.2*Math.sin(t*5);c.beginPath();c.moveTo(x-6,y+14);c.lineTo(x+6,y+14);c.lineTo(q[0]+40,q[1]);c.lineTo(q[0]-40,q[1]);c.fill()},
+ snowpile:(x,y)=>{c.fillStyle='#e6eef7';ell(x,y+3,24,8);c.fillStyle='#fff';ell(x-2,y,20,6.5)},
+ crack:(x,y)=>{c.strokeStyle='#14141a';c.lineWidth=2;c.lineJoin='round';c.beginPath();c.moveTo(x-14,y-26);c.lineTo(x-6,y-12);c.lineTo(x-12,y-2);c.lineTo(x-2,y+10);c.lineTo(x-8,y+24);c.stroke()},
+ cave:(x,y,s,l)=>{const r=[14,20,27,34][l-1];c.fillStyle='#2a2d36';ell(x,y,r+3,r*.8+3);c.fillStyle='#0e0f14';ell(x,y,r,r*.8);
+   if(l==4){const g=c.createRadialGradient(x,y,2,x,y,r);g.addColorStop(0,'rgba(140,110,255,.4)');g.addColorStop(1,'rgba(140,110,255,0)');c.fillStyle=g;c.fillRect(x-r,y-r,r*2,r*2)}},
+ stalac:(x,y,s,l)=>{const r=[14,20,27,34][clamp((G.shown.C||1)-1,0,3)],n=l*2;c.fillStyle='#d2dae6';
+   for(let i=0;i<n;i++){const px=x-r*.7+i*(r*1.4/(n-1)),len=3+l*2+(i%2)*2,ty=y-r*.7+Math.abs(px-x)*.15;c.beginPath();c.moveTo(px-3,ty);c.lineTo(px+3,ty);c.lineTo(px,ty+len);c.fill()}
+   if(l>=3)for(let i=0;i<3;i++){const px=x-r*.5+i*r*.5,by=y+r*.7-Math.abs(px-x)*.1;c.beginPath();c.moveTo(px-4,by);c.lineTo(px+4,by);c.lineTo(px+1.5,by-16);c.lineTo(px-1.5,by-16);c.fill()}},
+ fall:(x,y,s,l,t)=>{c.fillStyle='#4aa8e0';c.fillRect(x-3,y-20,6,52);c.fillStyle='#d6f0ff';for(let i=0;i<4;i++){const yy=y-20+((t*40+i*13)%52);c.fillRect(x-1,yy,2,5)}},
+ pool:(x,y)=>{c.fillStyle='#2f86cc';ell(x,y,26,8);c.fillStyle='rgba(255,255,255,.55)';ell(x-6,y-2,8,2.5)}};
+
+// ---------- scenes ----------
+function sceneGen(now,t,dt){
+  const V=W.vis,lv=G.shown,calm=save.calm;
+  const d=V.sky.k?clamp(av[V.sky.k]):1;
+  const sky=c.createLinearGradient(0,0,0,HH);sky.addColorStop(0,mix(V.sky.n[0],V.sky.d[0],d));sky.addColorStop(1,mix(V.sky.n[1],V.sky.d[1],d));
+  c.fillStyle=sky;c.fillRect(0,0,CW,HH);
+  V.bg&&V.bg(c,t,d);
+  c.fillStyle='rgba(0,0,0,.28)';c.beginPath();c.ellipse(CX,392,150,15,0,0,7);c.fill();
+  c.save();if(!calm)c.translate(0,Math.sin(t*1.1)*1.6);
+  // faces
+  [[faceL,V.fl,FL],[faceR,V.fr,FR]].forEach(([f,col,fn])=>{poly(f());c.fillStyle=col;c.fill();c.save();poly(f());c.clip();
+    c.strokeStyle=V.tex=='tile'?'rgba(255,255,255,.55)':'rgba(0,0,0,.13)';c.lineWidth=1;
+    if(V.tex=='rock'){for(let j=1;j<7;j++){c.beginPath();c.moveTo(...fn(0,j/7));for(let i=1;i<=6;i++)c.lineTo(...fn(i/6,j/7+Math.sin(i*2+j*3)*.025));c.stroke()}}
+    else{for(let i=1;i<6;i++){c.beginPath();c.moveTo(...fn(i/6,0));c.lineTo(...fn(i/6,1));c.stroke()}for(let j=1;j<5;j++){c.beginPath();c.moveTo(...fn(0,j/5));c.lineTo(...fn(1,j/5));c.stroke()}}
+    if(V.tex!='tile')SPECK.forEach(s=>{const p=fn(s[0],s[1]);c.fillStyle=s[3]>.5?'rgba(0,0,0,.18)':'rgba(255,255,255,.14)';c.beginPath();c.ellipse(p[0],p[1],s[2]*1.4,s[2],0,0,7);c.fill()});
+    const sh=c.createLinearGradient(0,Y0+h,0,Y0+2*h+Hs);sh.addColorStop(0,'rgba(0,0,0,0)');sh.addColorStop(1,'rgba(0,0,0,.2)');c.fillStyle=sh;c.fillRect(0,0,CW,HH);c.restore()});
+  const tm=V.top.k?clamp(av[V.top.k]/V.top.div)*(V.top.amt||1):0;
+  poly(faceT());c.fillStyle=mix(V.top.a,V.top.b,tm);c.fill();c.save();poly(faceT());c.clip();
+  if(V.tex=='tile'){c.strokeStyle='rgba(120,150,175,.35)';for(let i=1;i<6;i++){c.beginPath();c.moveTo(...T(i/6,0));c.lineTo(...T(i/6,1));c.stroke();c.beginPath();c.moveTo(...T(0,i/6));c.lineTo(...T(1,i/6));c.stroke()}}
+  else SPECK.forEach(s=>{const p=T(s[0],s[1]);c.fillStyle=tm>.3&&V.tex=='soil'&&s[3]>.55?'rgba(30,90,30,.35)':'rgba(0,0,0,.12)';c.beginPath();c.ellipse(p[0],p[1],s[2]*1.5,s[2],0,0,7);c.fill()});
+  c.restore();
+  c.lineJoin='round';c.lineWidth=3;c.strokeStyle=V.tex=='tile'?'#3a4a58':'#2a1a10';poly(faceT());c.stroke();poly(faceL());c.stroke();poly(faceR());c.stroke();
+  // sprites: sky ones first, then side faces, then the top (depth-sorted)
+  const list=[];
+  for(const k of KEYS){const l=lv[k];if(!l)continue;for(const e of EL[k].sp){if(l<e[5]||l>e[6])continue;
+    const p=e[0]=='T'?T(e[1],e[2]):e[0]=='L'?FL(e[1],e[2]):e[0]=='R'?FR(e[1],e[2]):[e[1],e[2]];
+    list.push([(e[0]=='X'?-2000:e[0]=='T'?0:-1000)+p[1],k,e,p,l])}}
+  list.sort((a,b)=>a[0]-b[0]);
+  for(const [,k,e,p,l] of list){c.save();c.globalAlpha=clamp(av[k]);const s=e[4]*pop(k,now),g=e[3];
+    if(g[0]=='@')GL[g.slice(1)](p[0],p[1],s,l,t,k);else em(g,p[0],p[1]-e[4]*.3+Math.sin(t*2+p[0]*.1)*1.2,s);c.restore()}
+  // particles + level-up pops
+  parts=parts.filter(p=>p.life>0);parts.forEach(p=>{p.life-=dt;p.vy+=p.g*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;c.globalAlpha=clamp(p.life/p.max);c.fillStyle=p.col;
+    if(p.rot!==undefined){c.save();c.translate(p.x,p.y);c.rotate(p.rot+=dt*6);c.fillRect(-p.sz,-p.sz*.5,p.sz*2,p.sz);c.restore()}else{c.beginPath();c.arc(p.x,p.y,p.sz,0,7);c.fill()}});
+  fxs=fxs.filter(f=>now-f.t0<1500);
+  fxs.forEach(f=>{const u=(now-f.t0)/1500;c.globalAlpha=1-u*u;
+    c.strokeStyle=f.max?'#f2c14e':'#fff';c.lineWidth=3;c.beginPath();c.arc(f.x,f.y-6,10+u*34,0,7);c.stroke();
+    c.font='700 15px Fredoka,system-ui,sans-serif';c.textAlign='center';c.lineWidth=4;c.strokeStyle='#2a1a10';
+    const s=f.max?'¡MAX!':f.to==1?'¡Nuevo!':'LV'+f.to;c.strokeText(s,f.x,f.y-28-u*22);c.fillStyle=f.max?'#f2c14e':'#fff';c.fillText(s,f.x,f.y-28-u*22)});
+  c.globalAlpha=1;c.restore();
+  // weather
+  if(!calm)(V.wx||[]).forEach(wx=>{const l=lv[wx.k],n=wx.n[l]||0;if(!n)return;
+    if(wx.t=='rain'){c.strokeStyle='rgba(170,215,255,.7)';c.lineWidth=1.2;RAIN.slice(0,n).forEach(r=>{const y=(r[1]+t*260*r[2])%(HH+20)-10,x=r[0]-y*.15;c.beginPath();c.moveTo(x,y);c.lineTo(x-1.5,y+9);c.stroke()})}
+    else{c.fillStyle='rgba(255,255,255,.9)';SNOW.slice(0,n).forEach(r=>{const y=(r[1]+t*40*r[2])%(HH+10),x=r[0]+Math.sin(t*.8+r[3])*14;c.beginPath();c.arc(x,y,1.5+r[2]*.8,0,7);c.fill()})}});
+}
+
+function sceneAnt(now,t,dt){
   const ap=k=>clamp(av[k]),lv=G.shown,calm=save.calm;
-  c.setTransform(DPR,0,0,DPR,0,0);c.clearRect(0,0,W,HH);c.globalAlpha=1;
-  // sky: dusk until the sun arrives
   const d=clamp(av.L);
   const sky=c.createLinearGradient(0,0,0,HH);sky.addColorStop(0,mix('#141a3a','#7fcaf5',d));sky.addColorStop(1,mix('#2a2745','#ffeccf',d));
-  c.fillStyle=sky;c.fillRect(0,0,W,HH);
+  c.fillStyle=sky;c.fillRect(0,0,CW,HH);
   if(d<1){STARS.forEach(s=>{c.globalAlpha=(1-d)*(.5+.5*Math.sin(t*2+s[3]));c.fillStyle='#fff';c.beginPath();c.arc(s[0],s[1],s[2],0,7);c.fill()});c.globalAlpha=1}
   if(d<1)em('🌙',305,52,34,1-d);
   if(av.L>0){const g=c.createRadialGradient(305,52,4,305,52,64);g.addColorStop(0,'rgba(255,230,120,.75)');g.addColorStop(1,'rgba(255,230,120,0)');
@@ -488,26 +728,21 @@ function frame(now){
     em('☀️',305,52,42*pop('L',now),1);c.globalAlpha=1}
   if(av.L>1){const cols=['#ff5a5a','#ff9f43','#ffd93d','#6bd96b','#4db8ff','#6c6cff','#b36cff'];
     c.globalAlpha=clamp(av.L-1)*.8;c.lineWidth=5;cols.forEach((col,i)=>{c.strokeStyle=col;c.beginPath();c.arc(150,218,150-i*5,Math.PI*1.08,Math.PI*1.82);c.stroke()});c.globalAlpha=1}
-  // clouds in daylight
-  if(d>.05){c.globalAlpha=d*.85;c.fillStyle='#fff';[[0,40,1],[1,85,.7],[2,22,.85]].forEach(q=>{const x=((t*(5+q[0]*3)+q[0]*130)%(W+140))-70,y=q[1];
+  if(d>.05){c.globalAlpha=d*.85;c.fillStyle='#fff';[[0,40,1],[1,85,.7],[2,22,.85]].forEach(q=>{const x=((t*(5+q[0]*3)+q[0]*130)%(CW+140))-70,y=q[1];
     c.beginPath();c.ellipse(x,y,22*q[2],8*q[2],0,0,7);c.ellipse(x-13*q[2],y+3,14*q[2],6*q[2],0,0,7);c.ellipse(x+14*q[2],y+3,15*q[2],6.5*q[2],0,0,7);c.fill()});c.globalAlpha=1}
-  // fireflies at night
   if(d<.8&&!calm)FLY.forEach(f=>{const x=f[2]+Math.sin(t*f[1]+f[0])*24,y=f[3]+Math.cos(t*f[1]*1.3+f[0])*14,a=(1-d)*(.4+.6*Math.sin(t*3+f[0]*3)**2);
     const g=c.createRadialGradient(x,y,0,x,y,7);g.addColorStop(0,`rgba(230,255,140,${a})`);g.addColorStop(1,'rgba(230,255,140,0)');c.fillStyle=g;c.fillRect(x-7,y-7,14,14)});
-  // shadow
   c.fillStyle='rgba(0,0,0,.28)';c.beginPath();c.ellipse(CX,392,150,15,0,0,7);c.fill();
   c.save();if(!calm)c.translate(0,Math.sin(t*1.1)*1.6);
 
-  // --- faces ---
   const green=clamp(av.S/3);
   [[faceL,'#8a5a36',FL],[faceR,'#6e4526',FR]].forEach(([f,col,fn])=>{poly(f());c.fillStyle=col;c.fill();c.save();poly(f());c.clip();
     c.strokeStyle='rgba(0,0,0,.13)';c.lineWidth=1;
     for(let i=1;i<6;i++){c.beginPath();c.moveTo(...fn(i/6,0));c.lineTo(...fn(i/6,1));c.stroke()}
     for(let j=1;j<5;j++){c.beginPath();c.moveTo(...fn(0,j/5));c.lineTo(...fn(1,j/5));c.stroke()}
     SPECK.forEach(s=>{const p=fn(s[0],s[1]);c.fillStyle=s[3]>.5?'rgba(0,0,0,.18)':'rgba(255,230,190,.14)';c.beginPath();c.ellipse(p[0],p[1],s[2]*1.4,s[2],0,0,7);c.fill()});
-    const sh=c.createLinearGradient(0,Y0+h,0,Y0+2*h+Hs);sh.addColorStop(0,'rgba(0,0,0,0)');sh.addColorStop(1,'rgba(0,0,0,.22)');c.fillStyle=sh;c.fillRect(0,0,W,HH);
+    const sh=c.createLinearGradient(0,Y0+h,0,Y0+2*h+Hs);sh.addColorStop(0,'rgba(0,0,0,0)');sh.addColorStop(1,'rgba(0,0,0,.22)');c.fillStyle=sh;c.fillRect(0,0,CW,HH);
     c.restore()});
-  // interior: left face
   c.save();poly(faceL());c.clip();
   const o2=clamp(av.O-1),o3=clamp(av.O-2),o4=clamp(av.O-3);
   const tL=[tunnel(FL,[[.25,0],[.25,.5],[.6,.5]],o2),tunnel(FL,[[.25,.5],[.25,.82],[.78,.82]],o3),tunnel(FL,[[.6,.5],[.6,.22],[.92,.22]],o4),tunnel(FL,[[.78,.82],[1.02,.82]],o4),tunnel(FL,[[.6,.5],[1.02,.5]],o4)];
@@ -524,7 +759,6 @@ function frame(now){
     if(lv.S>=4)em('🌾',Gp[0],Gp[1]-6,14,clamp(av.S-3))}
   const nIn=lv.O<2?0:lv.O-1;tL.forEach((P,i)=>{if(P.length&&nIn>0)walker(P,t,.18+i*.03,i*.37,.5)});
   c.restore();
-  // interior: right face
   c.save();poly(faceR());c.clip();
   const Ci=FR(.5,.38),Fp=FR(.5,.8);
   const tR=[tunnel(FR,[[-.02,.5],[.5,.38]],o4),tunnel(FR,[[-.02,.82],[.5,.8]],o4)];
@@ -541,7 +775,6 @@ function frame(now){
   tR.forEach((P,i)=>{if(P.length)walker(P,t,.15,i*.5+.2,.5)});
   c.restore();
 
-  // --- top face ---
   poly(faceT());c.fillStyle=mix('#9a6a3f','#6aa84f',green*.75);c.fill();
   c.save();poly(faceT());c.clip();
   SPECK.forEach(s=>{const p=T(s[0],s[1]);c.fillStyle=green>.3&&s[3]>.55?'rgba(40,110,40,.35)':'rgba(0,0,0,.14)';c.beginPath();c.ellipse(p[0],p[1],s[2]*1.5,s[2],0,0,7);c.fill()});
@@ -558,10 +791,8 @@ function frame(now){
     c.fillStyle='#1a0e07';c.beginPath();c.ellipse(Hp[0],Hp[1],9,4,0,0,7);c.fill();c.globalAlpha=1}
   c.restore();
   c.lineJoin='round';c.lineWidth=3;c.strokeStyle='#2a1a10';poly(faceT());c.stroke();poly(faceL());c.stroke();poly(faceR());c.stroke();
-  // night tint over the block
   if(d<1){c.fillStyle=`rgba(8,10,40,${(1-d)*.34})`;poly(faceT());c.fill();poly(faceL());c.fill();poly(faceR());c.fill()}
 
-  // --- surface sprites (depth-sorted) ---
   const sp=[];
   const PL=[[.62,.28],[.72,.38],[.55,.38],[.8,.25],[.66,.18]];
   if(av.S>0){const a=ap('S');
@@ -582,25 +813,27 @@ function frame(now){
     for(let i=0;i<n;i++)sp.push([200+i,()=>walker(path,t,.12+i*.02,i*.31,.7,ap('O'))])}
   sp.sort((a,b)=>a[0]-b[0]).forEach(s=>s[1]());
   if(lv.S>=4&&lv.L>=1&&!calm){const x=CX+Math.sin(t*.7)*70,y=Y0+40+Math.sin(t*1.9)*18;em('🦋',x,y,15,clamp(av.S-3),Math.cos(t*.7)<0,Math.sin(t*9)*.2)}
-  // nuptial flight
   if(lv.R>=4){for(let i=0;i<3;i++){const u=(t*.22+i/3)%1,x=Hp[0]+u*150+Math.sin(u*9+i)*14,y=Hp[1]-u*190;
     c.globalAlpha=clamp(av.R-3)*Math.sin(u*Math.PI);ant(x,y,.8,1,t*30+i,'f');if(i==0)em('👑',x+2,y-10,11);em('✨',x+10,y-8,9)}c.globalAlpha=1}
-  // particles
   parts=parts.filter(p=>p.life>0);parts.forEach(p=>{p.life-=dt;p.vy+=p.g*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;c.globalAlpha=clamp(p.life/p.max);c.fillStyle=p.col;
     if(p.rot!==undefined){c.save();c.translate(p.x,p.y);c.rotate(p.rot+=dt*6);c.fillRect(-p.sz,-p.sz*.5,p.sz*2,p.sz);c.restore()}else{c.beginPath();c.arc(p.x,p.y,p.sz,0,7);c.fill()}});
-  // level-up pops
   fxs=fxs.filter(f=>now-f.t0<1500);
   fxs.forEach(f=>{const u=(now-f.t0)/1500;c.globalAlpha=1-u*u;
     c.strokeStyle=f.max?'#f2c14e':'#fff';c.lineWidth=3;c.beginPath();c.arc(f.x,f.y-6,10+u*34,0,7);c.stroke();
     c.font='700 15px Fredoka,system-ui,sans-serif';c.textAlign='center';c.lineWidth=4;c.strokeStyle='#2a1a10';
     const s=f.max?'¡MAX!':f.to==1?'¡Nuevo!':'LV'+f.to;c.strokeText(s,f.x,f.y-28-u*22);c.fillStyle=f.max?'#f2c14e':'#fff';c.fillText(s,f.x,f.y-28-u*22)});
   c.globalAlpha=1;c.restore();
-  // rain
   if(now<rainUntil){c.strokeStyle='rgba(170,215,255,.7)';c.lineWidth=1.2;c.globalAlpha=clamp((rainUntil-now)/600);RAIN.forEach(r=>{const y=(r[1]+t*260*r[2])%(HH+20)-10,x=r[0]-y*.15;c.beginPath();c.moveTo(x,y);c.lineTo(x-1.5,y+9);c.stroke()});c.globalAlpha=1}
+}
+
+function frame(now){
+  const t=now/1000,dt=Math.min(.05,(now-(frame.l||now))/1000);frame.l=now;
+  for(const k of KEYS){const g=G.shown[k];av[k]+=(g-av[k])*Math.min(1,dt*4);if(Math.abs(g-av[k])<.002)av[k]=g}
+  c.setTransform(DPR,0,0,DPR,0,0);c.clearRect(0,0,CW,HH);c.globalAlpha=1;
+  if(W.scene=='ant')sceneAnt(now,t,dt);else sceneGen(now,t,dt);
   // confetti for a perfect colony
-  if(now<confettiUntil&&!calm&&Math.random()<.7)parts.push({x:Math.random()*W,y:-6,vx:(Math.random()-.5)*30,vy:30+Math.random()*50,g:25,life:3.2,max:3.2,sz:2+Math.random()*2.5,rot:Math.random()*6,col:['#f2c14e','#e8762b','#ff8fb1','#6bd96b','#4db8ff','#fff'][Math.floor(Math.random()*6)]});
-  // vignette
-  const vg=c.createRadialGradient(W/2,HH/2,120,W/2,HH/2,260);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,.28)');c.fillStyle=vg;c.fillRect(0,0,W,HH);
+  if(now<confettiUntil&&!save.calm&&Math.random()<.7)parts.push({x:Math.random()*CW,y:-6,vx:(Math.random()-.5)*30,vy:30+Math.random()*50,g:25,life:3.2,max:3.2,sz:2+Math.random()*2.5,rot:Math.random()*6,col:['#f2c14e','#e8762b','#ff8fb1','#6bd96b','#4db8ff','#fff'][Math.floor(Math.random()*6)]});
+  const vg=c.createRadialGradient(CW/2,HH/2,120,CW/2,HH/2,260);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,.28)');c.fillStyle=vg;c.fillRect(0,0,CW,HH);
   requestAnimationFrame(frame);
 }
 
