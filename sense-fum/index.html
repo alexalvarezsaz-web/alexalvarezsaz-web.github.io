@@ -113,6 +113,15 @@ h1, h2, h3 { font-family: var(--display); line-height: 1.1; margin: 0; text-wrap
 .bars .on i { background: var(--pine); }
 .bars b { font-size: 11px; font-weight: 800; }
 .bars span { font-size: 10.5px; color: var(--muted); }
+.bars .nd i { height: 14px; background: repeating-linear-gradient(45deg, var(--line) 0 3px, transparent 3px 6px); }
+.bars .nd b { color: var(--muted); font-weight: 600; }
+.hist-h { font-size: 17px; font-weight: 800; margin-top: 10px; }
+.hist { display: flex; gap: 2px; align-items: end; height: 108px; padding-bottom: 18px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+.hist::-webkit-scrollbar { display: none; }
+.hist div { position: relative; flex: 1 0 7px; height: 100%; display: flex; flex-direction: column; justify-content: end; }
+.hist i { display: block; width: 100%; border-radius: 2px 2px 0 0; background: var(--pine); }
+.hist .nd i { height: 22px; background: repeating-linear-gradient(45deg, var(--line) 0 3px, transparent 3px 6px); }
+.hist span { position: absolute; left: 0; bottom: -17px; font-size: 10.5px; color: var(--muted); white-space: nowrap; }
 .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .ghost { min-height: 44px; padding: 0 14px; border-radius: 12px; border: 1px solid var(--line); background: transparent; font-weight: 700; }
 .linkb { min-height: 44px; border: 0; background: transparent; color: var(--muted); font-weight: 700; text-decoration: underline; padding: 0; }
@@ -283,6 +292,9 @@ details.sect summary::after { content: "▾"; margin-left: auto; color: var(--mu
     <h2>Chicles de 2 mg</h2>
     <p class="small" id="gumTxt"></p>
     <div class="bars" id="gumBars"></div>
+    <h3 class="hist-h">Desde el primer chicle apuntado</h3>
+    <div class="hist" id="gumHist"></div>
+    <p class="small" id="gumHistTxt"></p>
     <p class="small">La idea es ir bajando poco a poco, sin prisa. Cuánto tiempo y cómo lo marca el prospecto, y en la farmacia te lo ajustan.</p>
   </section>
 
@@ -422,10 +434,11 @@ function render() {
   }).join('');
   $('tWin').textContent = nf(events('respiro').length);
   // Gum
-  var gumDays = {}, todayKey = dayKey(now); events('chicle').forEach(function (e) { var k = dayKey(e.t); gumDays[k] = (gumDays[k] || 0) + 1; });
+  var gm = gumMap(), gumDays = gm.by, todayKey = dayKey(now);
   var today = gumDays[todayKey] || 0, cells = [], mx = 1;
-  for (var i = 13; i >= 0; i--) { var dd = new Date(now - i * DAY), c = gumDays[dayKey(dd)] || 0; mx = Math.max(mx, c); cells.push([dd, c]); }
-  $('gumBars').innerHTML = cells.map(function (x) { return '<div class="' + (x[1] ? 'on' : '') + '"><b>' + (x[1] || '') + '</b><i style="height:' + (x[1] / mx * 66) + 'px"></i><span>' + x[0].getDate() + '</span></div>'; }).join('');
+  for (var i = 13; i >= 0; i--) { var dd = new Date(now - i * DAY), c = gumDays[dayKey(dd)] || 0; mx = Math.max(mx, c); cells.push([dd, c, gm.known(sod(dd))]); }
+  $('gumBars').innerHTML = cells.map(function (x) { return !x[2] ? '<div class="nd" title="Sin datos"><b>–</b><i></i><span>' + x[0].getDate() + '</span></div>' : '<div class="' + (x[1] ? 'on' : '') + '"><b>' + (x[1] || '') + '</b><i style="height:' + (x[1] / mx * 66) + 'px"></i><span>' + x[0].getDate() + '</span></div>'; }).join('');
+  renderGumHist(gm, now);
   $('gumToday').textContent = today ? today + ' hoy' : 'ninguno hoy';
   var wk = 0, wkOld = 0; events('chicle').forEach(function (e) { var ago = (now - e.t) / DAY; if (ago < 7) wk++; else if (ago < 14) wkOld++; });
   $('gumTxt').textContent = !n.gums ? 'Toca «＋ Chicle» cada vez que masques uno y aquí verás cómo van bajando.' : wkOld && wk < wkOld ? 'Esta semana, ' + wk + '. La anterior, ' + wkOld + '. Vas bajando.' : 'Últimos 7 días: ' + wk + (wk === 1 ? ' chicle.' : ' chicles.');
@@ -435,6 +448,37 @@ function render() {
   var ps = Object.keys(S.pend).length + Object.keys(S.del).length + (S.pPend ? 1 : 0);
   $('sync').textContent = !db ? 'Guardado en este móvil.' : ps ? 'Guardado en este móvil · ' + ps + ' por subir.' : 'Guardado en tu cuenta. Lo ves igual en el móvil y en el ordenador.';
 }
+// ---------- Gum history: every day since the first one noted ----------
+// Gums noted on paper before the app were imported with ids starting "imp". The days between the last of
+// those and the first one noted in the app were not recorded, so they show as "sin datos", never as 0.
+function sod(t) { var d = new Date(t); return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime(); }
+function gumMap() {
+  var by = {}, first = Infinity, imp = 0, app = Infinity;
+  Object.keys(S.ev).forEach(function (k) {
+    var e = S.ev[k]; if (e.tipo !== 'chicle') return;
+    var d = dayKey(e.t); by[d] = (by[d] || 0) + 1; first = Math.min(first, e.t);
+    if (k.indexOf('imp') === 0) imp = Math.max(imp, e.t); else app = Math.min(app, e.t);
+  });
+  var gA = imp && app < Infinity && app > imp ? sod(imp) : 0, gB = gA ? sod(app) : 0;
+  return { by: by, first: first < Infinity ? sod(first) : 0, known: function (d) { return first < Infinity && d >= sod(first) && !(gA && d > gA && d < gB); } };
+}
+function renderGumHist(gm, now) {
+  if (!gm.first) { $('gumHist').innerHTML = ''; $('gumHistTxt').textContent = ''; return; }
+  var days = [], end = sod(now), mx = 1, gaps = 0;
+  for (var d = new Date(gm.first); d.getTime() <= end; d = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1)) {
+    var c = gm.by[dayKey(d)] || 0, k = gm.known(d.getTime()); if (!k) gaps++; mx = Math.max(mx, c); days.push([d, c, k]);
+  }
+  var avg = function (list) { var s = 0, n = 0; list.forEach(function (x) { if (x[2]) { s += x[1]; n++; } }); return n ? s / n : null; };
+  var done = days.slice(0, -1), a0 = avg(done.slice(0, 7)), a1 = avg(done.slice(-7));
+  $('gumHist').innerHTML = days.map(function (x, i) {
+    var lab = i === 0 || x[0].getDay() === 1 ? '<span>' + x[0].getDate() + '/' + (x[0].getMonth() + 1) + '</span>' : '';
+    var when = x[0].getDate() + ' de ' + MONTHS[x[0].getMonth()];
+    return x[2] ? '<div title="' + when + ': ' + x[1] + (x[1] === 1 ? ' chicle' : ' chicles') + '"><i style="height:' + Math.max(2, x[1] / mx * 80) + 'px"></i>' + lab + '</div>' : '<div class="nd" title="' + when + ': sin datos"><i></i>' + lab + '</div>';
+  }).join('');
+  $('gumHistTxt').textContent = (done.length >= 10 && a0 != null && a1 != null ? 'Media al día: ' + nf(a0, 1) + ' la primera semana apuntada, ' + nf(a1, 1) + ' los últimos 7 días.' : nf(days.length) + (days.length === 1 ? ' día' : ' días') + ' desde el primero apuntado.') + (gaps ? ' Rayado: sin datos.' : '');
+  var h = $('gumHist'); h.scrollLeft = h.scrollWidth;
+}
+
 // ---------- Reasons: the person's own words, said in different ways ----------
 function phrases() { return (S.m.frases || []).map(function (l) { var p = String(l).split(' | '); return p.length > 1 ? { m: p[0].trim(), t: p.slice(1).join(' | ').trim() } : { m: '', t: String(l).trim() }; }).filter(function (x) { return x.t; }); }
 function fillIn(s, n) { return s.replace(/\{dias\}/g, nf(n.whole)).replace(/\{euros\}/g, nf(n.net)).replace(/\{vida\}/g, dur(n.cigs * 11)).replace(/\{horas\}/g, nf(S.p.cig * 11 / 60)); }
