@@ -339,8 +339,8 @@ function itemHtml(o, sub) {
   var tag = done ? '<span class="res ' + (o.outcome ? 'ok' : 'no') + '">' + (o.outcome ? 'Pasó' : 'No pasó') + '</span>' : '';
   if (!sub) m += tag;
   var acts = done
-    ? (sub ? tag : '') + '<span class="sp"></span><button type="button" class="linkb" data-re="' + o.id + '">Reabrir</button><button type="button" class="linkb" data-del="' + o.id + '">Borrar</button>'
-    : '<button type="button" class="yes" data-res="' + o.id + '" data-v="1">Pasó</button><button type="button" class="nop" data-res="' + o.id + '" data-v="0">No pasó</button><button type="button" class="linkb" data-del="' + o.id + '">Borrar</button>';
+    ? (sub ? tag : '') + '<span class="sp"></span><button type="button" class="linkb" data-re="' + o.id + '">Reabrir</button>' + (sub ? '' : '<button type="button" class="linkb" data-edit="' + o.id + '">Editar</button>') + '<button type="button" class="linkb" data-del="' + o.id + '">Borrar</button>'
+    : '<button type="button" class="yes" data-res="' + o.id + '" data-v="1">Pasó</button><button type="button" class="nop" data-res="' + o.id + '" data-v="0">No pasó</button>' + (sub ? '' : '<button type="button" class="linkb" data-edit="' + o.id + '">Editar</button>') + '<button type="button" class="linkb" data-del="' + o.id + '">Borrar</button>';
   return '<div class="it' + (sub ? ' sub' : '') + (done ? ' done' : '') + '"><span class="pc num">' + o.p + '<small> %</small></span><span class="t">' + esc(o.text) + '</span><span class="m">' + m + '</span><div class="acts">' + acts + '</div></div>';
 }
 function groupTable(list, keyf, title) {
@@ -375,7 +375,7 @@ function groupHtml(u) {
   var m = '<span>' + esc(u.cat) + ' ·</span><span>' + (u.done ? 'resuelto ' + when(u.resolved) : late ? '<span class="late">tocaba ' + when(u.due) + '</span>' : 'lo sabrás ' + when(u.due)) + '</span>';
   return '<div class="grp"><div class="grp-h"><span class="lab">' + lab + '</span><h3>' + esc(u.name) + '</h3><span class="m">' + m + '</span></div>' +
     u.items.map(function (o) { return itemHtml(o, true); }).join('') +
-    '<div class="row">' + (u.done ? '' : '<button type="button" class="linkb" data-add="' + u.gid + '">＋ Añadir apartado</button>') + '<span class="sp"></span><button type="button" class="linkb" data-delg="' + u.gid + '">Borrar momento</button></div></div>';
+    '<div class="row">' + (u.done ? '' : '<button type="button" class="linkb" data-add="' + u.gid + '">＋ Apartado</button>') + '<span class="sp"></span><button type="button" class="linkb" data-editg="' + u.gid + '">Editar</button><button type="button" class="linkb" data-delg="' + u.gid + '">Borrar todo</button></div></div>';
 }
 function unitHtml(u) { return u.gid ? groupHtml(u) : itemHtml(u.items[0]); }
 
@@ -414,6 +414,10 @@ document.querySelector('main').addEventListener('click', function (e) {
     toast('Pronóstico borrado', 'Deshacer', function () { put(gone); });
   } else if (b.dataset.add) {
     var f = all().filter(function (o) { return o.gid === b.dataset.add; })[0]; if (f) openNew({ gid: f.gid, gname: f.gname, cat: f.cat, due: f.due });
+  } else if (b.dataset.edit) {
+    openEdit(b.dataset.edit, null);
+  } else if (b.dataset.editg) {
+    openEdit(null, b.dataset.editg);
   } else if (b.dataset.delg) {
     var gg = all().filter(function (o) { return o.gid === b.dataset.delg; });
     gg.forEach(function (o) { drop(o.id); });
@@ -447,7 +451,7 @@ function check() {
   if (F.mode === 'one') msg = !$('txt').value.trim() ? 'Escribe qué crees que va a pasar.' : !due ? 'Elige cuándo lo sabrás.' : '';
   else msg = !$('gname').value.trim() ? 'Ponle nombre al momento.' : !n ? 'Escribe al menos un apartado.' : !due ? 'Elige cuándo lo sabrás.' : '';
   $('save').disabled = !!msg; $('hint').textContent = msg;
-  $('save').textContent = F.mode === 'one' ? 'Guardar pronóstico' : n > 1 ? 'Guardar ' + n + ' apartados' : 'Guardar apartado';
+  $('save').textContent = F.edit ? 'Guardar cambios' : F.mode === 'one' ? 'Guardar pronóstico' : n > 1 ? 'Guardar ' + n + ' apartados' : 'Guardar apartado';
 }
 // Apartados: rows added to the DOM one by one, so what is typed stays put
 var EX = ['Me pasará algo raro', 'Me equivocaré con las luces', 'Me quedaré dormido', 'Será una noche tranquila', 'Llegaré tarde'];
@@ -457,7 +461,7 @@ function addRow() {
     '<div class="ap-p"><input type="range" class="apr" min="1" max="99" step="1" value="50" aria-label="Probabilidad del apartado"><b class="apv num">50 %</b></div><span class="small apw">' + words(50) + '</span>';
   $('rows').appendChild(d); return d;
 }
-function rowsData() { return [].map.call($('rows').children, function (ap) { return { text: ap.querySelector('.apt').value.trim(), p: +ap.querySelector('.apr').value }; }).filter(function (r) { return r.text; }); }
+function rowsData() { return [].map.call($('rows').children, function (ap) { return { id: ap.dataset.id, text: ap.querySelector('.apt').value.trim(), p: +ap.querySelector('.apr').value }; }).filter(function (r) { return r.text; }); }
 $('rows').addEventListener('input', function (e) {
   if (e.target.classList.contains('apr')) { var ap = e.target.closest('.ap'); ap.querySelector('.apv').textContent = e.target.value + ' %'; ap.querySelector('.apw').textContent = words(+e.target.value); }
   check();
@@ -481,7 +485,7 @@ $('txt').addEventListener('input', check);
 // g: an existing moment to add apartados to; its name, topic and date stay as they are
 function openNew(g) {
   $('txt').value = ''; $('due').value = g ? g.due : ''; $('due').min = today(); $('catx').value = ''; $('catx').hidden = true;
-  F = { cat: g ? g.cat : '', other: false, mode: 'one', gid: g ? g.gid : null };
+  F = { cat: g ? g.cat : '', other: false, mode: 'one', gid: g ? g.gid : null, edit: null };
   $('rows').innerHTML = ''; $('gname').value = g ? g.gname : ''; $('gname').readOnly = !!g;
   $('newT').textContent = g ? 'Añadir apartados' : 'Nuevo pronóstico';
   $('modeChips').hidden = $('catFld').hidden = $('dueFld').hidden = !!g;
@@ -490,9 +494,49 @@ function openNew(g) {
   setMode(g ? 'group' : 'one'); $('newD').showModal();
   setTimeout(function () { var el = g ? $('rows').querySelector('.apt') : $('txt'); if (el && $('newD').open) el.focus(); }, 50);
 }
+// Edit a lone forecast (id) or a whole moment (gid) in the same sheet, already filled in
+function openEdit(id, gid) {
+  var items = gid ? all().filter(function (o) { return o.gid === gid; }).sort(function (a, b) { return a.id < b.id ? -1 : 1; }) : [P[id]];
+  var f = items[0]; if (!f) return;
+  openNew(null);
+  F.edit = gid ? { gid: gid, ids: items.map(function (o) { return o.id; }) } : { id: id };
+  $('newT').textContent = gid ? 'Editar momento' : 'Editar pronóstico';
+  $('modeChips').hidden = true; $('due').min = ''; $('due').value = f.due;
+  var cb = [].filter.call($('cats').children, function (c) { return c.dataset.v === f.cat; })[0];
+  if (cb) { onOnly($('cats'), cb); F.cat = f.cat; }
+  else if (f.cat && f.cat !== 'Sin tema') { onOnly($('cats'), $('cats').querySelector('[data-v="__otro"]')); F.other = true; $('catx').hidden = false; $('catx').value = f.cat; }
+  if (gid) {
+    $('gname').value = f.gname || '';
+    items.forEach(function (o) {
+      var r = addRow(); r.dataset.id = o.id; r.querySelector('.apt').value = o.text; r.querySelector('.apr').value = o.p;
+      r.querySelector('.apv').textContent = o.p + ' %'; r.querySelector('.apw').textContent = words(o.p);
+      if (isDone(o)) r.insertAdjacentHTML('beforeend', '<span class="small">Ya resuelto: ' + (o.outcome ? 'pasó' : 'no pasó') + '</span>');
+    });
+    setMode('group');
+  } else { $('txt').value = f.text; setP(f.p); setMode('one'); }
+}
 $('newBtn').addEventListener('click', function () { openNew(null); });
 $('save').addEventListener('click', function () {
   var cat = F.other ? ($('catx').value.trim() || 'Otro') : (F.cat || 'Sin tema'), due = $('due').value;
+  if (F.edit) {
+    var before, after = [];
+    if (F.edit.id) { before = [P[F.edit.id]]; after.push(Object.assign({}, before[0], { text: $('txt').value.trim(), p: +$('pr').value, cat: cat, due: due })); }
+    else {
+      var gn = $('gname').value.trim(), keep = {};
+      before = F.edit.ids.map(function (k) { return P[k]; }).filter(Boolean);
+      rowsData().forEach(function (r) {
+        var old = r.id && P[r.id]; if (old) keep[old.id] = 1;
+        after.push(old ? Object.assign({}, old, { text: r.text, p: r.p, cat: cat, due: due, gname: gn })
+          : { id: uid(), text: r.text, p: r.p, cat: cat, created: today(), due: due, outcome: null, gid: F.edit.gid, gname: gn });
+      });
+      before.forEach(function (o) { if (!keep[o.id]) drop(o.id); });
+    }
+    after.forEach(put); $('newD').close();
+    return toast('Cambios guardados', 'Deshacer', function () {
+      after.forEach(function (o) { if (!before.some(function (x) { return x.id === o.id; })) drop(o.id); });
+      before.forEach(put);
+    });
+  }
   if (F.mode === 'one') {
     put({ id: uid(), text: $('txt').value.trim(), p: +$('pr').value, cat: cat, created: today(), due: due, outcome: null });
     $('newD').close(); return toast('Guardado. Lo resuelves ' + when(due) + '.');
