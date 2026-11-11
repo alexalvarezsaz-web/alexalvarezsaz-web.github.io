@@ -1,0 +1,610 @@
+<!doctype html><html lang="es"><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="../shared/firebase-config.js"></script>
+<script src="../shared/claude-firebase.js" data-app="estrat"></script>
+</head><body>
+<title>Estrat</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="icon" type="image/svg+xml" href="icon.svg?v=1">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=1">
+<link rel="manifest" href="manifest.webmanifest?v=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Estrat">
+<meta name="theme-color" content="#2b2118">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Figtree:wght@400;600;800&display=swap">
+<style>
+/* Layout: the map fills the screen; sites, collection and season notes slide up as sheets from the bottom bar */
+:root {
+  --bg: #f3ede3; --surface: #fffaf2; --ink: #2b2118; --muted: #6e6152; --line: #ddd1bf;
+  --acc: #b4541f; --acc-ink: #fff; --ok: #2f7d4a; --ok-bg: #dcefe1; --no: #a8382b; --no-bg: #f6e0da; --amber: #c98a12;
+  --bar: #2b2118; --on-bar: #f6ecdd; --on-bar-2: #c7b59c;
+  --display: "Fraunces", Georgia, serif; --body: "Figtree", "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #17120d; --surface: #241c15; --ink: #f3e9da; --muted: #b7a790; --line: #3d3127;
+  --acc: #f08a4b; --acc-ink: #1a120b; --ok: #6fcf8f; --ok-bg: #1d3325; --no: #f2867a; --no-bg: #3b1f1b; --amber: #f2be4a; color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --bg: #17120d; --surface: #241c15; --ink: #f3e9da; --muted: #b7a790; --line: #3d3127;
+  --acc: #f08a4b; --acc-ink: #1a120b; --ok: #6fcf8f; --ok-bg: #1d3325; --no: #f2867a; --no-bg: #3b1f1b; --amber: #f2be4a; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; max-width: 100%; overflow: hidden; }
+body { background: var(--bg); color: var(--ink); font: 400 16px/1.45 var(--body); }
+button, input, textarea, select { font: inherit; color: inherit; }
+button { cursor: pointer; touch-action: manipulation; }
+:focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
+h2, h3 { font-family: var(--display); line-height: 1.1; margin: 0; }
+#map { position: fixed; inset: 0 0 calc(64px + env(safe-area-inset-bottom, 0px)) 0; background: #444; }
+.top { position: fixed; z-index: 500; top: calc(10px + env(safe-area-inset-top, 0px)); left: calc(10px + env(safe-area-inset-left, 0px)); right: calc(10px + env(safe-area-inset-right, 0px)); display: flex; gap: 8px; align-items: flex-start; pointer-events: none; }
+.top > * { pointer-events: auto; }
+.pill { background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 999px; padding: 7px 12px; font-size: 14px; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+.brand { font-family: var(--display); font-weight: 800; font-size: 18px; }
+.alert { flex: 1; min-width: 0; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fab { position: fixed; z-index: 500; right: calc(12px + env(safe-area-inset-right, 0px)); width: 46px; height: 46px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); box-shadow: 0 2px 8px rgba(0,0,0,.25); display: grid; place-items: center; font-size: 20px; }
+#locBtn { bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
+#layBtn { bottom: calc(134px + env(safe-area-inset-bottom, 0px)); }
+#locBtn.on { background: var(--acc); color: var(--acc-ink); }
+.bar { position: fixed; z-index: 600; left: 0; right: 0; bottom: 0; background: var(--bar); display: grid; grid-template-columns: repeat(4, 1fr); padding: 6px max(6px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(6px, env(safe-area-inset-left, 0px)); }
+.bar button { background: none; border: 0; color: var(--on-bar-2); display: grid; justify-items: center; gap: 1px; font-size: 12px; font-weight: 600; padding: 4px 0; border-radius: 10px; }
+.bar button b { font-size: 21px; line-height: 1.1; font-weight: 400; }
+.bar button.on { color: var(--on-bar); background: rgba(255,255,255,.08); }
+.sheet { position: fixed; z-index: 550; left: 0; right: 0; bottom: calc(64px + env(safe-area-inset-bottom, 0px)); max-height: 72vh; overflow-y: auto; background: var(--bg); border-radius: 18px 18px 0 0; box-shadow: 0 -6px 24px rgba(0,0,0,.25); padding: 6px max(16px, env(safe-area-inset-right, 0px)) 20px max(16px, env(safe-area-inset-left, 0px)); }
+.grip { width: 40px; height: 5px; border-radius: 3px; background: var(--line); margin: 4px auto 10px; }
+.sh-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.linkb { background: none; border: 0; color: var(--acc); font-weight: 700; padding: 6px 0; }
+.go { background: var(--acc); color: var(--acc-ink); border: 0; border-radius: 12px; padding: 11px 16px; font-weight: 700; }
+.ghost { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 9px 14px; font-weight: 600; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; margin-bottom: 10px; }
+.row { display: flex; gap: 10px; align-items: center; }
+.grow { flex: 1; min-width: 0; }
+.small { font-size: 14px; color: var(--muted); margin: 4px 0 0; }
+.tag { display: inline-block; font-size: 13px; font-weight: 700; border-radius: 999px; padding: 2px 9px; }
+.tag.ok { background: var(--ok-bg); color: var(--ok); } .tag.no { background: var(--no-bg); color: var(--no); } .tag.nt { background: var(--line); color: var(--ink); }
+.lst { list-style: none; padding: 0; margin: 0; }
+.lst li button { width: 100%; text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 11px 14px; margin-bottom: 8px; display: flex; gap: 12px; align-items: center; }
+.lst .ico { font-size: 24px; width: 32px; text-align: center; }
+.lst img.th { width: 52px; height: 52px; object-fit: cover; border-radius: 10px; }
+.empty { color: var(--muted); text-align: center; padding: 18px 8px; }
+.fld { display: grid; gap: 4px; margin-bottom: 12px; }
+.lab { font-size: 14px; font-weight: 700; color: var(--muted); }
+.fld input, .fld textarea, .fld select { width: 100%; font-size: 16px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips button { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 6px 12px; font-size: 15px; }
+.chips button.on { background: var(--acc); color: var(--acc-ink); border-color: var(--acc); }
+.thumbs { display: flex; gap: 8px; flex-wrap: wrap; }
+.thumbs figure { margin: 0; position: relative; } .thumbs img { width: 76px; height: 76px; object-fit: cover; border-radius: 10px; }
+.thumbs figure button { position: absolute; top: -6px; right: -6px; width: 24px; height: 24px; border-radius: 50%; border: 0; background: var(--ink); color: var(--bg); font-size: 12px; }
+.geo { border-left: 5px solid var(--gc, var(--acc)); padding-left: 10px; }
+.geo b { font-family: var(--display); font-size: 18px; }
+.lay label { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.lay input[type=checkbox], .lay input[type=radio] { width: 20px; height: 20px; accent-color: var(--acc); }
+.lay input[type=range] { width: 100%; accent-color: var(--acc); }
+.months { display: grid; grid-template-columns: repeat(12, 1fr); gap: 2px; margin-top: 6px; }
+.months span { font-size: 11px; text-align: center; padding: 4px 0; border-radius: 4px; background: var(--line); color: var(--muted); }
+.months span.on { background: var(--amber); color: #1a120b; font-weight: 700; }
+.months span.now { outline: 2px solid var(--ink); }
+.big { font-family: var(--display); font-weight: 800; font-size: 34px; line-height: 1; }
+.err { color: var(--no); font-size: 14px; }
+.danger { color: var(--no); }
+.leaflet-popup-content-wrapper, .leaflet-popup-tip { background: var(--surface); color: var(--ink); }
+.leaflet-popup-content { margin: 12px 14px; font: 15px/1.4 var(--body); min-width: 220px; }
+.leaflet-container a.leaflet-popup-close-button { color: var(--muted); }
+.pop-act { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+.pop-act button { font-size: 14px; padding: 7px 10px; }
+.pin { font-size: 22px; line-height: 1; filter: drop-shadow(0 1px 2px rgba(0,0,0,.6)); }
+.dot { width: 12px; height: 12px; border-radius: 50%; background: #e8c45a; border: 2px solid #3a2a10; }
+.me { width: 18px; height: 18px; border-radius: 50%; background: #2a7fff; border: 3px solid #fff; box-shadow: 0 0 0 6px rgba(42,127,255,.25); }
+.pickhint { position: fixed; z-index: 700; left: 50%; transform: translateX(-50%); bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
+</style>
+
+<div id="map" role="application" aria-label="Mapa"></div>
+<div class="top">
+  <span class="pill brand">Estrat</span>
+  <button type="button" class="pill alert" id="alertBtn">Cargando avisos…</button>
+</div>
+<button type="button" class="fab" id="layBtn" aria-label="Capas">🗺️</button>
+<button type="button" class="fab" id="locBtn" aria-label="Mi posición">◎</button>
+<button type="button" class="pill pickhint" id="pickHint" hidden>Toca el mapa para colocar el punto · Cancelar</button>
+
+<section class="sheet" id="sheet" hidden><div class="grip"></div><div id="sheetBody"></div></section>
+
+<nav class="bar" id="bar">
+  <button type="button" data-tab="mapa" class="on"><b>⛰︎</b>Mapa</button>
+  <button type="button" data-tab="sitios"><b>📍</b>Sitios</button>
+  <button type="button" data-tab="vitrina"><b>🐚</b>Vitrina</button>
+  <button type="button" data-tab="avisos"><b>🗓︎</b>Avisos</button>
+</nav>
+
+<script>
+var $ = function (id) { return document.getElementById(id); };
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function uid(p) { return p + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+function dec(x, n) { return (+x).toFixed(n).replace('.', ','); }
+function num(s) { var v = parseFloat(String(s).replace(',', '.')); return isNaN(v) ? null : v; }
+var MES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+var MESL = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+var TIPOS = { fosil: ['🦴', 'Fósil'], mineral: ['💎', 'Mineral'], cuerno: ['🦌', 'Cuerno'], craneo: ['💀', 'Cráneo'], otro: ['📌', 'Otro'] };
+var BERGUEDA = [[41.95, 1.55], [42.36, 2.15]], CENTER = [42.13, 1.83];
+
+// ---------- Local data first; the account copy arrives later ----------
+var LS = 'estrat-v1', S = { sitios: {}, piezas: {} }, db = null, assets = null, sample = null, synced = false;
+try { var raw = JSON.parse(localStorage.getItem(LS) || 'null'); if (raw && typeof raw === 'object') { S.sitios = raw.sitios || {}; S.piezas = raw.piezas || {}; } } catch (e) {}
+function persist() { try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) {} }
+function put(col, o) { S[col][o.id] = o; persist(); if (db) db.collection(col).doc(o.id).set(o).catch(function () {}); refresh(); }
+function drop(col, id) { var o = S[col][id]; delete S[col][id]; persist(); if (db) db.collection(col).doc(id).delete().catch(function () {}); if (o && o.fotos && assets) o.fotos.forEach(function (f) { assets.delete(f).catch(function () {}); }); refresh(); }
+function list(col) { return Object.keys(S[col]).map(function (k) { return S[col][k]; }); }
+
+// ---------- Live data: La Baells, rain, desmogue ----------
+var LIVE = { baells: null, baellsSerie: [], lluvia7: null, lluviaDias: [] };
+function loadBaells() {
+  var q = "https://analisi.transparenciacatalunya.cat/resource/gn9e-3qhr.json?$limit=60&$order=dia%20DESC&$where=" + encodeURIComponent("estaci like '%Baells%'");
+  return fetch(q).then(function (r) { return r.json(); }).then(function (rows) {
+    if (!rows || !rows.length) return;
+    LIVE.baellsSerie = rows.map(function (r) { return { d: r.dia.slice(0, 10), p: +r.percentatge_volum_embassat, n: +r.nivell_absolut }; }).reverse();
+    LIVE.baells = LIVE.baellsSerie[LIVE.baellsSerie.length - 1];
+  }).catch(function () {});
+}
+function loadLluvia() {
+  return fetch('https://api.open-meteo.com/v1/forecast?latitude=42.10&longitude=1.85&daily=precipitation_sum&past_days=14&forecast_days=1&timezone=Europe%2FMadrid')
+    .then(function (r) { return r.json(); }).then(function (j) {
+      var t = j.daily.time, p = j.daily.precipitation_sum; LIVE.lluviaDias = t.map(function (d, i) { return { d: d, mm: p[i] || 0 }; }).slice(0, -1);
+      LIVE.lluvia7 = LIVE.lluviaDias.slice(-7).reduce(function (a, x) { return a + x.mm; }, 0);
+    }).catch(function () {});
+}
+// Shedding months (1–12). Red deer drop antlers late winter, roe deer at the end of autumn
+var DESMOGUE = [
+  { k: 'ciervo', n: 'Ciervo', m: [2, 3, 4], t: 'Los machos grandes desmogan primero (febrero); los jóvenes hasta abril. Busca en solanas, comederos de invierno, pasos entre bosque y prado y cerca de fuentes.' },
+  { k: 'corzo', n: 'Corzo', m: [10, 11, 12], t: 'Desmoga de octubre a diciembre y las cuernas son pequeñas: mira en lindes de bosque, zarzales y pasos estrechos. Los roedores las comen pronto, así que sal en cuanto empiece.' },
+  { k: 'gamo', n: 'Gamo', m: [4, 5], t: 'Poco presente en el Berguedà; si lo hay, desmoga en abril y mayo.' }
+];
+function desmogueNow() { var m = new Date().getMonth() + 1; return DESMOGUE.filter(function (d) { return d.m.indexOf(m) >= 0; }); }
+
+// A site's access condition → { ok: true/false/null, why }
+function estado(s) {
+  var c = s.cond || {}, m = new Date().getMonth() + 1;
+  if (c.tipo === 'baells') {
+    if (!LIVE.baells) return { ok: null, why: 'Sin dato del pantano ahora' };
+    var ok = LIVE.baells.p <= c.max;
+    return { ok: ok, why: 'La Baells al ' + dec(LIVE.baells.p, 1) + ' % (' + (ok ? 'por debajo' : 'por encima') + ' del ' + c.max + ' %)' };
+  }
+  if (c.tipo === 'meses') { var on = (c.meses || []).indexOf(m) >= 0; return { ok: on, why: on ? 'Es temporada' : 'Fuera de temporada (' + (c.meses || []).map(function (x) { return MES[x - 1]; }).join(', ') + ')' }; }
+  if (c.tipo === 'lluvia') {
+    if (LIVE.lluvia7 == null) return { ok: null, why: 'Sin dato de lluvia ahora' };
+    var r = LIVE.lluvia7 >= c.mm; return { ok: r, why: dec(LIVE.lluvia7, 0) + ' mm en 7 días en Berga (' + (r ? 'suficiente' : 'pide ' + c.mm) + ')' };
+  }
+  return { ok: null, why: '' };
+}
+function alertas() {
+  var out = [];
+  list('sitios').forEach(function (s) { if (s.cond && s.cond.tipo && s.cond.tipo !== 'meses' && estado(s).ok) out.push('✅ ' + s.nombre + ': ' + estado(s).why); });
+  list('sitios').forEach(function (s) { if (s.cond && s.cond.tipo === 'meses' && estado(s).ok) out.push('🗓️ ' + s.nombre + ': es temporada'); });
+  desmogueNow().forEach(function (d) { out.push('🦌 Desmogue del ' + d.n.toLowerCase()); });
+  if (LIVE.lluvia7 != null && LIVE.lluvia7 >= 25) out.push('🌧️ ' + dec(LIVE.lluvia7, 0) + ' mm esta semana: buen momento para margas y cárcavas');
+  return out;
+}
+function renderAlert() {
+  var a = alertas(), b = LIVE.baells ? 'La Baells ' + dec(LIVE.baells.p, 1) + ' %' : '';
+  $('alertBtn').textContent = a.length ? a[0] + (a.length > 1 ? ' · +' + (a.length - 1) : '') : (b || 'Sin avisos ahora');
+}
+
+// ---------- Geology: what you stand on ----------
+var ERAS = [ // period/epoch name in the ICGC table → start/end in millions of years, colour, what to look for
+  ['Maastrichtià', 66, 72.1, '#a6d84a'], ['Campanià', 72.1, 83.6, '#bfe35d'], ['Santonià', 83.6, 86.3, '#b3de53'], ['Coniacià', 86.3, 89.8, '#a6d84a'], ['Turonià', 89.8, 93.9, '#bfe35d'], ['Cenomanià', 93.9, 100.5, '#b3de53'], ['Albià', 100.5, 113, '#ccea97'], ['Aptià', 113, 121.4, '#bfe48a'],
+  ['Priabonià', 33.9, 37.7, '#fdcda1'], ['Bartonià', 37.7, 41.2, '#fdc091'], ['Lutecià', 41.2, 47.8, '#fcb482'], ['Cuisià', 47.8, 52, '#fca773'], ['Ilerdià', 52, 56, '#fca773'], ['Ypresià', 47.8, 56, '#fca773'], ['Thanetià', 56, 59.2, '#fdbf6f'],
+  ['Holocè', 0, .012, '#f9f97f'], ['Plistocè', .012, 2.58, '#fff2ae'], ['Quaternari', 0, 2.58, '#f9f97f'],
+  ['Pliocè', 2.58, 5.33, '#ffff99'], ['Miocè', 5.33, 23, '#ffff00'], ['Oligocè', 23, 33.9, '#fec07a'], ['Eocè', 33.9, 56, '#fdb46c'], ['Paleocè', 56, 66, '#fda75f'],
+  ['Neogen', 2.58, 23, '#ffe619'], ['Paleogen', 23, 66, '#fd9a52'],
+  ['Cretaci superior', 66, 100.5, '#a6d84a'], ['Cretaci inferior', 100.5, 145, '#8ccd57'], ['Cretaci', 66, 145, '#7fc64e'],
+  ['Juràssic', 145, 201, '#34b2c9'], ['Triàsic', 201, 252, '#812b92'], ['Permià', 252, 299, '#f04028'], ['Carbonífer', 299, 359, '#67a599'],
+  ['Devonià', 359, 419, '#cb8c37'], ['Silurià', 419, 444, '#b3e1b6'], ['Ordovicià', 444, 485, '#009270'], ['Cambrià', 485, 539, '#7fa056']
+];
+function eraOf(p) { var keys = [p.Edat, p.Epoca, p.Periode]; for (var i = 0; i < keys.length; i++) for (var j = 0; j < ERAS.length; j++) if (keys[i] && keys[i] !== 'Null' && keys[i].indexOf(ERAS[j][0]) === 0) return ERAS[j]; return null; }
+function pistas(p) {
+  var d = (p.Descripcio || '').toLowerCase(), per = (p.Periode || '') + ' ' + (p.Epoca || ''), out = [];
+  if (/garumn/.test(d)) out.push('Garumniense: icnitas y huevos de dinosaurio, carofitas, gasterópodos de agua dulce y lignito. Fumanya y Vallcebre están protegidos: mira solo canchales y material suelto fuera del yacimiento.');
+  else if (/Cretaci/.test(per)) out.push('Cretácico marino: rudistas, ostreidos, orbitolinas, equinodermos y algún ammonite.');
+  if (/Eoc|Paleoc/.test(per) && /(calc|marg|gres|lutit)/.test(d)) out.push('Paleógeno marino: nummulites y alveolinas (las "lentejas"), equinoideos, gasterópodos, bivalvos y corales.');
+  if (/Oligoc|Mioc/.test(per)) out.push('Terciario continental: conglomerados con pocos fósiles; en margas y lutitas, restos vegetales y moluscos de agua dulce.');
+  if (/Triàsic/.test(per)) out.push(/guix|keuper|argil/.test(d) ? 'Keuper: yesos con jacintos de Compostela (cuarzos rojos) y aragonitos: busca minerales.' : 'Triásico: en calizas del Muschelkalk, bivalvos y algún ceratites.');
+  if (/Carbon|Permi|Devon|Silur|Ordovic/.test(per)) out.push('Paleozoico: pizarras con graptolites o plantas fósiles; filones con pirita y cuarzo.');
+  if (/Quaternari|Holoc|Plistoc/.test(per)) out.push('Depósitos recientes (terrazas, coluviones): arrastran fósiles de los estratos de arriba; buen sitio para material caído.');
+  if (/lignit|carb/.test(d)) out.push('Hay lignito: antiguas minas de carbón con escombreras donde aparece pirita, azufre y plantas.');
+  if (!out.length) out.push('Sin pistas concretas para esta roca: fíjate en margas y calizas cercanas.');
+  return out;
+}
+function geologyAt(lat, lng) {
+  var dd = .0004, url = 'https://geoserveis.icgc.cat/servei/catalunya/geologia-territorial/wms?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetFeatureInfo&LAYERS=unitats-geologiques-50000&QUERY_LAYERS=unitats-geologiques-50000&CRS=EPSG:4326&BBOX=' + [lat - dd, lng - dd, lat + dd, lng + dd].join(',') + '&WIDTH=3&HEIGHT=3&I=1&J=1&INFO_FORMAT=text/plain';
+  return fetch(url).then(function (r) { return r.text(); }).then(function (t) {
+    // "@layer OBJECTID;Codi;…; 36875;KMgp;…" — names first, then values from the first number on (line breaks vary)
+    var i0 = t.indexOf('OBJECTID;'); if (i0 < 0) return null;
+    var parts = t.slice(i0).split(';').map(function (x) { return x.trim(); }), n = parts.findIndex(function (x) { return /^\d+$/.test(x); });
+    if (n < 1) return null;
+    var p = {}; for (var i = 0; i < n; i++) p[parts[i]] = parts[n + i];
+    return p.Descripcio ? p : null;
+  }).catch(function () { return null; });
+}
+function geoHtml(p) {
+  if (!p) return '<p class="small">Fuera del mapa geológico o sin conexión.</p>';
+  var e = eraOf(p), edad = [p.Edat, p.Epoca, p.Periode].filter(function (x) { return x && x !== 'Null'; })[0] || '';
+  return '<div class="geo" style="--gc:' + (e ? e[3] : 'var(--acc)') + '"><b>' + esc(edad) + '</b>' + (e ? '<div class="small">' + (e[1] < 1 ? 'menos de 1' : 'unos ' + Math.round((e[1] + e[2]) / 2)) + ' millones de años · ' + esc(p.Periode) + '</div>' : '') +
+    '<div style="margin-top:4px">' + esc(p.Descripcio) + '</div></div><ul style="margin:8px 0 0;padding-left:18px">' + pistas(p).map(function (x) { return '<li class="small" style="margin:2px 0">' + esc(x) + '</li>'; }).join('') + '</ul>';
+}
+function geoShort(p) { if (!p) return ''; var e = [p.Edat, p.Epoca, p.Periode].filter(function (x) { return x && x !== 'Null'; })[0] || ''; return e + ' · ' + (p.Descripcio || '').split('.')[0]; }
+
+// ---------- Map ----------
+var map = L.map('map', { zoomControl: false, attributionControl: true, maxBounds: [[40.4, 0], [43, 3.6]], minZoom: 8 }).setView(CENTER, 11);
+var BASES = {
+  sat: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, maxNativeZoom: 18, attribution: 'Esri' }),
+  topo: L.tileLayer('https://geoserveis.icgc.cat/servei/catalunya/mapa-base/wmts/topografic/MON3857NW/{z}/{x}/{y}.png', { maxZoom: 19, maxNativeZoom: 18, attribution: 'ICGC' })
+};
+var GEO = L.tileLayer.wms('https://geoserveis.icgc.cat/servei/catalunya/geologia-territorial/wms', { layers: 'geologia-territorial-50000-geologic', format: 'image/png', transparent: true, version: '1.3.0', opacity: .55, maxZoom: 19, attribution: 'Mapa geològic ICGC' });
+var IEIG = L.tileLayer.wms('https://geoserveis.icgc.cat/servei/catalunya/espais-interes-geologic/wms', { layers: 'espais-interes-geologic', format: 'image/png', transparent: true, version: '1.1.1', opacity: .8, maxZoom: 19 });
+var gSitios = L.layerGroup(), gPiezas = L.layerGroup(), gPbdb = L.layerGroup();
+var PREF = { base: 'sat', geo: true, op: 55, ieig: false, pbdb: false, sitios: true, piezas: true };
+try { Object.assign(PREF, JSON.parse(localStorage.getItem(LS + '-capas') || '{}')); } catch (e) {}
+function applyLayers() {
+  Object.keys(BASES).forEach(function (k) { if (k === PREF.base) BASES[k].addTo(map); else map.removeLayer(BASES[k]); });
+  GEO.setOpacity(PREF.op / 100);
+  [[GEO, PREF.geo], [IEIG, PREF.ieig], [gSitios, PREF.sitios], [gPiezas, PREF.piezas], [gPbdb, PREF.pbdb]].forEach(function (a) { if (a[1]) a[0].addTo(map); else map.removeLayer(a[0]); });
+  if (PREF.pbdb) loadPbdb();
+  try { localStorage.setItem(LS + '-capas', JSON.stringify(PREF)); } catch (e) {}
+}
+var pbdbDone = false;
+function loadPbdb() {
+  if (pbdbDone) return; pbdbDone = true;
+  fetch('https://paleobiodb.org/data1.2/occs/list.json?lngmin=1.45&lngmax=2.25&latmin=41.9&latmax=42.4&show=coords,class,loc&limit=all')
+    .then(function (r) { return r.json(); }).then(function (j) {
+      var by = {}; (j.records || []).forEach(function (o) { var k = o.lat + ',' + o.lng; (by[k] = by[k] || []).push(o); });
+      Object.keys(by).forEach(function (k) {
+        var os = by[k], ll = k.split(',').map(Number), names = {}; os.forEach(function (o) { names[o.tna] = (o.cll || o.odl || '') ; });
+        var html = '<b>' + os.length + ' registros de la Paleobiology Database</b><div class="small">' + esc(os[0].oei || '') + (os[0].eag ? ' · ' + Math.round(os[0].eag) + '–' + Math.round(os[0].lag) + ' Ma' : '') + '</div><div style="max-height:150px;overflow:auto;margin-top:6px">' + Object.keys(names).slice(0, 40).map(function (n) { return '<div>' + esc(n) + (names[n] ? ' <span class="small">' + esc(names[n]) + '</span>' : '') + '</div>'; }).join('') + '</div><p class="small">Coordenadas aproximadas: a veces es solo el centro del municipio.</p>';
+        L.marker(ll, { icon: L.divIcon({ className: '', html: '<div class="dot"></div>', iconSize: [12, 12] }) }).bindPopup(html).addTo(gPbdb);
+      });
+    }).catch(function () { pbdbDone = false; });
+}
+function pinIcon(em) { return L.divIcon({ className: '', html: '<div class="pin">' + em + '</div>', iconSize: [24, 24], iconAnchor: [12, 20] }); }
+function drawPins() {
+  gSitios.clearLayers(); gPiezas.clearLayers();
+  list('sitios').forEach(function (s) { if (s.lat == null) return; var st = estado(s); L.marker([s.lat, s.lng], { icon: pinIcon((TIPOS[s.tipo] || TIPOS.otro)[0] + (st.ok === true ? '✅' : '')) }).on('click', function () { openSitio(s.id); }).addTo(gSitios); });
+  list('piezas').forEach(function (p) { if (p.lat == null) return; L.marker([p.lat, p.lng], { icon: pinIcon('🔸') }).on('click', function () { openPieza(p.id); }).addTo(gPiezas); });
+}
+
+// Tapping the map: the rock underneath, and save a site or a find there
+var picking = null;
+map.on('click', function (e) {
+  var lat = e.latlng.lat, lng = e.latlng.lng;
+  if (picking) { var cb = picking; stopPick(); cb(lat, lng); return; }
+  var pop = L.popup().setLatLng(e.latlng).setContent('<p class="small">Mirando el estrato…</p>').openOn(map);
+  geologyAt(lat, lng).then(function (p) {
+    lastGeo = { lat: lat, lng: lng, p: p };
+    pop.setContent(geoHtml(p) + '<div class="pop-act"><button type="button" class="ghost" data-pop="sitio">📍 Guardar sitio</button><button type="button" class="ghost" data-pop="pieza">🐚 Pieza aquí</button></div>');
+  });
+});
+var lastGeo = null;
+document.addEventListener('click', function (e) {
+  var b = e.target.closest('[data-pop]'); if (!b || !lastGeo) return;
+  map.closePopup();
+  if (b.dataset.pop === 'sitio') openSitio(null, { lat: lastGeo.lat, lng: lastGeo.lng, geo: geoShort(lastGeo.p) });
+  else openPieza(null, { lat: lastGeo.lat, lng: lastGeo.lng, geo: geoShort(lastGeo.p) });
+});
+function startPick(cb) { picking = cb; hideSheet(); $('pickHint').hidden = false; }
+function stopPick() { picking = null; $('pickHint').hidden = true; }
+$('pickHint').addEventListener('click', function () { var cb = picking; stopPick(); if (cb) cb(null); });
+
+// GPS: works without coverage; the map tiles need a first visit or the download
+var me = null, meAcc = null, watch = null, follow = true, lastPos = null;
+$('locBtn').addEventListener('click', function () {
+  if (!navigator.geolocation) return;
+  if (watch !== null && lastPos) { follow = true; map.setView(lastPos, Math.max(map.getZoom(), 15)); return; }
+  this.classList.add('on');
+  watch = navigator.geolocation.watchPosition(function (p) {
+    lastPos = [p.coords.latitude, p.coords.longitude];
+    if (!me) { me = L.marker(lastPos, { icon: L.divIcon({ className: '', html: '<div class="me"></div>', iconSize: [18, 18] }), zIndexOffset: 1000 }).addTo(map); meAcc = L.circle(lastPos, { radius: p.coords.accuracy, color: '#2a7fff', weight: 1, fillOpacity: .08 }).addTo(map); map.setView(lastPos, 15); }
+    else { me.setLatLng(lastPos); meAcc.setLatLng(lastPos).setRadius(p.coords.accuracy); if (follow) map.panTo(lastPos); }
+  }, function () { $('locBtn').classList.remove('on'); watch = null; alert('No se pudo leer el GPS. Revisa el permiso de ubicación.'); }, { enableHighAccuracy: true, maximumAge: 5000 });
+});
+map.on('dragstart', function () { follow = false; });
+function here() { return lastPos ? { lat: lastPos[0], lng: lastPos[1] } : null; }
+
+// ---------- Sheets ----------
+var tab = 'mapa';
+function showSheet(html) { $('sheetBody').innerHTML = html; $('sheet').hidden = false; $('sheet').scrollTop = 0; }
+function hideSheet() { $('sheet').hidden = true; }
+function setTab(t) {
+  tab = t; Array.prototype.forEach.call($('bar').children, function (b) { b.classList.toggle('on', b.dataset.tab === t); });
+  if (t === 'mapa') hideSheet(); else if (t === 'sitios') renderSitios(); else if (t === 'vitrina') renderVitrina(); else renderAvisos();
+}
+$('bar').addEventListener('click', function (e) { var b = e.target.closest('button'); if (b) setTab(b.dataset.tab === tab && tab !== 'mapa' ? 'mapa' : b.dataset.tab); });
+$('alertBtn').addEventListener('click', function () { setTab('avisos'); });
+function refresh() { drawPins(); renderAlert(); if (!$('sheet').hidden && !editingForm) { if (tab === 'sitios') renderSitios(); else if (tab === 'vitrina') renderVitrina(); else if (tab === 'avisos') renderAvisos(); } }
+var editingForm = false;
+function head(title, extra) { return '<div class="sh-top"><h2>' + title + '</h2><div class="row">' + (extra || '') + '<button type="button" class="linkb" data-act="close">Cerrar</button></div></div>'; }
+function stTag(st) { return st.ok === true ? '<span class="tag ok">Accesible</span>' : st.ok === false ? '<span class="tag no">Ahora no</span>' : ''; }
+
+function renderSitios() {
+  editingForm = false;
+  var ss = list('sitios').sort(function (a, b) { return (estado(b).ok === true) - (estado(a).ok === true) || a.nombre.localeCompare(b.nombre); });
+  showSheet(head('Mis sitios', '<button type="button" class="go" data-act="newSitio">+ Sitio</button>') +
+    (ss.length ? '<ul class="lst">' + ss.map(function (s) { var st = estado(s); return '<li><button type="button" data-sitio="' + s.id + '"><span class="ico">' + (TIPOS[s.tipo] || TIPOS.otro)[0] + '</span><span class="grow"><b>' + esc(s.nombre) + '</b> ' + stTag(st) + '<div class="small">' + esc(st.why || s.geo || '') + '</div></span></button></li>'; }).join('') + '</ul>'
+      : '<p class="empty">Aún no hay sitios. Toca el mapa donde quieras y pulsa «Guardar sitio», o usa «+ Sitio».</p>') +
+    '<div class="row" style="margin-top:6px"><label class="ghost" style="cursor:pointer">Importar de Google Maps<input type="file" id="imp" accept=".json,.geojson,.csv" hidden multiple></label></div><p class="small">Acepta los archivos de Google Takeout: «Sitios guardados.json» o las listas en CSV del apartado «Guardado».</p>');
+}
+function renderVitrina() {
+  editingForm = false;
+  var ps = list('piezas').sort(function (a, b) { return (b.fecha || '').localeCompare(a.fecha || ''); }), cnt = {};
+  ps.forEach(function (p) { cnt[p.tipo] = (cnt[p.tipo] || 0) + 1; });
+  showSheet(head('Vitrina', '<button type="button" class="go" data-act="newPieza">+ Pieza</button>') +
+    (ps.length ? '<p class="small" style="margin:0 0 10px">' + Object.keys(cnt).map(function (k) { return (TIPOS[k] || TIPOS.otro)[0] + ' ' + cnt[k]; }).join(' · ') + '</p><ul class="lst">' + ps.map(function (p) {
+      return '<li><button type="button" data-pieza="' + p.id + '">' + (p.fotos && p.fotos[0] ? '<img class="th" src="/_blob/' + esc(p.fotos[0]) + '" alt="">' : '<span class="ico">' + (TIPOS[p.tipo] || TIPOS.otro)[0] + '</span>') + '<span class="grow"><b>' + esc(p.nombre || (TIPOS[p.tipo] || TIPOS.otro)[1]) + '</b><div class="small">' + esc([p.fecha ? p.fecha.slice(0, 4) : '', p.zona || '', p.geo ? p.geo.split(' · ')[0] : ''].filter(Boolean).join(' · ')) + '</div></span></button></li>';
+    }).join('') + '</ul>' : '<p class="empty">Tu colección aparecerá aquí: foto, dónde y cuándo, y de qué estrato viene.</p>'));
+}
+function renderAvisos() {
+  editingForm = false;
+  var m = new Date().getMonth() + 1, a = alertas(), b = LIVE.baells;
+  var spark = '';
+  if (LIVE.baellsSerie.length > 2) {
+    var vs = LIVE.baellsSerie.map(function (x) { return x.p; }), lo = Math.min.apply(null, vs.concat([30])), hi = Math.max.apply(null, vs.concat([100])), W = 300, H = 60;
+    var pts = vs.map(function (v, i) { return (i * W / (vs.length - 1)).toFixed(1) + ',' + (H - (v - lo) / (hi - lo) * H).toFixed(1); }).join(' ');
+    var y40 = H - (40 - lo) / (hi - lo) * H;
+    spark = '<svg viewBox="0 0 300 64" style="width:100%;height:64px;margin-top:8px" aria-label="Nivel de La Baells en los últimos 60 días"><line x1="0" x2="300" y1="' + y40 + '" y2="' + y40 + '" stroke="var(--amber)" stroke-dasharray="4 4"/><polyline points="' + pts + '" fill="none" stroke="var(--acc)" stroke-width="2.5"/></svg><div class="small">Últimos 60 días · la línea discontinua es el 40 %</div>';
+  }
+  showSheet(head('Avisos') +
+    (a.length ? '<div class="card">' + a.map(function (x) { return '<div style="margin:3px 0">' + esc(x) + '</div>'; }).join('') + '</div>' : '') +
+    '<div class="card"><div class="lab">Pantano de La Baells</div>' + (b ? '<div class="big">' + dec(b.p, 1) + ' %</div><div class="small">Cota ' + dec(b.n, 2) + ' m · dato del ' + b.d.split('-').reverse().join('/') + ' (ACA)</div>' + spark : '<p class="small">Sin conexión con los datos del ACA.</p>') + '</div>' +
+    '<div class="card"><div class="lab">Lluvia en Berga</div>' + (LIVE.lluvia7 != null ? '<div class="big">' + dec(LIVE.lluvia7, 0) + ' mm</div><div class="small">en los últimos 7 días. Tras lluvias fuertes la erosión deja fósiles nuevos al descubierto en margas, cárcavas y torrentes.</div>' : '<p class="small">Sin datos.</p>') + '</div>' +
+    '<div class="card"><div class="lab">Desmogue</div>' + DESMOGUE.map(function (d) { return '<div style="margin-top:10px"><b>' + d.n + '</b> ' + (d.m.indexOf(m) >= 0 ? '<span class="tag ok">Ahora</span>' : '') + '<div class="months">' + MES.map(function (x, i) { return '<span class="' + (d.m.indexOf(i + 1) >= 0 ? 'on' : '') + (i + 1 === m ? ' now' : '') + '">' + x[0].toUpperCase() + '</span>'; }).join('') + '</div><p class="small">' + esc(d.t) + '</p></div>'; }).join('') +
+    '<p class="small">Fuera de parques naturales y reservas de caza suele poder recogerse; en Cadí-Moixeró consulta antes.</p></div>' +
+    '<div class="card"><div class="lab">Para llevarte las cosas a casa</div><p class="small">Material suelto y caído, sin picar en el estrato. En yacimientos protegidos (Fumanya, Vallcebre) no se toca nada dentro del perímetro: actívalo en Capas → «Espais d\'interès geològic» para ver los límites.</p></div>');
+}
+
+// ---------- Site form ----------
+var draft = null;
+function openSitio(id, preset) {
+  var s = id ? S.sitios[id] : null;
+  if (s && !preset) return showSitio(s);
+  editingForm = true; tab !== 'sitios' && setTab('sitios'); editingForm = true;
+  draft = s ? JSON.parse(JSON.stringify(s)) : Object.assign({ id: uid('s'), nombre: '', tipo: 'fosil', notas: '', cond: { tipo: '' }, lat: null, lng: null, geo: '' }, preset || {});
+  if (!draft.cond) draft.cond = { tipo: '' };
+  formSitio();
+  if (!s && draft.lat != null && !draft.geo) setPlace(draft, draft.lat, draft.lng, formSitio);
+}
+function showSitio(s) {
+  editingForm = true; if (tab !== 'sitios') { tab = 'sitios'; Array.prototype.forEach.call($('bar').children, function (b) { b.classList.toggle('on', b.dataset.tab === 'sitios'); }); }
+  var st = estado(s);
+  showSheet(head(esc(s.nombre)) + '<div class="card"><span class="tag nt">' + (TIPOS[s.tipo] || TIPOS.otro).join(' ') + '</span> ' + stTag(st) + (st.why ? '<p class="small">' + esc(st.why) + '</p>' : '') + (s.notas ? '<p style="white-space:pre-wrap;margin:8px 0 0">' + esc(s.notas) + '</p>' : '') + (s.geo ? '<p class="small">🪨 ' + esc(s.geo) + '</p>' : '') + (s.lat != null ? '<p class="small">' + dec(s.lat, 5) + ', ' + dec(s.lng, 5) + '</p>' : '') + '</div>' +
+    '<div class="row" style="flex-wrap:wrap"><button type="button" class="go" data-act="verMapa" data-ll="' + s.lat + ',' + s.lng + '">Ver en el mapa</button><a class="ghost" style="text-decoration:none" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=' + s.lat + ',' + s.lng + '">Cómo llegar</a><button type="button" class="ghost" data-act="editSitio" data-id="' + s.id + '">Editar</button></div>');
+}
+function formSitio() {
+  var d = draft, c = d.cond;
+  showSheet(head(S.sitios[d.id] ? 'Editar sitio' : 'Nuevo sitio') +
+    '<div class="fld"><span class="lab">Nombre</span><input id="fN" value="' + esc(d.nombre) + '" placeholder="La cala del pantano"></div>' +
+    '<div class="fld"><span class="lab">Qué hay</span><div class="chips" id="fT">' + Object.keys(TIPOS).map(function (k) { return '<button type="button" data-v="' + k + '" class="' + (d.tipo === k ? 'on' : '') + '">' + TIPOS[k].join(' ') + '</button>'; }).join('') + '</div></div>' +
+    '<div class="fld"><span class="lab">Lugar</span><div class="small">' + (d.lat != null ? dec(d.lat, 5) + ', ' + dec(d.lng, 5) + (d.geo ? '<br>🪨 ' + esc(d.geo) : '') : 'Sin colocar') + '</div><div class="row"><button type="button" class="ghost" data-act="sHere">Donde estoy</button><button type="button" class="ghost" data-act="sPick">Elegir en el mapa</button></div></div>' +
+    '<div class="fld"><span class="lab">Cuándo se puede ir</span><div class="chips" id="fC">' + [['', 'Siempre'], ['baells', 'Según La Baells'], ['meses', 'Ciertos meses'], ['lluvia', 'Tras lluvias']].map(function (o) { return '<button type="button" data-v="' + o[0] + '" class="' + ((c.tipo || '') === o[0] ? 'on' : '') + '">' + o[1] + '</button>'; }).join('') + '</div>' +
+    (c.tipo === 'baells' ? '<div class="row" style="margin-top:8px"><span>Accesible por debajo del</span><input id="fMax" inputmode="decimal" style="width:80px" value="' + (c.max != null ? String(c.max).replace('.', ',') : '40') + '"><span>%</span></div>' : '') +
+    (c.tipo === 'meses' ? '<div class="chips" id="fM" style="margin-top:8px">' + MES.map(function (x, i) { return '<button type="button" data-v="' + (i + 1) + '" class="' + ((c.meses || []).indexOf(i + 1) >= 0 ? 'on' : '') + '">' + x + '</button>'; }).join('') + '</div>' : '') +
+    (c.tipo === 'lluvia' ? '<div class="row" style="margin-top:8px"><span>Con al menos</span><input id="fMm" inputmode="decimal" style="width:80px" value="' + (c.mm || 20) + '"><span>mm en 7 días</span></div>' : '') + '</div>' +
+    '<div class="fld"><span class="lab">Notas</span><textarea id="fNo" rows="3" placeholder="Cómo se llega, qué sale, dónde mirar…">' + esc(d.notas) + '</textarea></div>' +
+    '<p class="err" id="fErr"></p><div class="row"><button type="button" class="go" data-act="saveSitio">Guardar</button>' + (S.sitios[d.id] ? '<button type="button" class="linkb danger" data-act="delSitio">Eliminar</button>' : '') + '</div>');
+}
+function readSitio() {
+  var d = draft; if (!$('fN')) return; d.nombre = $('fN').value.trim(); d.notas = $('fNo').value;
+  if ($('fMax')) d.cond.max = num($('fMax').value); if ($('fMm')) d.cond.mm = num($('fMm').value);
+}
+function setPlace(o, lat, lng, after) { o.lat = lat; o.lng = lng; o.geo = ''; after(); geologyAt(lat, lng).then(function (p) { if (p) { o.geo = geoShort(p); if (draft === o && editingForm) after(); } }); }
+
+// ---------- Find form ----------
+var pdraft = null, fotoBusy = false;
+function openPieza(id, preset) {
+  var p = id ? S.piezas[id] : null;
+  if (p && !preset) return showPieza(p);
+  if (tab !== 'vitrina') { tab = 'vitrina'; Array.prototype.forEach.call($('bar').children, function (b) { b.classList.toggle('on', b.dataset.tab === 'vitrina'); }); }
+  editingForm = true;
+  var h = here();
+  pdraft = p ? JSON.parse(JSON.stringify(p)) : Object.assign({ id: uid('p'), tipo: 'fosil', nombre: '', fecha: new Date().toISOString().slice(0, 10), zona: '', notas: '', fotos: [], lat: h ? h.lat : null, lng: h ? h.lng : null, geo: '' }, preset || {});
+  formPieza();
+  if (!p && !preset && h) setPlace(pdraft, h.lat, h.lng, formPieza);
+}
+function showPieza(p) {
+  editingForm = true; if (tab !== 'vitrina') { tab = 'vitrina'; Array.prototype.forEach.call($('bar').children, function (b) { b.classList.toggle('on', b.dataset.tab === 'vitrina'); }); }
+  showSheet(head(esc(p.nombre || (TIPOS[p.tipo] || TIPOS.otro)[1])) + (p.fotos && p.fotos.length ? '<div class="thumbs" style="margin-bottom:10px">' + p.fotos.map(function (f) { return '<a href="/_blob/' + esc(f) + '" target="_blank"><img src="/_blob/' + esc(f) + '" alt="Foto" style="width:120px;height:120px;object-fit:cover;border-radius:12px"></a>'; }).join('') + '</div>' : '') +
+    '<div class="card"><span class="tag nt">' + (TIPOS[p.tipo] || TIPOS.otro).join(' ') + '</span>' + (p.fecha ? '<p class="small">Encontrado el ' + p.fecha.split('-').reverse().join('/') + (p.zona ? ' · ' + esc(p.zona) : '') + '</p>' : '') + (p.geo ? '<p class="small">🪨 ' + esc(p.geo) + '</p>' : '') + (p.id_ia ? '<p class="small">🔎 ' + esc(p.id_ia) + '</p>' : '') + (p.notas ? '<p style="white-space:pre-wrap;margin:8px 0 0">' + esc(p.notas) + '</p>' : '') + '</div>' +
+    '<div class="row">' + (p.lat != null ? '<button type="button" class="go" data-act="verMapa" data-ll="' + p.lat + ',' + p.lng + '">Ver en el mapa</button>' : '') + '<button type="button" class="ghost" data-act="editPieza" data-id="' + p.id + '">Editar</button></div>');
+}
+function formPieza() {
+  var d = pdraft;
+  showSheet(head(S.piezas[d.id] ? 'Editar pieza' : 'Nueva pieza') +
+    '<div class="fld"><span class="lab">Fotos</span><div class="thumbs" id="thumbs">' + d.fotos.map(function (f, i) { return '<figure><img src="/_blob/' + esc(f) + '" alt="Foto ' + (i + 1) + '"><button type="button" data-rmf="' + i + '" aria-label="Quitar foto">✕</button></figure>'; }).join('') + '</div>' +
+    (assets ? '<label class="ghost" style="cursor:pointer;justify-self:start">📷 Añadir foto<input type="file" id="fFile" accept="image/*" multiple hidden></label>' : '<p class="small">Las fotos se guardan cuando la app está conectada a tu cuenta.</p>') +
+    (sample && d.fotos.length ? '<button type="button" class="ghost" data-act="ia" style="justify-self:start">🔎 ¿Qué es?</button>' : '') + '<p class="small" id="fotoNote"></p></div>' +
+    '<div class="fld"><span class="lab">Tipo</span><div class="chips" id="fT">' + Object.keys(TIPOS).map(function (k) { return '<button type="button" data-v="' + k + '" class="' + (d.tipo === k ? 'on' : '') + '">' + TIPOS[k].join(' ') + '</button>'; }).join('') + '</div></div>' +
+    '<div class="fld"><span class="lab">Qué es</span><input id="fN" value="' + esc(d.nombre) + '" placeholder="Nummulites, pirita, cuerna de corzo…"></div>' +
+    '<div class="fld"><span class="lab">Cuándo</span><input id="fF" type="date" value="' + esc(d.fecha) + '"></div>' +
+    '<div class="fld"><span class="lab">Dónde (más o menos)</span><input id="fZ" value="' + esc(d.zona) + '" placeholder="Torrent de…, Cercs"><div class="small">' + (d.lat != null ? dec(d.lat, 4) + ', ' + dec(d.lng, 4) + (d.geo ? '<br>🪨 ' + esc(d.geo) : '') : 'Sin punto en el mapa') + '</div><div class="row"><button type="button" class="ghost" data-act="pHere">Donde estoy</button><button type="button" class="ghost" data-act="pPick">Elegir en el mapa</button></div></div>' +
+    '<div class="fld"><span class="lab">Notas</span><textarea id="fNo" rows="3">' + esc(d.notas) + '</textarea></div>' +
+    '<p class="err" id="fErr"></p><div class="row"><button type="button" class="go" data-act="savePieza">Guardar</button>' + (S.piezas[d.id] ? '<button type="button" class="linkb danger" data-act="delPieza">Eliminar</button>' : '') + '</div>');
+  var f = $('fFile'); if (f) f.addEventListener('change', addFotos);
+}
+function readPieza() { var d = pdraft; if (!$('fN')) return; d.nombre = $('fN').value.trim(); d.fecha = $('fF').value; d.zona = $('fZ').value.trim(); d.notas = $('fNo').value; }
+function shrink(f) {
+  return new Promise(function (res) {
+    var img = new Image(), u = URL.createObjectURL(f);
+    img.onload = function () { var s = Math.min(1, 1600 / Math.max(img.width, img.height)), c = document.createElement('canvas'); c.width = Math.round(img.width * s); c.height = Math.round(img.height * s); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(u); c.toBlob(function (b) { res(b || f); }, 'image/jpeg', .82); };
+    img.onerror = function () { URL.revokeObjectURL(u); res(f); };
+    img.src = u;
+  });
+}
+async function addFotos() {
+  readPieza(); var files = Array.prototype.slice.call(this.files || []), d = pdraft;
+  for (var i = 0; i < files.length; i++) {
+    $('fotoNote').textContent = 'Subiendo foto ' + (i + 1) + ' de ' + files.length + '…';
+    try { var bl = await shrink(files[i]); var r = await assets.upload(bl, { type: 'image/jpeg' }); d.fotos.push(r.id); }
+    catch (e) { $('fotoNote').textContent = 'No se ha podido subir una foto. Prueba con más cobertura.'; return; }
+  }
+  if (pdraft === d) formPieza();
+}
+async function identify() {
+  readPieza(); var d = pdraft, note = $('fotoNote'); note.textContent = 'Mirando la foto…';
+  try {
+    var blobs = await Promise.all(d.fotos.slice(0, 3).map(function (f) { return fetch('/_blob/' + f).then(function (r) { return r.blob(); }); }));
+    var prompt = 'Eres paleontólogo y mineralogista de campo en el Berguedà (Prepirineo catalán). Identifica la pieza de las fotos (' + (TIPOS[d.tipo] || TIPOS.otro)[1].toLowerCase() + '). ' +
+      (d.geo ? 'Se encontró sobre este estrato del mapa geológico del ICGC: ' + d.geo + '. ' : '') + (d.zona ? 'Zona: ' + d.zona + '. ' : '') +
+      'Responde en español con JSON: {"nombre": "lo más concreto que puedas sostener (género o grupo)", "grupo": "grupo general", "edad": "edad probable", "confianza": "alta|media|baja", "como_confirmar": "qué mirar para confirmarlo, una frase"}. Si no se ve bien, dilo en confianza baja.';
+    var r = await sample.json(prompt, { images: blobs.length === 1 ? blobs[0] : blobs, cache: false });
+    if (pdraft !== d) return;
+    if (!d.nombre && r.nombre) d.nombre = r.nombre;
+    d.id_ia = [r.nombre, r.grupo, r.edad].filter(Boolean).join(' · ') + ' (confianza ' + (r.confianza || '?') + ')' + (r.como_confirmar ? '. ' + r.como_confirmar : '');
+    formPieza(); $('fotoNote').textContent = '🔎 ' + d.id_ia;
+  } catch (e) { note.textContent = 'No se ha podido identificar ahora.'; }
+}
+
+// ---------- One click handler for the sheets ----------
+$('sheet').addEventListener('click', function (e) {
+  var b = e.target.closest('button'); if (!b) return;
+  var act = b.dataset.act;
+  if (b.closest('#fT')) { (draft && $('fC') ? draft : pdraft).tipo = b.dataset.v; Array.prototype.forEach.call(b.parentNode.children, function (x) { x.classList.toggle('on', x === b); }); return; }
+  if (b.closest('#fC')) { readSitio(); draft.cond = { tipo: b.dataset.v, max: draft.cond.max != null ? draft.cond.max : 40, meses: draft.cond.meses || [], mm: draft.cond.mm || 20 }; formSitio(); return; }
+  if (b.closest('#fM')) { var v = +b.dataset.v, ms = draft.cond.meses || (draft.cond.meses = []), i = ms.indexOf(v); if (i >= 0) ms.splice(i, 1); else ms.push(v); ms.sort(function (a, c) { return a - c; }); b.classList.toggle('on'); return; }
+  if (b.dataset.sitio) return openSitio(b.dataset.sitio);
+  if (b.dataset.pieza) return openPieza(b.dataset.pieza);
+  if (b.dataset.rmf != null) { readPieza(); var gone = pdraft.fotos.splice(+b.dataset.rmf, 1)[0]; if (gone && assets && !(S.piezas[pdraft.id] && (S.piezas[pdraft.id].fotos || []).indexOf(gone) >= 0)) assets.delete(gone).catch(function () {}); formPieza(); return; }
+  if (act === 'close') return setTab('mapa');
+  if (act === 'newSitio') return openSitio(null, here() || {});
+  if (act === 'newPieza') return openPieza(null);
+  if (act === 'editSitio') { draft = JSON.parse(JSON.stringify(S.sitios[b.dataset.id])); if (!draft.cond) draft.cond = { tipo: '' }; return formSitio(); }
+  if (act === 'editPieza') { pdraft = JSON.parse(JSON.stringify(S.piezas[b.dataset.id])); pdraft.fotos = pdraft.fotos || []; return formPieza(); }
+  if (act === 'verMapa') { var ll = b.dataset.ll.split(',').map(Number); setTab('mapa'); follow = false; map.setView(ll, 16); return; }
+  if (act === 'sHere' || act === 'pHere') { var h = here(); if (!h) { alert('Activa primero tu posición con el botón ◎ del mapa.'); return; } if (act === 'sHere') { readSitio(); setPlace(draft, h.lat, h.lng, formSitio); } else { readPieza(); setPlace(pdraft, h.lat, h.lng, formPieza); } return; }
+  if (act === 'sPick' || act === 'pPick') {
+    var isS = act === 'sPick', o = isS ? draft : pdraft; isS ? readSitio() : readPieza();
+    startPick(function (lat, lng) { $('sheet').hidden = false; if (lat == null) return isS ? formSitio() : formPieza(); setPlace(o, lat, lng, isS ? formSitio : formPieza); });
+    return;
+  }
+  if (act === 'ia') return identify();
+  if (act === 'saveSitio') { readSitio(); if (!draft.nombre) { $('fErr').textContent = 'Ponle un nombre.'; return; } if (draft.lat == null) { $('fErr').textContent = 'Coloca el sitio en el mapa.'; return; } if (draft.cond.tipo !== 'meses') delete draft.cond.meses; draft.ts = Date.now(); put('sitios', draft); editingForm = false; return showSitio(S.sitios[draft.id]); }
+  if (act === 'savePieza') { readPieza(); pdraft.ts = Date.now(); put('piezas', pdraft); editingForm = false; return renderVitrina(); }
+  if (act === 'delSitio' || act === 'delPieza') {
+    if (!b.classList.contains('sure')) { b.classList.add('sure'); b.textContent = '¿Seguro? Eliminar'; return; }
+    if (act === 'delSitio') { drop('sitios', draft.id); renderSitios(); } else { drop('piezas', pdraft.id); renderVitrina(); }
+  }
+});
+
+// ---------- Google Maps import (Takeout GeoJSON or list CSV) ----------
+function coordsFromUrl(u) {
+  var m = /[?&](?:q|query|ll|destination)=(-?\d+\.\d+),\s*(-?\d+\.\d+)/.exec(u) || /@(-?\d+\.\d+),(-?\d+\.\d+)/.exec(u) || /!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/.exec(u);
+  return m ? [+m[1], +m[2]] : null;
+}
+function parseCsv(t) {
+  var rows = [], row = [], f = '', q = false;
+  for (var i = 0; i < t.length; i++) { var c = t[i]; if (q) { if (c === '"' && t[i + 1] === '"') { f += '"'; i++; } else if (c === '"') q = false; else f += c; } else if (c === '"') q = true; else if (c === ',') { row.push(f); f = ''; } else if (c === '\n') { row.push(f); rows.push(row); row = []; f = ''; } else if (c !== '\r') f += c; }
+  if (f || row.length) { row.push(f); rows.push(row); } return rows;
+}
+document.addEventListener('change', async function (e) {
+  if (e.target.id !== 'imp') return;
+  var files = Array.prototype.slice.call(e.target.files || []), add = 0, sin = [], have = {};
+  list('sitios').forEach(function (s) { have[s.nombre + '|' + (s.lat || 0).toFixed(4)] = 1; });
+  function push(nombre, lat, lng, notas, lista) {
+    if (lat == null || (lat === 0 && lng === 0)) { sin.push(nombre); return; }
+    var k = nombre + '|' + lat.toFixed(4); if (have[k]) return; have[k] = 1;
+    var tipo = /f[oó]sil|dino|ammon|trilob/i.test(nombre + lista) ? 'fosil' : /mina|mineral|cristal|cuarz|pirit/i.test(nombre + lista) ? 'mineral' : /cuern|desmog|ciervo|corzo/i.test(nombre + lista) ? 'cuerno' : /cr[aá]neo|hueso/i.test(nombre + lista) ? 'craneo' : 'otro';
+    put('sitios', { id: uid('s'), nombre: nombre || 'Sin nombre', tipo: tipo, notas: [notas, lista ? 'Lista de Google Maps: ' + lista : ''].filter(Boolean).join('\n'), cond: { tipo: '' }, lat: lat, lng: lng, geo: '', ts: Date.now() }); add++;
+  }
+  for (var i = 0; i < files.length; i++) {
+    var txt = await files[i].text(), lista = files[i].name.replace(/\.(csv|json|geojson)$/i, '');
+    if (/\.csv$/i.test(files[i].name)) {
+      var rows = parseCsv(txt), h = (rows.shift() || []).map(function (x) { return x.toLowerCase(); });
+      var iT = h.findIndex(function (x) { return /t[ií]tulo|title/.test(x); }), iN = h.findIndex(function (x) { return /nota|note/.test(x); }), iU = h.findIndex(function (x) { return /url/.test(x); });
+      rows.forEach(function (r) { if (!r[iT] && !r[iU]) return; var ll = coordsFromUrl(r[iU] || ''); push(r[iT] || '', ll ? ll[0] : null, ll ? ll[1] : null, r[iN] || '', lista); });
+    } else {
+      try { (JSON.parse(txt).features || []).forEach(function (f) { var pr = f.properties || {}, c = (f.geometry || {}).coordinates || [0, 0], nm = (pr.location && pr.location.name) || pr.name || pr.Title || ''; var ll = c[0] || c[1] ? [c[1], c[0]] : coordsFromUrl(pr.google_maps_url || ''); push(nm || 'Sitio guardado', ll ? ll[0] : null, ll ? ll[1] : null, pr.location && pr.location.address || '', ''); }); } catch (err) {}
+    }
+  }
+  alert(add + ' sitios importados.' + (sin.length ? ' ' + sin.length + ' no traían coordenadas en el archivo (' + sin.slice(0, 5).join(', ') + (sin.length > 5 ? '…' : '') + '): colócalos a mano.' : ''));
+  renderSitios();
+});
+
+// ---------- Layers sheet ----------
+$('layBtn').addEventListener('click', function () {
+  tab = 'capas'; Array.prototype.forEach.call($('bar').children, function (b) { b.classList.remove('on'); });
+  showSheet(head('Capas') + '<div class="lay">' +
+    '<label><input type="radio" name="base" value="sat"' + (PREF.base === 'sat' ? ' checked' : '') + '> Satélite</label>' +
+    '<label><input type="radio" name="base" value="topo"' + (PREF.base === 'topo' ? ' checked' : '') + '> Topográfico ICGC</label>' +
+    '<label><input type="checkbox" data-k="geo"' + (PREF.geo ? ' checked' : '') + '> Mapa geológico 1:50.000 (ICGC)</label>' +
+    '<div style="padding:4px 0 8px"><span class="small">Transparencia del geológico</span><input type="range" min="15" max="100" value="' + PREF.op + '" id="op"></div>' +
+    '<label><input type="checkbox" data-k="ieig"' + (PREF.ieig ? ' checked' : '') + '> Espais d\'interès geològic (yacimientos protegidos)</label>' +
+    '<label><input type="checkbox" data-k="pbdb"' + (PREF.pbdb ? ' checked' : '') + '> Fósiles registrados (Paleobiology Database)</label>' +
+    '<label><input type="checkbox" data-k="sitios"' + (PREF.sitios ? ' checked' : '') + '> Mis sitios</label>' +
+    '<label><input type="checkbox" data-k="piezas"' + (PREF.piezas ? ' checked' : '') + '> Mis piezas</label></div>' +
+    '<p class="small">Toca cualquier punto del mapa para ver la roca, su edad y qué fósiles o minerales buscar.</p>' +
+    ('serviceWorker' in navigator && location.protocol === 'https:' ? '<div class="card" style="margin-top:10px"><div class="lab">Sin cobertura</div><p class="small">El GPS funciona sin datos. Descarga el Berguedà (satélite + geológico, zoom hasta calle) para verlo en el monte.</p><button type="button" class="ghost" id="dl">Descargar el Berguedà (~40 MB)</button><p class="small" id="dlNote"></p></div>' : ''));
+});
+$('sheet').addEventListener('change', function (e) {
+  var t = e.target;
+  if (t.name === 'base') { PREF.base = t.value; applyLayers(); }
+  else if (t.dataset.k) { PREF[t.dataset.k] = t.checked; applyLayers(); }
+});
+$('sheet').addEventListener('input', function (e) { if (e.target.id === 'op') { PREF.op = +e.target.value; applyLayers(); } });
+
+// Offline: a service worker keeps every tile it sees; the button walks the whole comarca once
+function tileUrls() {
+  var urls = [], z, x, y;
+  function t2(lat, lng, z) { var n = Math.pow(2, z), r = lat * Math.PI / 180; return [Math.floor((lng + 180) / 360 * n), Math.floor((1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * n)]; }
+  for (z = 10; z <= 15; z++) {
+    var a = t2(BERGUEDA[1][0], BERGUEDA[0][1], z), b = t2(BERGUEDA[0][0], BERGUEDA[1][1], z);
+    for (x = a[0]; x <= b[0]; x++) for (y = a[1]; y <= b[1]; y++) {
+      urls.push('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/' + z + '/' + y + '/' + x);
+      if (z <= 14) { var n = Math.pow(2, z), w = x / n * 40075016.686 - 20037508.343, e2 = (x + 1) / n * 40075016.686 - 20037508.343, no = 20037508.343 - y / n * 40075016.686, so = 20037508.343 - (y + 1) / n * 40075016.686; urls.push(GEO._url + L.Util.getParamString(Object.assign({}, GEO.wmsParams, { crs: 'EPSG:3857', bbox: [w, so, e2, no].join(','), width: 256, height: 256 }), GEO._url, true)); }
+    }
+  }
+  return urls;
+}
+document.addEventListener('click', async function (e) {
+  if (e.target.id !== 'dl') return;
+  var b = e.target, note = $('dlNote'), urls = tileUrls(), done = 0, fail = 0;
+  b.disabled = true;
+  try {
+    var c = await caches.open('estrat-tiles');
+    for (var i = 0; i < urls.length; i += 8) {
+      await Promise.all(urls.slice(i, i + 8).map(function (u) { return c.match(u).then(function (hit) { return hit || fetch(u, { mode: 'cors' }).then(function (r) { if (r.ok) return c.put(u, r); fail++; }); }).catch(function () { fail++; }); }));
+      done = Math.min(urls.length, i + 8); note.textContent = done + ' de ' + urls.length + ' trozos de mapa…';
+    }
+    note.textContent = 'Listo: el Berguedà está guardado en el móvil' + (fail ? ' (fallaron ' + fail + ' trozos; vuelve a pulsar para reintentar)' : '') + '.';
+  } catch (err) { note.textContent = 'No se pudo guardar: quizá falta espacio.'; }
+  b.disabled = false;
+});
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(function () {});
+
+// ---------- Start ----------
+applyLayers(); drawPins(); renderAlert();
+Promise.all([loadBaells(), loadLluvia()]).then(refresh);
+
+// ---------- Sync: local copy first, the account when there is one ----------
+(async function () {
+  try {
+    var c = window.claude && await window.claude.use('db'); if (!c) return;
+    db = c;
+    try { assets = await window.claude.use('assets'); } catch (e) {}
+    try { var sm = await window.claude.use('sample'); var lim = sm ? await sm.limits().catch(function () { return null; }) : null; sample = lim && lim.images ? sm : null; } catch (e) {}
+    function cached(s) { return !!(s.metadata && s.metadata.fromCache); }
+    ['sitios', 'piezas'].forEach(function (col) {
+      var seen = false;
+      c.collection(col).onSnapshot(function (snap) {
+        var m = {}; snap.docs.forEach(function (d) { var x = d.data(); if (x) m[d.id] = x; });
+        if (!cached(snap)) {
+          synced = true;
+          if (!seen) { seen = true; Object.keys(S[col]).forEach(function (k) { if (!m[k]) { m[k] = S[col][k]; c.collection(col).doc(k).set(S[col][k]).catch(function () {}); } }); }
+        } else if (!synced && !snap.docs.length) return;
+        var keep = {}; if (!synced) Object.keys(S[col]).forEach(function (k) { if (!m[k]) keep[k] = S[col][k]; });
+        S[col] = Object.assign(keep, m); persist(); refresh();
+      }, function () {});
+    });
+  } catch (e) {}
+})();
+</script>
+</body></html>
