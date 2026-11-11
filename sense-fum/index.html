@@ -292,7 +292,7 @@ details.sect summary::after { content: "▾"; margin-left: auto; color: var(--mu
       <label>Último día que fumaste<input id="fQuit" type="date"></label>
       <label>A qué hora, más o menos<input id="fHour" type="time"></label>
       <label>Cigarrillos al día<input id="fCig" type="number" min="1" max="80" inputmode="numeric"></label>
-      <label>Gasto en tabaco al día (€)<input id="fPack" type="number" min="0" step="0.5" inputmode="decimal"></label>
+      <label>Precio de la cajetilla de 20 (€)<input id="fPack" type="number" min="0" step="0.5" inputmode="decimal"></label>
       <label>Tu récord anterior (días)<input id="fRec" type="number" min="0" inputmode="numeric"></label>
       <label class="w">Por qué lo dejé<textarea id="fWhy" rows="4" maxlength="400" placeholder="Escríbelo con tus palabras. Te saldrá en la pantalla de respirar."></textarea></label>
       <label class="w">Frases de cada día, una por línea<textarea id="fFrases" rows="6" placeholder="Yesenia | Una frase tuya"></textarea></label>
@@ -318,7 +318,7 @@ details.sect summary::after { content: "▾"; margin-left: auto; color: var(--mu
 <dialog id="sos" aria-label="Respirar"><div class="s" id="sosBody"></div></dialog>
 
 <script>
-var DAY = 86400000, DEFAULTS = { quit: '2026-10-09', hora: '00:00', cig: 18, diario: 6, record: 2, motivo: '' };
+var DAY = 86400000, DEFAULTS = { quit: '2026-10-09', hora: '00:00', cig: 18, cajetilla: 6, record: 2, motivo: '' };
 var LS = 'sense-fum-v1', S = { p: Object.assign({}, DEFAULTS), ev: {}, pend: {}, del: {}, pPend: false, m: { bloques: [], frases: [] }, mPend: false }, db = null, assets = null, hoyOff = 0;
 try { var raw = JSON.parse(localStorage.getItem(LS) || 'null'); if (raw) { S.p = Object.assign({}, DEFAULTS, raw.p); S.ev = raw.ev || {}; S.pend = raw.pend || {}; S.del = raw.del || {}; S.pPend = !!raw.pPend; if (raw.m) S.m = raw.m; S.mPend = !!raw.mPend; } } catch (e) {}
 function persist() { try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) {} }
@@ -335,7 +335,7 @@ function dur(mins) { if (mins < 60) return Math.round(mins) + ' min'; var h = mi
 
 // ---------- Numbers ----------
 function numbers(now) {
-  var since = Math.max(0, now - quitAt().getTime()), d = since / DAY, cigs = d * S.p.cig, perDay = S.p.diario;
+  var since = Math.max(0, now - quitAt().getTime()), d = since / DAY, cigs = d * S.p.cig, perDay = S.p.cig / 20 * S.p.cajetilla;
   var gums = events('chicle').length, gross = d * perDay, net = gross;
   return { since: since, d: d, whole: Math.floor(d), cigs: cigs, gums: gums, gross: gross, net: net, perDay: perDay, perYear: perDay * 365 };
 }
@@ -383,7 +383,7 @@ function tick() {
   $('clock').textContent = h + ' h ' + String(mi).padStart(2, '0') + ' min ' + String(s).padStart(2, '0') + ' s';
   $('eur').textContent = nf(n.net, 2) + ' €';
   $('nToday').textContent = 'Lo de hoy, hasta ahora: ' + nf(n.perDay * rest / DAY, 2) + ' € y ' + nf(Math.floor(S.p.cig * rest / DAY)) + ' cigarrillos sin fumar. Cada hora suma.';
-  $('tCig').textContent = nf(Math.floor(n.cigs)); $('tPack').textContent = nf(Math.floor(n.d));
+  $('tCig').textContent = nf(Math.floor(n.cigs)); $('tPack').textContent = nf(Math.floor(n.cigs / 20));
   $('tTime').textContent = dur(n.cigs * 7); $('tLife').textContent = dur(n.cigs * 11); $('tTar').textContent = nf(n.cigs * 10 / 1000, n.cigs < 1000 ? 1 : 0) + ' g';
 }
 function render() {
@@ -392,7 +392,7 @@ function render() {
   tick(); renderClimb(n);
   var r = S.p.record, times = r > 0 ? n.d / r : 0;
   $('record').innerHTML = r > 0 && n.d > r ? 'Antes no pasabas de ' + r + (r === 1 ? ' día' : ' días') + '. Ahora vas por <b>' + nf(times, times < 10 ? 1 : 0) + ' veces</b> tu récord.' : r > 0 ? 'Tu récord anterior: ' + r + (r === 1 ? ' día' : ' días') + '. Vas a por él.' : 'Cada día de estos es un día de récord.';
-  $('eurSub').textContent = 'Con ' + nf(S.p.diario, 2) + ' € al día, una cajetilla diaria.';
+  $('eurSub').textContent = nf(S.p.cig) + ' cigarrillos al día son ' + nf(S.p.cig / 20, 2) + ' cajetillas de 20. A ' + nf(S.p.cajetilla, 2) + ' € cada una, ' + nf(n.perDay, 2) + ' € al día.';
   var has = GOALS.filter(function (g) { return g[0] <= n.net; }).pop(), nx = GOALS.filter(function (g) { return g[0] > n.net; })[0];
   $('goal').innerHTML = (has ? '<span>Ya te da para ' + esc(has[1]) + '.</span>' : '') + (nx ? '<span>A por ' + esc(nx[1]) + ': ' + nf(nx[0]) + ' €, a precio aproximado</span><div class="track"><i style="width:' + Math.min(100, n.net / nx[0] * 100) + '%"></i></div>' : '');
   $('pm1').textContent = nf(n.perDay * 30) + ' €'; $('pm3').textContent = nf(n.perDay * 91) + ' €'; $('pm6').textContent = nf(n.perDay * 182) + ' €';
@@ -459,7 +459,7 @@ function renderWhy(n, now) {
   $('whyBlocks').innerHTML = blocks.map(function (b) { return '<div class="block"><h3>' + esc(b.titulo) + '</h3><p>' + esc(fillIn(b.texto || '', n)) + '</p>' + widget(b.kind, n, now) + '</div>'; }).join('');
 }
 $('hoyNext').addEventListener('click', function () { hoyOff++; render(); });
-function fillForm() { var p = S.p; $('fQuit').value = p.quit; $('fHour').value = p.hora; $('fCig').value = p.cig; $('fPack').value = p.diario; $('fRec').value = p.record; if (document.activeElement !== $('fWhy')) $('fWhy').value = p.motivo; if (document.activeElement !== $('fFrases')) $('fFrases').value = (S.m.frases || []).join('\n'); }
+function fillForm() { var p = S.p; $('fQuit').value = p.quit; $('fHour').value = p.hora; $('fCig').value = p.cig; $('fPack').value = p.cajetilla; $('fRec').value = p.record; if (document.activeElement !== $('fWhy')) $('fWhy').value = p.motivo; if (document.activeElement !== $('fFrases')) $('fFrases').value = (S.m.frases || []).join('\n'); }
 
 // ---------- Store: on the phone first, synced when there is signal ----------
 var flushing = false;
@@ -491,7 +491,7 @@ function buzz() { try { if (navigator.vibrate) navigator.vibrate(25); } catch (e
 function gum() { var id = addEv('chicle'); buzz(); return id; }
 $('gumBtn').addEventListener('click', function () { var id = gum(); toast('Chicle apuntado', 'Deshacer', function () { delEv(id); }); });
 [['fQuit', 'quit'], ['fHour', 'hora']].forEach(function (x) { $(x[0]).addEventListener('change', function () { if (this.value) { var c = {}; c[x[1]] = this.value; setP(c); } }); });
-[['fCig', 'cig'], ['fPack', 'diario'], ['fRec', 'record']].forEach(function (x) { $(x[0]).addEventListener('change', function () { var v = parseFloat(this.value); if (v >= 0) { var c = {}; c[x[1]] = v; setP(c); } }); });
+[['fCig', 'cig'], ['fPack', 'cajetilla'], ['fRec', 'record']].forEach(function (x) { $(x[0]).addEventListener('change', function () { var v = parseFloat(this.value); if (v >= 0) { var c = {}; c[x[1]] = v; setP(c); } }); });
 $('fWhy').addEventListener('change', function () { setP({ motivo: this.value.trim() }); });
 function setFrases(list) { S.m = Object.assign({}, S.m, { frases: list }); S.mPend = true; persist(); fillForm(); render(); flush(); }
 $('fFrases').addEventListener('change', function () { setFrases(this.value.split('\n').map(function (l) { return l.trim(); }).filter(Boolean)); });

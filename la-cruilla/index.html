@@ -448,7 +448,7 @@ var LIVE_FN = {
   'sense-fum': function (r) {
     var p = r.perfil; if (!p || !p.quit) return null;
     var q = p.quit.split('-'), h = (p.hora || '00:00').split(':'), at = new Date(+q[0], +q[1] - 1, +q[2], +h[0] || 0, +h[1] || 0);
-    var d = Math.max(0, (Date.now() - at) / 864e5), net = d * (p.diario != null ? +p.diario : 6), w = Math.floor(d);
+    var d = Math.max(0, (Date.now() - at) / 864e5), net = d * (p.cig != null ? +p.cig : 18) / 20 * (p.cajetilla != null ? +p.cajetilla : 6), w = Math.floor(d);
     return { n: w, u: plural(w, 'día sin fumar', 'días sin fumar'), s: net ? thousands(net) + ' € ahorrados' : '' };
   },
   tfg: function (r) {
