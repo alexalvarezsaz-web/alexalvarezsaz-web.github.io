@@ -475,7 +475,8 @@ function renderGumHist(gm, now) {
     var when = x[0].getDate() + ' de ' + MONTHS[x[0].getMonth()];
     return x[2] ? '<div title="' + when + ': ' + x[1] + (x[1] === 1 ? ' chicle' : ' chicles') + '"><i style="height:' + Math.max(2, x[1] / mx * 80) + 'px"></i>' + lab + '</div>' : '<div class="nd" title="' + when + ': sin datos"><i></i>' + lab + '</div>';
   }).join('');
-  $('gumHistTxt').textContent = (done.length >= 10 && a0 != null && a1 != null ? 'Media al día: ' + nf(a0, 1) + ' la primera semana apuntada, ' + nf(a1, 1) + ' los últimos 7 días.' : nf(days.length) + (days.length === 1 ? ' día' : ' días') + ' desde el primero apuntado.') + (gaps ? ' Rayado: sin datos.' : '');
+  var tot = 0; Object.keys(gm.by).forEach(function (k) { tot += gm.by[k]; });
+  $('gumHistTxt').innerHTML = '<b>' + nf(tot) + (tot === 1 ? ' chicle' : ' chicles') + ' en total.</b> ' + esc((done.length >= 10 && a0 != null && a1 != null ? 'Media al día: ' + nf(a0, 1) + ' la primera semana apuntada, ' + nf(a1, 1) + ' los últimos 7 días.' : nf(days.length) + (days.length === 1 ? ' día' : ' días') + ' desde el primero apuntado.') + (gaps ? ' Rayado: sin datos.' : ''));
   var h = $('gumHist'); h.scrollLeft = h.scrollWidth;
 }
 
