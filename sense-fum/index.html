@@ -115,7 +115,11 @@ h1, h2, h3 { font-family: var(--display); line-height: 1.1; margin: 0; text-wrap
 .bars span { font-size: 10.5px; color: var(--muted); }
 .bars .nd i { height: 14px; background: repeating-linear-gradient(45deg, var(--line) 0 3px, transparent 3px 6px); }
 .bars .nd b { color: var(--muted); font-weight: 600; }
-.tg { display: grid; gap: 6px; }
+.tg summary { cursor: pointer; min-height: 40px; display: flex; align-items: center; gap: 6px; font-weight: 700; color: var(--pine); list-style: none; }
+.tg summary::-webkit-details-marker { display: none; }
+.tg summary::after { content: "▾"; color: var(--muted); transition: transform .2s; }
+.tg[open] summary::after { transform: rotate(180deg); }
+.tg #gumList { display: grid; gap: 6px; padding-top: 4px; }
 .tg ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
 .tg li { display: flex; align-items: center; border-radius: 12px; background: var(--bg); padding-left: 4px; }
 .tg input { width: 6.4em; min-height: 40px; padding: 0 6px; border: 0; background: transparent; color: var(--ink); font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
@@ -296,7 +300,7 @@ details.sect summary::after { content: "▾"; margin-left: auto; color: var(--mu
   <section class="sect">
     <h2>Chicles de 2 mg</h2>
     <p class="small" id="gumTxt"></p>
-    <div class="tg" id="gumList" hidden></div>
+    <details class="tg" id="gumBox" hidden><summary id="gumSum"></summary><div id="gumList"></div></details>
     <div class="bars" id="gumBars"></div>
     <h3 class="hist-h">Desde el primer chicle apuntado</h3>
     <div class="hist" id="gumHist"></div>
@@ -490,8 +494,9 @@ function renderGumHist(gm, now) {
 function renderGumToday(now) {
   var box = $('gumList'); if (box.contains(document.activeElement)) return;
   var t0 = sod(now), ids = Object.keys(S.ev).filter(function (k) { return S.ev[k].tipo === 'chicle' && S.ev[k].t >= t0; }).sort(function (a, b) { return S.ev[a].t - S.ev[b].t; });
-  box.hidden = !ids.length;
-  box.innerHTML = '<span class="lab">Hoy · toca la hora para cambiarla</span><ul>' + ids.map(function (k) {
+  $('gumBox').hidden = !ids.length;
+  $('gumSum').textContent = 'Hoy: ' + ids.length + (ids.length === 1 ? ' chicle' : ' chicles') + ' · corregir';
+  box.innerHTML = '<span class="small">Toca la hora para cambiarla o la × para borrarlo.</span><ul>' + ids.map(function (k) {
     var d = new Date(S.ev[k].t), hm = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
     return '<li><input type="time" value="' + hm + '" data-id="' + esc(k) + '" aria-label="Hora del chicle"><button type="button" data-del="' + esc(k) + '" aria-label="Borrar el chicle de las ' + hm + '">×</button></li>';
   }).join('') + '</ul>';
