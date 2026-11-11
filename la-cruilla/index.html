@@ -66,11 +66,11 @@ h1 { margin: 0; display: flex; align-items: center; gap: .28em; font: 800 clamp(
 @media (min-width: 720px) { .finder { grid-template-columns: minmax(220px, 320px) minmax(0, 1fr); align-items: center; } }
 
 /* Mosaic */
-.mosaic { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 96px; grid-auto-flow: dense; gap: 8px; }
+.mosaic { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 112px; gap: 8px; }
 .slot { position: relative; min-width: 0; grid-column: span var(--m, 1); grid-row: span var(--mr, 1); }
 .slot.note { grid-column: 1 / -1; grid-row: span 2; color: var(--muted); padding: 20px 4px; }
 @media (min-width: 720px) {
-  .mosaic { grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: 176px; gap: 10px; }
+  .mosaic { grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: 150px; gap: 10px; }
   .slot { grid-column: span var(--d, 1); grid-row: span var(--dr, 1); }
 }
 .tile { position: relative; display: grid; grid-template-rows: auto 1fr; gap: 2px; width: 100%; height: 100%; padding: 10px 12px; border: 0; border-radius: 12px; overflow: hidden; background: var(--c, var(--t-otr)); color: var(--t-ink); text-align: left; text-decoration: none; cursor: pointer; }
@@ -112,7 +112,7 @@ h1 { margin: 0; display: flex; align-items: center; gap: .28em; font: 800 clamp(
 @media (min-width: 720px) { .desc { display: block; } }
 .stat { position: absolute !important; top: 8px; right: 12px; text-align: right; font: 800 34px/1 var(--font-display); letter-spacing: -.02em; }
 .stat small { display: block; font: 500 11px var(--font-mono); letter-spacing: .02em; color: var(--t-soft); }
-@media (min-width: 720px) { .stat { font-size: 56px; } .stat small { font-size: 12px; } }
+@media (min-width: 720px) { .stat { font-size: 40px; } .stat small { font-size: 12px; } }
 .note-tag { justify-self: start; margin-top: 3px; padding: 0 6px; border-radius: 4px; background: rgba(255, 255, 255, .18); font-size: 12px; font-weight: 500; }
 .tile:hover { filter: brightness(1.1); }
 .tile:focus-visible { outline-offset: 2px; }
@@ -193,6 +193,23 @@ var CATS = [['Naturaleza', '--t-nat'], ['Viajes', '--t-via'], ['Estudios', '--t-
 var LS = 'cruilla-v1', LV = 'cruilla-visitas', items = [], visits = {}, loaded = false, db = null, visitDoc = null, canEdit = false, editMode = false, status = 'Cargando tus páginas…', filter = 'all', editing = null;
 try { var c0 = JSON.parse(localStorage.getItem(LS) || 'null'); if (Array.isArray(c0)) { items = c0; loaded = c0.length > 0; } } catch (e) {}
 try { visits = JSON.parse(localStorage.getItem(LV) || '{}') || {}; } catch (e) {}
+// Every open is counted (timestamps, kept 30 days). The mosaic orders itself by opens in the last 14 days.
+var LC = 'cruilla-conteo', counts = {}, WIN = 14 * 864e5, KEEP = 30 * 864e5;
+try { counts = JSON.parse(localStorage.getItem(LC) || '{}') || {}; } catch (e) {}
+function seedCounts() { // pages opened before counting existed start with one open, their last one
+  Object.keys(visits).forEach(function (k) { if (!counts[k] && visits[k] > Date.now() - KEEP) counts[k] = [visits[k]]; });
+}
+function mergeCounts(c) {
+  var lim = Date.now() - KEEP;
+  Object.keys(c || {}).forEach(function (k) {
+    if (!Array.isArray(c[k])) return;
+    var all = (counts[k] || []).concat(c[k]).filter(function (t) { return typeof t === 'number' && t > lim; });
+    counts[k] = all.filter(function (t, i) { return all.indexOf(t) === i; }).sort();
+    if (!counts[k].length) delete counts[k];
+  });
+}
+function score(id) { var lim = Date.now() - WIN; return (counts[id] || []).filter(function (t) { return t > lim; }).length; }
+seedCounts();
 
 var $ = function (id) { return document.getElementById(id); };
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (m) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]; }); }
@@ -200,7 +217,7 @@ function norm(s) { return String(s || '').toLowerCase().normalize('NFD').replace
 function catColor(n) { for (var i = 0; i < CATS.length; i++) if (CATS[i][0] === n) return CATS[i][1]; return '--t-otr'; }
 function safeUrl(u) { return /^https:\/\/\S+$/i.test(String(u || '').trim()); }
 function safeBlob(f) { return /^[0-9a-f]{32}$/.test(String(f || '')); }
-function sortItems(l) { return l.sort(function (a, b) { return (b.fijada ? 1 : 0) - (a.fijada ? 1 : 0) || (a.orden || 0) - (b.orden || 0); }); }
+function sortItems(l) { return l.sort(function (a, b) { return (b.fijada ? 1 : 0) - (a.fijada ? 1 : 0) || score(b.id) - score(a.id) || (visits[b.id] || 0) - (visits[a.id] || 0) || (a.orden || 0) - (b.orden || 0); }); }
 var SEASONS = ['invierno', 'invierno', 'primavera', 'primavera', 'primavera', 'verano', 'verano', 'verano', 'otoño', 'otoño', 'otoño', 'invierno'];
 $('today').textContent = new Date().toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' }).replace('.', '') + ' · ' + SEASONS[new Date().getMonth()];
 
@@ -264,6 +281,7 @@ function poster(sky, body) { return '<svg class="poster-art" viewBox="0 0 400 22
 var bands = function (cols) { return cols.map(function (c, i) { return '<rect y="' + (i * 26) + '" width="400" height="30" fill="' + c + '"/>'; }).join(''); };
 var pines = function (x0, x1, base, step, h, col) { var s = ''; for (var x = x0, k = 0; x < x1; x += step, k++) { var ht = h * (.8 + ((k * 7) % 5) * .08); s += 'M' + x + ' ' + base + 'L' + (x + step * .48) + ' ' + (base - ht) + 'L' + (x + step * .96) + ' ' + base + 'Z'; } return '<path d="' + s + '" fill="' + col + '"/>'; };
 var POSTERS = {
+  'calendario': poster('#ff5a3c', bands(['#f24a2d', '#ff5a3c', '#ff6e4a', '#ff8259', '#ff966a']) + '<rect x="132" y="12" width="136" height="120" rx="10" fill="#fff6ee"/><path d="M132 22a10 10 0 0 1 10-10h116a10 10 0 0 1 10 10V38H132Z" fill="#1a0d08"/><rect x="156" y="4" width="8" height="20" rx="4" fill="#1a0d08"/><rect x="236" y="4" width="8" height="20" rx="4" fill="#1a0d08"/><g fill="#1a0d08">' + [[152, 64], [176, 64], [200, 64], [224, 64], [248, 64], [152, 86], [176, 86], [224, 86], [248, 86], [152, 108], [176, 108], [200, 108], [224, 108]].map(function (p) { return '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="3.5"/>'; }).join('') + '</g><circle cx="200" cy="86" r="12" fill="none" stroke="#0fa573" stroke-width="4"/><path d="M240 100l16 16M256 100l-16 16" stroke="#0fa573" stroke-width="5" stroke-linecap="round"/>'),
   'diari-bolets': poster('#1f4d4a', bands(['#17423f', '#23564e', '#3b6f55', '#79925a', '#d4a84b']) + '<circle cx="300" cy="118" r="34" fill="#f3cf72"/><path d="M0 150 L70 118 L150 142 L230 106 L320 138 L400 112 V220 H0Z" fill="#2c5a43"/>' + pines(0, 400, 164, 21, 42, '#1c4433') + '<path d="M0 220 V176 C90 160 220 186 400 164 V220Z" fill="#11291f"/>' + pines(0, 150, 198, 26, 62, '#0c2018') + '<path d="M258 200 C256 180 264 170 276 168 H308 C320 170 328 180 326 200 C326 212 258 212 258 200Z" fill="#efe2c6"/><path d="M226 172 C226 126 358 126 358 172 C358 182 226 182 226 172Z" fill="#8c4a22"/><path d="M240 160 C256 138 300 134 322 142 C296 142 262 148 240 160Z" fill="#b56a31"/>'),
   'territorio': poster('#c9b77e', bands(['#b9c49a', '#c7cb9c', '#d8cf9f', '#e4d6a2', '#e9c987']) + '<path d="M0 170 L80 128 L140 150 L196 66 L214 96 L228 86 L246 60 L300 138 L400 116 V220 H0Z" fill="#3f6f4d"/><path d="M196 66 L214 96 L200 104 L184 90Z M246 60 L262 90 L246 98 L236 82Z" fill="#f0ead2"/><g fill="none" stroke="#e8e2c2" stroke-opacity=".45" stroke-width="1.5"><path d="M0 188C60 168 110 182 170 160S300 150 400 158"/><path d="M0 204C70 184 120 198 180 176S310 166 400 174"/><path d="M60 150C110 132 150 146 190 116S260 104 310 142"/><path d="M110 170C150 150 180 160 214 134S270 130 340 160"/></g><path d="M0 220 V196 C120 182 260 208 400 188 V220Z" fill="#20402d"/><path d="M322 96 c-11 0 -19 8 -19 18 c0 13 19 32 19 32 s19 -19 19 -32 c0 -10 -8 -18 -19 -18Z" fill="#c63a26"/><circle cx="322" cy="114" r="7" fill="#f3ead0"/>'),
   'sense-fum': poster('#20465f', bands(['#1a3b54', '#2c5a75', '#5a8596', '#c9a877', '#f0b35e']) + '<circle cx="86" cy="128" r="36" fill="#fbe3a1"/><path d="M0 176 L90 148 L170 170 L400 140 V220 H0Z" fill="#35617a"/><path d="M60 220 C130 196 176 160 214 58 L240 104 L256 92 L286 46 C304 100 346 168 400 190 V220Z" fill="#10232c"/><path d="M214 58 L240 104 L222 110 L202 90Z M286 46 L306 92 L288 92 L272 72Z" fill="#e4eef2"/><path d="M60 220 C130 196 176 160 214 58" fill="none" stroke="#f5bd3b" stroke-width="3" stroke-dasharray="3 7" stroke-linecap="round"/>'),
@@ -333,39 +351,25 @@ function renderRecent() {
 }
 
 // Tile sizes: a photo gets the most room, a countdown a wide tile. The last tile stretches to close the mosaic.
-function layout(list, extra) {
-  var cells = { d: 0, m: 0 }, sizes = list.map(function (o) {
-    var photo = safeBlob(o.foto), dated = daysLeft(o.fecha) !== null, since = daysSince(o.desde) !== null;
-    var s = o.grande ? { d: 2, dr: 2, m: 2, mr: 2 } : photo ? { d: 2, dr: 2, m: 2, mr: 1 } : dated ? { d: 2, dr: 1, m: 2, mr: 1 } : since ? { d: 2, dr: 1, m: 1, mr: 1 } : { d: 1, dr: 1, m: 1, mr: 1 };
-    cells.d += s.d * s.dr; cells.m += s.m * s.mr;
-    return s;
-  });
-  cells.d += extra; cells.m += extra;
-  if (!extra && sizes.length) {
-    var last = sizes[sizes.length - 1];
-    if (last.dr === 1) last.d = Math.min(4, last.d + (4 - cells.d % 4) % 4);
-    if (last.mr === 1) last.m = Math.min(2, last.m + (2 - cells.m % 2) % 2);
-  }
-  return sizes;
+function layout(list) { // every tile is the same size
+  return list.map(function () { return { d: 1, dr: 1, m: 1, mr: 1 }; });
 }
 
 function render() {
   var list = matches(), qv = $('q').value.trim(), canMove = !qv && filter === 'all', html = '';
-  var adder = canEdit && canMove && (editMode || !items.length), sizes = layout(list, adder ? 1 : 0);
+  var adder = canEdit && canMove && (editMode || !items.length), sizes = layout(list);
   list.forEach(function (o, i) {
     var s = sizes[i], left = daysLeft(o.fecha), since = daysSince(o.desde), photo = safeBlob(o.foto), art = !photo && POSTERS[o.id], big = s.d > 1 && (o.grande || photo || left !== null || since !== null);
     var kind = [o.categoria === 'Otros' ? '' : o.categoria, o.lugar].filter(Boolean).join(' · ');
+    var stat = left !== null ? '<span class="stat">' + (left === 0 ? 'Hoy' : left) + (left === 0 ? '' : '<small>' + (left === 1 ? 'día' : 'días') + '</small>') + '</span>' : since !== null ? '<span class="stat">' + since + '<small>' + (since === 1 ? 'día' : 'días') + '</small></span>' : '';
     var inner = (art || (photo ? '<img src="/_blob/' + esc(o.foto) + '" alt="">' : artFor(o))) +
-      '<span class="kind">' + (o.fijada ? '★ ' : '') + esc(kind) + '</span>' +
-      (left !== null ? '<span class="stat">' + (left === 0 ? 'Hoy' : left) + (left === 0 ? '' : '<small>' + (left === 1 ? 'día' : 'días') + '</small>') + '</span>' : since !== null ? '<span class="stat">' + since + '<small>' + (since === 1 ? 'día' : 'días') + '</small></span>' : '') +
+      '<span class="kind">' + (o.fijada ? '★ ' : '') + esc(kind) + '</span>' + stat +
       '<span class="body"><span class="name">' + esc(o.nombre) + '</span>' + (o.texto ? '<span class="desc">' + esc(o.texto) + '</span>' : '') + (o.aviso ? '<span class="note-tag">' + esc(o.aviso) + '</span>' : '') + '</span>';
-    var cls = 'tile' + (art ? ' poster' : photo ? ' photo' : '') + (big ? ' big' : ''), bg = 'style="--c:var(' + catColor(o.categoria) + ')"';
+    var cls = 'tile' + (art ? ' poster' : photo ? ' photo' : ''), bg = 'style="--c:var(' + catColor(o.categoria) + ')"';
     var tile = safeUrl(o.url) ? '<a class="' + cls + '" ' + bg + ' data-id="' + esc(o.id) + '" href="' + esc(o.url) + '" target="_blank" rel="noopener">' + inner + '</a>' : '<span class="' + cls + '" ' + bg + '>' + inner + '</span>';
     var prev = list[i - 1], next = list[i + 1], tools = '';
     if (canEdit && editMode) {
       tools = '<div class="tools"><button type="button" data-act="pin" data-id="' + esc(o.id) + '" aria-pressed="' + !!o.fijada + '" aria-label="Fijar ' + esc(o.nombre) + '">★</button>' +
-        (canMove && prev && !!prev.fijada === !!o.fijada ? '<button type="button" data-act="up" data-id="' + esc(o.id) + '" aria-label="Mover antes ' + esc(o.nombre) + '">◀</button>' : '') +
-        (canMove && next && !!next.fijada === !!o.fijada ? '<button type="button" data-act="down" data-id="' + esc(o.id) + '" aria-label="Mover después ' + esc(o.nombre) + '">▶</button>' : '') +
         '<button type="button" data-act="edit" data-id="' + esc(o.id) + '" aria-label="Editar ' + esc(o.nombre) + '">✎</button></div>';
     }
     html += '<li class="slot" style="--i:' + i + ';--d:' + s.d + ';--dr:' + s.dr + ';--m:' + s.m + ';--mr:' + s.mr + '">' + tile + tools + '</li>';
@@ -402,9 +406,11 @@ $('chips').addEventListener('click', function (e) {
 
 // ---------- Visits: remembered per person, on every device they use ----------
 function remember(id) {
-  visits[id] = Date.now();
-  try { localStorage.setItem(LV, JSON.stringify(visits)); } catch (e) {}
-  if (visitDoc) visitDoc.set({ v: visits }).catch(function () {});
+  var now = Date.now();
+  visits[id] = now;
+  mergeCounts((function (o) { o[id] = [now]; return o; })({}));
+  try { localStorage.setItem(LV, JSON.stringify(visits)); localStorage.setItem(LC, JSON.stringify(counts)); } catch (e) {}
+  if (visitDoc) visitDoc.set({ v: visits, c: counts }).catch(function () {});
   setTimeout(renderRecent, 300);
 }
 document.addEventListener('click', function (e) {
@@ -510,8 +516,11 @@ async function addOnce() {
         if (!x.exists) return;
         var v = x.data().v || {};
         Object.keys(v).forEach(function (k) { if (!visits[k] || v[k] > visits[k]) visits[k] = v[k]; });
-        try { localStorage.setItem(LV, JSON.stringify(visits)); } catch (e) {}
-        renderRecent();
+        mergeCounts(x.data().c); seedCounts();
+        try { localStorage.setItem(LV, JSON.stringify(visits)); localStorage.setItem(LC, JSON.stringify(counts)); } catch (e) {}
+        var before = items.map(function (o) { return o.id; }).join();
+        sortItems(items);
+        if (items.map(function (o) { return o.id; }).join() !== before) renderAll(); else renderRecent();
       }, function () {});
     }
     db.collection('paginas').onSnapshot(function (s) {

@@ -190,7 +190,7 @@ function st(id) { return S.est[id] || {}; }
 function hm(m) { return m ? (m >= 60 ? Math.floor(m / 60) + 'h' + String(m % 60).padStart(2, '0') : m + ' min') : ''; }
 // One sitting: a film or single doc whole, one episode of a series or doc series, one video
 function unit(o) { return o.k === 'series' ? o.ep : o.min; }
-function avail(o) { return (o.p || []).length > 0; }
+function avail(o) { return (o.p || []).length > 0 && !(o.estreno && o.estreno > day(Date.now())); }
 function inProgress(o) { var e = st(o.id); return o.k === 'series' && e.curso && !e.vista; }
 function badges(p) { return (p || []).map(function (x) { return '<span class="pb ' + x + '" title="' + PLAT[x] + '">' + x.toUpperCase() + '</span>'; }).join(''); }
 function where(o) {

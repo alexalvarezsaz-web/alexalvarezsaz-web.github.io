@@ -86,6 +86,23 @@ h1, h2, h3 { font-family: var(--display); line-height: 1.1; margin: 0; text-wrap
 .route .done .when { color: var(--pine); }
 .route .now .when { color: var(--ink); }
 .route b { font-weight: 600; }
+.next { padding: 16px; border-radius: 18px; background: var(--surface); border: 2px solid var(--sun); display: grid; gap: 8px; }
+.next p { margin: 0; font-weight: 600; }
+.next .track { height: 11px; background: var(--line); }
+.next .track i { background: var(--pine); transition: width .6s; }
+.nbig { font: 800 clamp(36px, 12vw, 52px)/1 var(--display); color: var(--pine); }
+.next .today { padding-top: 8px; border-top: 1px solid var(--line); color: var(--muted); font-weight: 500; font-size: 14.5px; }
+.route summary { cursor: pointer; font-size: 12.5px; font-weight: 800; color: var(--pine); min-height: 28px; }
+.route details .route { margin-top: 8px; }
+.rprog { display: grid; gap: 3px; margin-top: 4px; }
+.rprog .track { background: var(--line); }
+.rprog .track i { background: var(--pine); }
+.rprog span { font-size: 12.5px; color: var(--muted); }
+.stops { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.stops li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; align-items: baseline; padding: 10px 12px; border-radius: 12px; background: var(--bg); }
+.stops b { font: 800 19px var(--display); }
+.stops em { font-style: normal; font-weight: 800; font-size: 13px; color: var(--pine); }
+.stops span { grid-column: 1 / -1; font-size: 13.5px; color: var(--muted); }
 .perks { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
 .perks li { padding: 10px 12px; border-radius: 12px; background: var(--bg); font-size: 14.5px; font-weight: 600; }
 
@@ -184,6 +201,15 @@ details.sect summary::after { content: "▾"; margin-left: auto; color: var(--mu
     <div class="hero-b"><span id="climb"></span><span class="small" style="color:var(--on-sky-2)" id="climb2"></span></div>
   </section>
 
+  <section class="next" aria-label="Lo siguiente">
+    <span class="lab">Lo siguiente</span>
+    <div class="nbig num" id="nBig"></div>
+    <div class="track"><i id="nBar"></i></div>
+    <p id="nTxt"></p>
+    <p id="nMoney"></p>
+    <p class="today" id="nToday"></p>
+  </section>
+
   <div class="record" id="record"></div>
 
   <div class="hoy" id="hoyBox" hidden>
@@ -208,6 +234,12 @@ details.sect summary::after { content: "▾"; margin-left: auto; color: var(--mu
     <div class="tile"><span>Ratos parado a respirar</span><b class="num" id="tWin">0</b></div>
   </div>
 
+  <section class="sect">
+    <h2>Lo que viene pronto</h2>
+    <p class="small" id="perDayTxt"></p>
+    <ol class="stops" id="stops"></ol>
+  </section>
+
   <section class="sect" id="whyBox">
     <h2>Por qué lo dejé</h2>
     <img class="why-foto" id="whyFoto" alt="Tu foto" hidden>
@@ -218,6 +250,9 @@ details.sect summary::after { content: "▾"; margin-left: auto; color: var(--mu
   <section class="sect">
     <h2>Si sigues así</h2>
     <div class="proj">
+      <div><b class="num" id="pm1"></b><span>en 1 mes</span></div>
+      <div><b class="num" id="pm3"></b><span>en 3 meses</span></div>
+      <div><b class="num" id="pm6"></b><span>en 6 meses</span></div>
       <div><b class="num" id="p1"></b><span>en 1 año</span></div>
       <div><b class="num" id="p5"></b><span>en 5 años</span></div>
       <div><b class="num" id="p10"></b><span>en 10 años</span></div>
@@ -292,6 +327,7 @@ function $(id) { return document.getElementById(id); }
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 function nf(n, d) { return Number(n).toLocaleString('de-DE', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 }); }
 var MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+function fmtDY(d) { return fmtD(d) + (d.getFullYear() !== new Date().getFullYear() ? ' de ' + d.getFullYear() : ''); }
 function fmtD(d) { return d.getDate() + ' de ' + MONTHS[d.getMonth()]; }
 function quitAt() { var q = S.p.quit.split('-'), h = (S.p.hora || '00:00').split(':'); return new Date(+q[0], +q[1] - 1, +q[2], +h[0] || 0, +h[1] || 0); }
 function events(tipo) { return Object.keys(S.ev).map(function (k) { return S.ev[k]; }).filter(function (e) { return !tipo || e.tipo === tipo; }); }
@@ -305,10 +341,12 @@ function numbers(now) {
   return { since: since, d: d, whole: Math.floor(d), cigs: cigs, gums: gums, gross: gross, net: net, perDay: perDay, perYear: perDay * 365 };
 }
 // Rough prices, here only to make the savings tangible
-var GOALS = [[15, 'unas cañas y unas bravas'], [35, 'una cesta de mimbre y una navaja de setas'], [60, 'una buena cena para dos'], [130, 'unas botas de monte nuevas'], [250, 'un finde en un refugio del Pirineo'], [450, 'una escapada a Cracovia'], [900, 'una bici de montaña decente'], [1600, 'una semana de vacaciones por todo lo alto'], [3500, 'un viaje grande de verdad']];
+var GOALS = [[6, 'un café con bocadillo'], [15, 'unas cañas y unas bravas'], [25, 'una pizza y unas cervezas para dos'], [35, 'una cesta de mimbre y una navaja de setas'], [60, 'una buena cena para dos'], [100, 'una sudadera de montaña'], [130, 'unas botas de monte nuevas'], [180, 'una noche en una casa rural'], [250, 'un finde en un refugio del Pirineo'], [450, 'una escapada a Cracovia'], [900, 'una bici de montaña decente'], [1600, 'una semana de vacaciones por todo lo alto'], [3500, 'un viaje grande de verdad']];
 // Timings from the WHO and the NHS
 var HEALTH = [
+  [.014, '20 minutos', 'Bajan el pulso y la tensión.'],
   [.5, '12 horas', 'El monóxido de carbono en sangre vuelve a la normalidad.'],
+  [1, '1 día', 'Los pulmones empiezan a limpiarse de moco y restos.'],
   [2, '2 días', 'El olfato y el gusto empiezan a mejorar.'],
   [3, '3 días', 'Respirar suele costar menos y tienes más energía.'],
   [14, '2 semanas a 3 meses', 'Mejoran la circulación y la capacidad de los pulmones.', 84],
@@ -318,7 +356,12 @@ var HEALTH = [
   [3650, '10 años', 'El riesgo de morir de cáncer de pulmón baja a cerca de la mitad, y baja también el de boca, garganta y otros.'],
   [5475, '15 años', 'El riesgo de enfermedad coronaria es como el de quien nunca ha fumado.']
 ];
-var MARKS = [[7, ''], [30, '1 mes'], [90, '3 meses'], [180, '6 meses'], [365, 'Cima · 1 año']];
+var MARKS = [[7, ''], [14, ''], [30, '1 mes'], [45, ''], [60, ''], [90, '3 meses'], [180, '6 meses'], [365, 'Cima · 1 año']];
+var STOPS = [7, 14, 21, 30, 35, 40, 45, 50, 55, 60, 70, 75, 80, 90, 100, 125, 150, 175, 200, 250, 300, 365];
+function routeRender(rows) {
+  var grp = function (st) { return rows.filter(function (r) { return r.st === st; }).map(function (r) { return r.html; }); }, done = grp('done'), now = grp('now'), fut = grp(''), box = function (t, l) { return l.length ? '<li><details><summary>' + t + ' · ' + l.length + '</summary><ol class="route">' + l.join('') + '</ol></details></li>' : ''; };
+  $('route').innerHTML = box('Ya conseguido', done) + now.join('') + fut.slice(0, 1).join('') + box('Más adelante', fut.slice(1));
+}
 var BASE_M = 1215, TOP_M = 2506;
 
 function renderClimb(n) {
@@ -328,17 +371,19 @@ function renderClimb(n) {
   $('marks').innerHTML = MARKS.map(function (m) {
     var q = path.getPointAtLength(len * m[0] / 365), done = n.d >= m[0], last = m[0] === 365;
     return '<circle cx="' + q.x + '" cy="' + q.y + '" r="3.5" fill="' + (done ? '#f5bd3b' : '#0f2230') + '" stroke="#f5fbff" stroke-width="1.5"/>' +
-      (m[1] ? '<text x="' + (m[0] === 30 ? q.x - 3 : q.x - 6) + '" y="' + (m[0] === 30 ? q.y + 15 : q.y - 8) + '" text-anchor="' + (m[0] === 30 ? 'start' : 'end') + '" font-size="11" font-weight="700" fill="#f5fbff">' + m[1] + '</text>' : '');
+      (m[1] ? '<text x="' + (m[0] === 30 || m[0] === 90 ? q.x + 5 : q.x - 6) + '" y="' + (m[0] === 30 || m[0] === 90 ? q.y + 15 : q.y - 8) + '" text-anchor="' + (m[0] === 30 || m[0] === 90 ? 'start' : 'end') + '" font-size="11" font-weight="700" fill="#f5fbff">' + m[1] + '</text>' : '');
   }).join('');
   var m = Math.round(BASE_M + f * (TOP_M - BASE_M)), next = MARKS.filter(function (x) { return x[0] > n.d; })[0], top = new Date(quitAt().getTime() + 365 * DAY);
   $('climb').innerHTML = n.d >= 365 ? '<b>Cima.</b> Un año sin fumar: estás en los 2.506 m del Pedraforca.' : 'Subida al Pedraforca: vas por los <b>' + nf(m) + ' m</b> de 2.506.';
-  $('climb2').textContent = next ? 'Te faltan ' + Math.ceil(next[0] - n.d) + (Math.ceil(next[0] - n.d) === 1 ? ' día' : ' días') + ' para ' + (next[0] === 7 ? 'la primera semana' : next[0] === 365 ? 'la cima, el ' + fmtD(top) : 'llegar a ' + next[1]) + '.' : 'Desde aquí, todo lo que venga es de propina.';
+  $('climb2').textContent = next ? 'Te faltan ' + Math.ceil(next[0] - n.d) + (Math.ceil(next[0] - n.d) === 1 ? ' día' : ' días') + ' para ' + (next[0] === 7 ? 'la primera semana' : next[0] === 14 ? 'las 2 semanas' : next[0] === 45 ? 'los 45 días' : next[0] === 365 ? 'la cima, el ' + fmtD(top) : 'llegar a ' + next[1]) + '.' : 'Desde aquí, todo lo que venga es de propina.';
+  var ns = STOPS.filter(function (x) { return x > n.d; })[0]; if (ns && n.d >= 7) { var lf = Math.ceil(ns - n.d); $('climb2').textContent = (lf === 1 ? 'Mañana' : 'En ' + lf + ' días') + ' cumples ' + ns + ' días. La cima, el ' + fmtD(top) + '.'; }
 }
 function tick() {
   var now = Date.now(), n = numbers(now), rest = n.since % DAY, h = Math.floor(rest / 3600000), mi = Math.floor(rest % 3600000 / 60000), s = Math.floor(rest % 60000 / 1000);
   $('days').textContent = nf(n.whole); $('daysW').textContent = n.whole === 1 ? 'día' : 'días';
   $('clock').textContent = h + ' h ' + String(mi).padStart(2, '0') + ' min ' + String(s).padStart(2, '0') + ' s';
   $('eur').textContent = nf(n.net, 2) + ' €';
+  $('nToday').textContent = 'Lo de hoy, hasta ahora: ' + nf(n.perDay * rest / DAY, 2) + ' € y ' + nf(Math.floor(S.p.cig * rest / DAY)) + ' cigarrillos sin fumar. Cada hora suma.';
   $('tCig').textContent = nf(Math.floor(n.cigs)); $('tPack').textContent = nf(Math.floor(n.d / 14));
   $('tTime').textContent = dur(n.cigs * 7); $('tLife').textContent = dur(n.cigs * 11); $('tTar').textContent = nf(n.cigs * 10 / 1000, n.cigs < 1000 ? 1 : 0) + ' g';
 }
@@ -351,10 +396,30 @@ function render() {
   $('eurSub').textContent = n.gums ? nf(n.gross, 2) + ' € de tabaco menos ' + nf(n.gums * S.p.gum, 2) + ' € de ' + (n.gums === 1 ? 'chicle apuntado.' : 'los ' + n.gums + ' chicles apuntados.') : 'Con ' + nf(S.p.gasto) + ' € de tabaco de liar cada 2 semanas.';
   var has = GOALS.filter(function (g) { return g[0] <= n.net; }).pop(), nx = GOALS.filter(function (g) { return g[0] > n.net; })[0];
   $('goal').innerHTML = (has ? '<span>Ya te da para ' + esc(has[1]) + '.</span>' : '') + (nx ? '<span>A por ' + esc(nx[1]) + ': ' + nf(nx[0]) + ' €, a precio aproximado</span><div class="track"><i style="width:' + Math.min(100, n.net / nx[0] * 100) + '%"></i></div>' : '');
+  $('pm1').textContent = nf(n.perDay * 30) + ' €'; $('pm3').textContent = nf(n.perDay * 91) + ' €'; $('pm6').textContent = nf(n.perDay * 182) + ' €';
   $('p1').textContent = nf(n.perYear) + ' €'; $('p5').textContent = nf(n.perYear * 5) + ' €'; $('p10').textContent = nf(n.perYear * 10) + ' €';
-  $('route').innerHTML = HEALTH.map(function (h) {
-    var end = h[3] || h[0], st = n.d >= end ? 'done' : n.d >= h[0] ? 'now' : '', lbl = st === 'done' ? 'Ya está · ' + h[1] : st === 'now' ? 'En marcha ahora · ' + h[1] : h[1];
-    return '<li class="' + st + '"><span class="when">' + lbl + '</span><b>' + h[2] + '</b></li>';
+  var rows = HEALTH.map(function (h) {
+    var end = h[3] || h[0], st = n.d >= end ? 'done' : n.d >= h[0] ? 'now' : '', lbl = st === 'done' ? 'Ya está · ' + h[1] : st === 'now' ? 'En marcha ahora · ' + h[1] : 'Hacia el ' + fmtDY(new Date(quitAt().getTime() + h[0] * DAY)) + ' · ' + h[1], extra = '';
+    if (st === 'now' && end - h[0] > 120) extra = '<div class="rprog"><span>Ya ha empezado y va mejorando poco a poco; el tramo completo llega hacia el ' + fmtDY(new Date(quitAt().getTime() + end * DAY)) + '.</span></div>';
+    else if (st === 'now' && end > h[0]) { var pc = Math.round((n.d - h[0]) / (end - h[0]) * 100); extra = '<div class="rprog"><div class="track"><i style="width:' + pc + '%"></i></div><span>Ya llevas el ' + pc + ' % de este tramo. Termina hacia el ' + fmtDY(new Date(quitAt().getTime() + end * DAY)) + '; no hace falta esperar al final para notarlo.</span></div>'; }
+    return { st: st, html: '<li class="' + st + '"><span class="when">' + lbl + '</span><b>' + h[2] + '</b>' + extra + '</li>' };
+  });
+  routeRender(rows);
+  var upc = STOPS.filter(function (x) { return x > n.d; }), got = STOPS.length - upc.length;
+  $('perDayTxt').textContent = 'Cada día que pasa suma ' + nf(n.perDay, 2) + ' € y ' + nf(S.p.cig) + ' cigarrillos que no fumas.' + (got ? ' Ya has cruzado ' + got + (got === 1 ? ' parada.' : ' paradas.') : '');
+  var nxS = upc[0], prevS = STOPS.filter(function (x) { return x <= n.d; }).pop() || 0;
+  if (nxS) {
+    var lf = Math.ceil(nxS - n.d), ng = GOALS.filter(function (g) { return g[0] > n.net; })[0];
+    $('nBig').textContent = lf === 1 ? 'Mañana' : 'En ' + lf + ' días';
+    $('nBar').style.width = Math.max(4, (n.d - prevS) / (nxS - prevS) * 100) + '%';
+    $('nTxt').textContent = 'Cumples ' + nxS + ' días el ' + fmtDY(new Date(quitAt().getTime() + nxS * DAY)) + '. Para entonces: ' + nf(nxS * n.perDay) + ' € sin gastar y ' + nf(nxS * S.p.cig) + ' cigarrillos sin fumar.';
+    var gl = ng ? Math.ceil((ng[0] - n.net) / n.perDay) : 0;
+    $('nMoney').textContent = ng ? (gl <= 1 ? 'Mañana ya te da para ' : 'En ' + gl + ' días ya te da para ') + ng[1] + ' (' + nf(ng[0]) + ' €, a precio aproximado).' : '';
+  }
+  upc = upc.slice(1);
+  $('stops').innerHTML = upc.slice(0, 4).map(function (x) {
+    var left = Math.ceil(x - n.d), when = left === 1 ? 'mañana' : 'en ' + left + ' días';
+    return '<li><b>' + x + ' días</b><em>' + when + '</em><span>' + fmtDY(new Date(quitAt().getTime() + x * DAY)) + ' · ' + nf(x * n.perDay) + ' € de tabaco sin gastar y ' + nf(x * S.p.cig) + ' cigarrillos sin fumar.</span></li>';
   }).join('');
   $('tWin').textContent = nf(events('respiro').length);
   // Gum

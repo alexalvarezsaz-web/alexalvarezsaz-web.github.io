@@ -643,7 +643,11 @@ function renderGallery(){
     g.appendChild(b);
   });
   const r=document.createElement('div');r.className='reset';r.innerHTML='<button>Borrar mi progreso</button>';
-  r.firstChild.onclick=()=>{if(confirm('¿Borrar todos los finales descubiertos?')){SV.found={};persist();renderGallery();toast('Progreso borrado')}};
+  r.firstChild.onclick=ev=>{
+    const b=ev.currentTarget;
+    if(!b.dataset.sure){b.dataset.sure=1;b.textContent='Toca otra vez para borrar todo';setTimeout(()=>{b.dataset.sure='';b.textContent='Borrar mi progreso'},3000);return}
+    SV.found={};persist();renderGallery();toast('Progreso borrado');
+  };
   g.appendChild(r);
 }
 function showEnding(id,{replay=false,seq=[],isNew=false}={}){
