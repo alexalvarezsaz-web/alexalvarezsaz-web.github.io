@@ -313,7 +313,14 @@ var POSTERS = {
     '<path d="M0 230 V196 L400 106 V140Z" fill="#f5bd3b" fill-opacity=".2"/><path d="M0 214 L400 124" stroke="#f3f3ff" stroke-opacity=".55" stroke-width="2.5" stroke-dasharray="6 8"/>' +
     '<polyline points="168,184 222,158 270,160 326,130 376,124" fill="none" stroke="#f5bd3b" stroke-width="4" stroke-linejoin="round"/>' +
     [[168, 184, 8], [222, 158, 11], [270, 160, 9], [326, 130, 13], [376, 124, 10]].map(function (p) { return '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="' + p[2] + '" fill="#f5bd3b" stroke="#14153a" stroke-width="3"/>'; }).join('') +
-    '<path d="M0 220 V206 C120 198 260 214 400 202 V220Z" fill="#0f1030"/>')
+    '<path d="M0 220 V206 C120 198 260 214 400 202 V220Z" fill="#0f1030"/>'),
+  'capsulas': poster('#1f6f5c', bands(['#185a4b', '#1f6f5c', '#257a65', '#2c866f', '#34927a']) +
+    '<circle cx="300" cy="70" r="62" fill="#f0b429" fill-opacity=".12"/><circle cx="300" cy="70" r="44" fill="#f0b429" fill-opacity=".12"/>' +
+    '<g transform="rotate(-38 300 70)"><rect x="236" y="44" width="128" height="52" rx="26" fill="#f6f3ea"/><path d="M300 44h38a26 26 0 0 1 0 52H300z" fill="#f0b429"/><path d="M252 58 H290" stroke="#fff" stroke-opacity=".9" stroke-width="6" stroke-linecap="round"/><path d="M300 44 V96" stroke="#c98f12" stroke-width="2"/></g>' +
+    [[60, 40, 24, '#f6f3ea'], [128, 78, -52, '#f0b429'], [36, 112, 70, '#9ad8c4'], [176, 30, -14, '#f6f3ea'], [210, 112, 40, '#f0b429'], [384, 150, -30, '#9ad8c4']].map(function (c) { return '<g transform="translate(' + c[0] + ' ' + c[1] + ') rotate(' + c[2] + ')"><rect x="-17" y="-7" width="34" height="14" rx="7" fill="#f6f3ea"/><path d="M0 -7h10a7 7 0 0 1 0 14H0z" fill="' + c[3] + '"/></g>'; }).join('') +
+    '<path d="M24 158 H376 L396 220 H4Z" fill="#c9d6d1"/><path d="M24 158 H376 L380 168 H20Z" fill="#e7eeeb"/>' +
+    (function () { var s = '', k = 0; for (var r = 0; r < 3; r++) for (var x = 0; x < 11; x++, k++) { var y = 176 + r * 15, cx = 42 + x * 31.6 + (r - 1) * (x - 5) * 1.4, f = (k * 5) % 7; s += '<ellipse cx="' + cx.toFixed(1) + '" cy="' + y + '" rx="10" ry="5.5" fill="' + (f < 3 ? '#0e3a30' : f < 6 ? '#f6f3ea' : '#f0b429') + '"/>' + (f >= 3 ? '<ellipse cx="' + cx.toFixed(1) + '" cy="' + (y - 1.5) + '" rx="6" ry="2.6" fill="#fff" fill-opacity=".7"/>' : ''); } return s; })() +
+    '<path d="M0 220 V212 H400 V220Z" fill="#0e3a30"/>')
 };
 // Days to a page's date: null when it has none or it has passed
 function daysLeft(f) {
