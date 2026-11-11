@@ -497,7 +497,7 @@ $('sheet').addEventListener('click', function (e) {
 
 // ---------- Google Maps import (Takeout GeoJSON or list CSV) ----------
 function coordsFromUrl(u) {
-  var m = /[?&](?:q|query|ll|destination)=(-?\d+\.\d+),\s*(-?\d+\.\d+)/.exec(u) || /@(-?\d+\.\d+),(-?\d+\.\d+)/.exec(u) || /!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/.exec(u);
+  var m = /[?&](?:q|query|ll|destination)=(-?\d+\.\d+),\s*(-?\d+\.\d+)/.exec(u) || /@(-?\d+\.\d+),(-?\d+\.\d+)/.exec(u) || /\/search\/(-?\d+\.\d+),\s*\+?(-?\d+\.\d+)/.exec(decodeURIComponent(u)) || /!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/.exec(u);
   return m ? [+m[1], +m[2]] : null;
 }
 function parseCsv(t) {
