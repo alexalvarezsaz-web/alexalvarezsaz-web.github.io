@@ -115,6 +115,11 @@ h1, h2, h3 { font-family: var(--display); line-height: 1.1; margin: 0; text-wrap
 .bars span { font-size: 10.5px; color: var(--muted); }
 .bars .nd i { height: 14px; background: repeating-linear-gradient(45deg, var(--line) 0 3px, transparent 3px 6px); }
 .bars .nd b { color: var(--muted); font-weight: 600; }
+.tg { display: grid; gap: 6px; }
+.tg ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.tg li { display: flex; align-items: center; border-radius: 12px; background: var(--bg); padding-left: 4px; }
+.tg input { width: 6.4em; min-height: 40px; padding: 0 6px; border: 0; background: transparent; color: var(--ink); font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.tg button { min-width: 40px; min-height: 40px; border: 0; background: transparent; color: var(--sos); font-size: 20px; font-weight: 800; }
 .hist-h { font-size: 17px; font-weight: 800; margin-top: 10px; }
 .hist { display: flex; gap: 2px; align-items: end; height: 108px; padding-bottom: 18px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
 .hist::-webkit-scrollbar { display: none; }
@@ -291,6 +296,7 @@ details.sect summary::after { content: "▾"; margin-left: auto; color: var(--mu
   <section class="sect">
     <h2>Chicles de 2 mg</h2>
     <p class="small" id="gumTxt"></p>
+    <div class="tg" id="gumList" hidden></div>
     <div class="bars" id="gumBars"></div>
     <h3 class="hist-h">Desde el primer chicle apuntado</h3>
     <div class="hist" id="gumHist"></div>
@@ -438,7 +444,7 @@ function render() {
   var today = gumDays[todayKey] || 0, cells = [], mx = 1;
   for (var i = 13; i >= 0; i--) { var dd = new Date(now - i * DAY), c = gumDays[dayKey(dd)] || 0; mx = Math.max(mx, c); cells.push([dd, c, gm.known(sod(dd))]); }
   $('gumBars').innerHTML = cells.map(function (x) { return !x[2] ? '<div class="nd" title="Sin datos"><b>–</b><i></i><span>' + x[0].getDate() + '</span></div>' : '<div class="' + (x[1] ? 'on' : '') + '"><b>' + (x[1] || '') + '</b><i style="height:' + (x[1] / mx * 66) + 'px"></i><span>' + x[0].getDate() + '</span></div>'; }).join('');
-  renderGumHist(gm, now);
+  renderGumHist(gm, now); renderGumToday(now);
   $('gumToday').textContent = today ? today + ' hoy' : 'ninguno hoy';
   var wk = 0, wkOld = 0; events('chicle').forEach(function (e) { var ago = (now - e.t) / DAY; if (ago < 7) wk++; else if (ago < 14) wkOld++; });
   $('gumTxt').textContent = !n.gums ? 'Toca «＋ Chicle» cada vez que masques uno y aquí verás cómo van bajando.' : wkOld && wk < wkOld ? 'Esta semana, ' + wk + '. La anterior, ' + wkOld + '. Vas bajando.' : 'Últimos 7 días: ' + wk + (wk === 1 ? ' chicle.' : ' chicles.');
@@ -479,6 +485,27 @@ function renderGumHist(gm, now) {
   $('gumHistTxt').innerHTML = '<b>' + nf(tot) + (tot === 1 ? ' chicle' : ' chicles') + ' en total.</b> ' + esc((done.length >= 10 && a0 != null && a1 != null ? 'Media al día: ' + nf(a0, 1) + ' la primera semana apuntada, ' + nf(a1, 1) + ' los últimos 7 días.' : nf(days.length) + (days.length === 1 ? ' día' : ' días') + ' desde el primero apuntado.') + (gaps ? ' Rayado: sin datos.' : ''));
   var h = $('gumHist'); h.scrollLeft = h.scrollWidth;
 }
+
+// Today's gums, each with its time to fix or a cross to remove one noted by mistake
+function renderGumToday(now) {
+  var box = $('gumList'); if (box.contains(document.activeElement)) return;
+  var t0 = sod(now), ids = Object.keys(S.ev).filter(function (k) { return S.ev[k].tipo === 'chicle' && S.ev[k].t >= t0; }).sort(function (a, b) { return S.ev[a].t - S.ev[b].t; });
+  box.hidden = !ids.length;
+  box.innerHTML = '<span class="lab">Hoy · toca la hora para cambiarla</span><ul>' + ids.map(function (k) {
+    var d = new Date(S.ev[k].t), hm = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    return '<li><input type="time" value="' + hm + '" data-id="' + esc(k) + '" aria-label="Hora del chicle"><button type="button" data-del="' + esc(k) + '" aria-label="Borrar el chicle de las ' + hm + '">×</button></li>';
+  }).join('') + '</ul>';
+}
+$('gumList').addEventListener('change', function (e) {
+  var k = e.target.getAttribute('data-id'), ev = S.ev[k], m = /^(\d{1,2}):(\d{2})$/.exec(e.target.value || ''); if (!ev || !m) return;
+  var d = new Date(ev.t); d.setHours(+m[1], +m[2], 0, 0); if (d.getTime() > Date.now()) { toast('Esa hora aún no ha llegado'); e.target.blur(); render(); return; }
+  S.ev[k] = Object.assign({}, ev, { t: d.getTime() }); S.pend[k] = 1; persist(); e.target.blur(); render(); flush(); toast('Hora cambiada');
+});
+$('gumList').addEventListener('click', function (e) {
+  var b = e.target.closest('[data-del]'); if (!b) return;
+  var k = b.getAttribute('data-del'), ev = S.ev[k]; if (!ev) return;
+  delEv(k); toast('Chicle borrado', 'Deshacer', function () { S.ev[k] = ev; S.pend[k] = 1; if (S.del[k]) delete S.del[k]; persist(); render(); flush(); });
+});
 
 // ---------- Reasons: the person's own words, said in different ways ----------
 function phrases() { return (S.m.frases || []).map(function (l) { var p = String(l).split(' | '); return p.length > 1 ? { m: p[0].trim(), t: p.slice(1).join(' | ').trim() } : { m: '', t: String(l).trim() }; }).filter(function (x) { return x.t; }); }
