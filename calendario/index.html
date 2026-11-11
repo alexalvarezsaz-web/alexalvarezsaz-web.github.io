@@ -87,6 +87,15 @@ html, body { max-width: 100%; overflow-x: clip; }
 .ev .open::before { content: ""; align-self: stretch; background: var(--c); margin-block: -12px; }
 .ev .x { border: 0; background: transparent; color: var(--muted); font-size: 20px; font-weight: 800; min-height: 48px; }
 .ev .x:hover, .ev .x:focus-visible { color: var(--coral); }
+.ev { grid-template-columns: minmax(0, 1fr) 48px 48px; }
+.ev .ok { border: 0; background: transparent; display: grid; place-items: center; min-height: 48px; padding: 0; }
+.ev .ok i { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--line); display: grid; place-items: center; font: 800 15px/1 var(--body); font-style: normal; color: transparent; }
+.ev .ok:hover i, .ev .ok:focus-visible i { border-color: var(--menta); color: var(--menta); }
+.ev.done .ok i { background: var(--menta); border-color: var(--menta); color: #04261b; }
+.ev.past .open, .ev.done .open { opacity: .55; }
+.ev.done .t { text-decoration: line-through; text-decoration-thickness: 2px; }
+.ev .ya { font-size: 11px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+.chips span.hecho { opacity: .5; text-decoration: line-through; }
 .ev .h { font: 800 15px/1.15 var(--display); font-variant-numeric: tabular-nums; color: var(--muted); }
 .ev .t { font-weight: 800; overflow-wrap: anywhere; }
 .ev .s { display: block; font-size: 13.5px; font-weight: 400; color: var(--muted); overflow-wrap: anywhere; }
@@ -208,6 +217,18 @@ function occurs(e, s) {
   if (e.r === 'y') return a.getDate() === b.getDate() && a.getMonth() === b.getMonth();
   return false;
 }
+// A plan on a given day is over once its end time (or its start, if it has no end) has passed; ticking it marks that one day as done.
+function nowHM() { var d = new Date(); return p2(d.getHours()) + ':' + p2(d.getMinutes()); }
+function isDone(e, s) { return !!(e.hechos && e.hechos.indexOf(s) >= 0); }
+function isPast(e, s) { var T = today(); return s < T || (s === T && !!e.h && nowHM() >= (e.h2 || e.h)); }
+function isGone(e, s) { return isDone(e, s) || isPast(e, s); }
+function toggleDone(id, s) {
+  var e = EV[id]; if (!e) return;
+  var was = isDone(e, s), h = (e.hechos || []).filter(function (x) { return x !== s; });
+  if (!was) h.push(s);
+  var o = Object.assign({}, e, { hechos: h }), old = e; save(id, o);
+  if (!was) toast('Hecho: ' + e.t, 'Deshacer', function () { save(id, old); });
+}
 function eventsOn(s) {
   return Object.keys(EV).map(function (k) { return EV[k]; }).filter(function (e) { return occurs(e, s); }).sort(function (a, b) { return (a.h || '').localeCompare(b.h || '') || (a.t || '').localeCompare(b.t || ''); });
 }
@@ -273,11 +294,12 @@ function toast(msg, label, fn) {
 
 // ---------- Drawing ----------
 function evRow(e) {
+  var s = sel, done = isDone(e, s), past = !done && isPast(e, s);
   var multi = e.f && e.f > e.d ? fmtShort(e.d) + ' a ' + fmtShort(e.f) : '', rep = e.r ? { w: 'Cada semana', m: 'Cada mes', y: 'Cada año' }[e.r] : '';
   var sub = [multi, rep, e.n].filter(Boolean).join(' · ');
-  var tag = e.k === 'cora' ? '<span class="tag">Cora</span>' : e.by === 'claude' ? '<span class="tag">Claude</span>' : '<span></span>';
+  var tag = done ? '<span class="ya">Hecho</span>' : past ? '<span class="ya">Ya pasó</span>' : e.k === 'cora' ? '<span class="tag">Cora</span>' : e.by === 'claude' ? '<span class="tag">Claude</span>' : '<span></span>';
   var hr = e.h ? esc(span(e)) : '<span style="font-size:12px">Todo el día</span>';
-  return '<li class="ev" style="--c:var(--' + esc(e.c || 'cielo') + ')"><button type="button" class="open" data-id="' + esc(e.id) + '"><span class="h">' + hr + '</span><span class="t">' + esc(e.t) + (sub ? '<span class="s">' + esc(sub) + '</span>' : '') + '</span>' + tag + '</button><button type="button" class="x" data-del="' + esc(e.id) + '" aria-label="Borrar ' + esc(e.t) + '">✕</button></li>';
+  return '<li class="ev' + (done ? ' done' : past ? ' past' : '') + '" style="--c:var(--' + esc(e.c || 'cielo') + ')"><button type="button" class="open" data-id="' + esc(e.id) + '"><span class="h">' + hr + '</span><span class="t">' + esc(e.t) + (sub ? '<span class="s">' + esc(sub) + '</span>' : '') + '</span>' + tag + '</button><button type="button" class="ok" data-ok="' + esc(e.id) + '" aria-pressed="' + done + '" aria-label="' + (done ? 'Quitar hecho: ' : 'Marcar hecho: ') + esc(e.t) + '"><i aria-hidden="true">✓</i></button><button type="button" class="x" data-del="' + esc(e.id) + '" aria-label="Borrar ' + esc(e.t) + '">✕</button></li>';
 }
 function nextCora() {
   var T = today(), best = null;
@@ -292,7 +314,7 @@ function drawCover() {
   var T = today(), d = pd(T), nx = [], cora = nextCora();
   $('cvDate').textContent = DIAC[d.getDay()] + ' ' + d.getDate() + ' ' + MESC[d.getMonth()];
   $('cvBig').innerHTML = '<b>' + d.getDate() + '</b><span>' + esc(DIA[d.getDay()]) + '<br>' + esc(MES[d.getMonth()]) + '</span>';
-  for (var k = 0; k < 30 && nx.length < 3; k++) { var s2 = addDays(T, k); eventsOn(s2).forEach(function (e) { if (nx.length < 3 && e.k !== 'cora') nx.push([s2, e]); }); }
+  for (var k = 0; k < 30 && nx.length < 3; k++) { var s2 = addDays(T, k); eventsOn(s2).forEach(function (e) { if (nx.length < 3 && e.k !== 'cora' && !isGone(e, s2)) nx.push([s2, e]); }); }
   var h = '<h2>Lo próximo</h2>' + (nx.length ? nx.map(function (p) { return '<p><b>' + esc(rel(p[0])) + '</b><span>' + esc(p[1].t + (p[1].h ? ' · ' + p[1].h : '')) + '</span></p>'; }).join('') : '<p><span>Nada apuntado. Día libre.</span></p>');
   if (cora) h += '<p><b>✚ Cora</b><span>' + esc(fmtShort(cora.d) + ' · ' + span(cora)) + '</span></p>';
   $('cvNx').innerHTML = h;
@@ -303,7 +325,7 @@ function render() {
   for (var i = 0; i < rows * 7; i++) {
     var s = addDays(start, i), d = pd(s), evs = eventsOn(s), cls = 'day' + (d.getMonth() !== mo ? ' out' : '') + (s === T ? ' today' : '') + (s === sel ? ' sel' : '');
     var dots = evs.slice(0, 3).map(function (e) { return '<i style="--c:var(--' + esc(e.c || 'cielo') + ')"></i>'; }).join('') + (evs.length > 3 ? '<b>+' + (evs.length - 3) + '</b>' : '');
-    var chips = evs.slice(0, 2).map(function (e) { return '<span style="--c:var(--' + esc(e.c || 'cielo') + ')">' + esc((e.h ? e.h + ' ' : '') + e.t) + '</span>'; }).join('') + (evs.length > 2 ? '<span style="--c:var(--muted)">+' + (evs.length - 2) + ' más</span>' : '');
+    var chips = evs.slice(0, 2).map(function (e) { return '<span' + (isDone(e, s) ? ' class="hecho"' : '') + ' style="--c:var(--' + esc(e.c || 'cielo') + ')">' + esc((e.h ? e.h + ' ' : '') + e.t) + '</span>'; }).join('') + (evs.length > 2 ? '<span style="--c:var(--muted)">+' + (evs.length - 2) + ' más</span>' : '');
     var cx = evs.some(function (e) { return e.k === 'cora'; }) ? '<span class="cx" aria-hidden="true">✚</span>' : '';
     cells.push('<button type="button" class="' + cls + '" data-d="' + s + '" aria-label="' + esc(fmtLong(s)) + (evs.length ? ', ' + evs.length + (evs.length === 1 ? ' plan' : ' planes') : '') + '"' + (s === sel ? ' aria-pressed="true"' : '') + '><span class="n">' + d.getDate() + '</span>' + cx + '<span class="dots">' + dots + '</span><span class="chips">' + chips + '</span></button>');
   }
@@ -312,7 +334,7 @@ function render() {
   $('dayT').innerHTML = esc(fmtLong(sel)) + '<em>' + esc(rel(sel)) + '</em>';
   $('dayL').innerHTML = list.length ? list.map(evRow).join('') : '<li><p class="empty">Nada este día. Escribe abajo lo que quieras apuntar.</p></li>';
   var nx = [];
-  for (var k = 0; k < 60 && nx.length < 12; k++) { var s2 = addDays(T, k); eventsOn(s2).forEach(function (e) { if (nx.length < 12) nx.push([s2, e]); }); }
+  for (var k = 0; k < 60 && nx.length < 12; k++) { var s2 = addDays(T, k); eventsOn(s2).forEach(function (e) { if (nx.length < 12 && !isGone(e, s2)) nx.push([s2, e]); }); }
   $('nextL').innerHTML = nx.length ? nx.map(function (p) {
     var e = p[1], d = pd(p[0]);
     return '<li><button type="button" class="next" style="--c:var(--' + esc(e.c || 'cielo') + ')" data-id="' + esc(e.id) + '" data-d="' + p[0] + '"><span class="badge"><b>' + d.getDate() + '</b><span>' + MESC[d.getMonth()] + '</span></span><span class="t">' + esc(e.t) + '<span class="s">' + esc(DIA[d.getDay()] + (e.h ? ' · ' + span(e) : ' · todo el día')) + '</span></span><span class="when">' + esc(rel(p[0])) + '</span></button></li>';
@@ -380,6 +402,7 @@ $('grid').addEventListener('click', function (ev) { var b = ev.target.closest('.
 $('grid').addEventListener('dblclick', function (ev) { var b = ev.target.closest('.day'); if (b) openSheet(null, b.dataset.d); });
 function onEv(ev) {
   var x = ev.target.closest('[data-del]'); if (x) { remove(x.dataset.del); return; }
+  var ok = ev.target.closest('[data-ok]'); if (ok) { toggleDone(ok.dataset.ok, sel); return; }
   var b = ev.target.closest('[data-id]'); if (b && EV[b.dataset.id]) openSheet(b.dataset.id, sel);
 }
 $('dayL').addEventListener('click', onEv); $('nextL').addEventListener('click', onEv);
