@@ -227,7 +227,7 @@ details.sect summary::after { content: "▾"; margin-left: auto; color: var(--mu
 
   <div class="tiles">
     <div class="tile"><span>Cigarrillos sin fumar</span><b class="num" id="tCig">0</b></div>
-    <div class="tile"><span>Veces sin ir a por tabaco</span><b class="num" id="tPack">0</b></div>
+    <div class="tile"><span>Cajetillas sin comprar</span><b class="num" id="tPack">0</b></div>
     <div class="tile"><span>Tiempo que no has pasado fumando</span><b class="num" id="tTime">0</b></div>
     <div class="tile"><span>Vida ganada, en estimación</span><b class="num" id="tLife">0</b></div>
     <div class="tile"><span>Alquitrán que no ha entrado</span><b class="num" id="tTar">0</b></div>
@@ -292,8 +292,7 @@ details.sect summary::after { content: "▾"; margin-left: auto; color: var(--mu
       <label>Último día que fumaste<input id="fQuit" type="date"></label>
       <label>A qué hora, más o menos<input id="fHour" type="time"></label>
       <label>Cigarrillos al día<input id="fCig" type="number" min="1" max="80" inputmode="numeric"></label>
-      <label>Gasto en tabaco cada 2 semanas (€)<input id="fPack" type="number" min="0" step="0.5" inputmode="decimal"></label>
-      <label>Precio de un chicle (€)<input id="fGum" type="number" min="0" step="0.01" inputmode="decimal"></label>
+      <label>Gasto en tabaco al día (€)<input id="fPack" type="number" min="0" step="0.5" inputmode="decimal"></label>
       <label>Tu récord anterior (días)<input id="fRec" type="number" min="0" inputmode="numeric"></label>
       <label class="w">Por qué lo dejé<textarea id="fWhy" rows="4" maxlength="400" placeholder="Escríbelo con tus palabras. Te saldrá en la pantalla de respirar."></textarea></label>
       <label class="w">Frases de cada día, una por línea<textarea id="fFrases" rows="6" placeholder="Yesenia | Una frase tuya"></textarea></label>
@@ -319,7 +318,7 @@ details.sect summary::after { content: "▾"; margin-left: auto; color: var(--mu
 <dialog id="sos" aria-label="Respirar"><div class="s" id="sosBody"></div></dialog>
 
 <script>
-var DAY = 86400000, DEFAULTS = { quit: '2026-10-09', hora: '00:00', cig: 18, gasto: 18, gum: 0.25, record: 2, motivo: '' };
+var DAY = 86400000, DEFAULTS = { quit: '2026-10-09', hora: '00:00', cig: 18, diario: 6, record: 2, motivo: '' };
 var LS = 'sense-fum-v1', S = { p: Object.assign({}, DEFAULTS), ev: {}, pend: {}, del: {}, pPend: false, m: { bloques: [], frases: [] }, mPend: false }, db = null, assets = null, hoyOff = 0;
 try { var raw = JSON.parse(localStorage.getItem(LS) || 'null'); if (raw) { S.p = Object.assign({}, DEFAULTS, raw.p); S.ev = raw.ev || {}; S.pend = raw.pend || {}; S.del = raw.del || {}; S.pPend = !!raw.pPend; if (raw.m) S.m = raw.m; S.mPend = !!raw.mPend; } } catch (e) {}
 function persist() { try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) {} }
@@ -336,8 +335,8 @@ function dur(mins) { if (mins < 60) return Math.round(mins) + ' min'; var h = mi
 
 // ---------- Numbers ----------
 function numbers(now) {
-  var since = Math.max(0, now - quitAt().getTime()), d = since / DAY, cigs = d * S.p.cig, perDay = S.p.gasto / 14;
-  var gums = events('chicle').length, gross = d * perDay, net = Math.max(0, gross - gums * S.p.gum);
+  var since = Math.max(0, now - quitAt().getTime()), d = since / DAY, cigs = d * S.p.cig, perDay = S.p.diario;
+  var gums = events('chicle').length, gross = d * perDay, net = gross;
   return { since: since, d: d, whole: Math.floor(d), cigs: cigs, gums: gums, gross: gross, net: net, perDay: perDay, perYear: perDay * 365 };
 }
 // Rough prices, here only to make the savings tangible
@@ -384,7 +383,7 @@ function tick() {
   $('clock').textContent = h + ' h ' + String(mi).padStart(2, '0') + ' min ' + String(s).padStart(2, '0') + ' s';
   $('eur').textContent = nf(n.net, 2) + ' €';
   $('nToday').textContent = 'Lo de hoy, hasta ahora: ' + nf(n.perDay * rest / DAY, 2) + ' € y ' + nf(Math.floor(S.p.cig * rest / DAY)) + ' cigarrillos sin fumar. Cada hora suma.';
-  $('tCig').textContent = nf(Math.floor(n.cigs)); $('tPack').textContent = nf(Math.floor(n.d / 14));
+  $('tCig').textContent = nf(Math.floor(n.cigs)); $('tPack').textContent = nf(Math.floor(n.d));
   $('tTime').textContent = dur(n.cigs * 7); $('tLife').textContent = dur(n.cigs * 11); $('tTar').textContent = nf(n.cigs * 10 / 1000, n.cigs < 1000 ? 1 : 0) + ' g';
 }
 function render() {
@@ -393,7 +392,7 @@ function render() {
   tick(); renderClimb(n);
   var r = S.p.record, times = r > 0 ? n.d / r : 0;
   $('record').innerHTML = r > 0 && n.d > r ? 'Antes no pasabas de ' + r + (r === 1 ? ' día' : ' días') + '. Ahora vas por <b>' + nf(times, times < 10 ? 1 : 0) + ' veces</b> tu récord.' : r > 0 ? 'Tu récord anterior: ' + r + (r === 1 ? ' día' : ' días') + '. Vas a por él.' : 'Cada día de estos es un día de récord.';
-  $('eurSub').textContent = n.gums ? nf(n.gross, 2) + ' € de tabaco menos ' + nf(n.gums * S.p.gum, 2) + ' € de ' + (n.gums === 1 ? 'chicle apuntado.' : 'los ' + n.gums + ' chicles apuntados.') : 'Con ' + nf(S.p.gasto) + ' € de tabaco de liar cada 2 semanas.';
+  $('eurSub').textContent = 'Con ' + nf(S.p.diario, 2) + ' € al día, una cajetilla diaria.';
   var has = GOALS.filter(function (g) { return g[0] <= n.net; }).pop(), nx = GOALS.filter(function (g) { return g[0] > n.net; })[0];
   $('goal').innerHTML = (has ? '<span>Ya te da para ' + esc(has[1]) + '.</span>' : '') + (nx ? '<span>A por ' + esc(nx[1]) + ': ' + nf(nx[0]) + ' €, a precio aproximado</span><div class="track"><i style="width:' + Math.min(100, n.net / nx[0] * 100) + '%"></i></div>' : '');
   $('pm1').textContent = nf(n.perDay * 30) + ' €'; $('pm3').textContent = nf(n.perDay * 91) + ' €'; $('pm6').textContent = nf(n.perDay * 182) + ' €';
@@ -431,7 +430,7 @@ function render() {
   var wk = 0, wkOld = 0; events('chicle').forEach(function (e) { var ago = (now - e.t) / DAY; if (ago < 7) wk++; else if (ago < 14) wkOld++; });
   $('gumTxt').textContent = !n.gums ? 'Toca «＋ Chicle» cada vez que masques uno y aquí verás cómo van bajando.' : wkOld && wk < wkOld ? 'Esta semana, ' + wk + '. La anterior, ' + wkOld + '. Vas bajando.' : 'Últimos 7 días: ' + wk + (wk === 1 ? ' chicle.' : ' chicles.');
   renderWhy(n, now);
-  $('assume').textContent = 'Los euros y los cigarrillos salen de estos números, que puedes cambiar: ' + nf(n.perDay, 2) + ' € al día. Estimación de tiempo: 7 min por cigarrillo fumando. Vida: 11 min por cigarrillo (University College London, 2000). Alquitrán: unos 10 mg por cigarrillo, la referencia de los de cajetilla, y los de liar no tienen por qué dar menos.';
+  $('assume').textContent = 'Los euros y los cigarrillos salen de estos números, que puedes cambiar: ' + nf(n.perDay, 2) + ' € al día. Estimación de tiempo: 7 min por cigarrillo fumando. Vida: 11 min por cigarrillo (University College London, 2000). Alquitrán: unos 10 mg por cigarrillo, la referencia de los de cajetilla.';
   var sl = events('desliz').length; $('slipsTxt').textContent = sl ? 'Deslices apuntados: ' + sl + '. El contador sigue, porque un desliz no borra lo que llevas.' : '';
   var ps = Object.keys(S.pend).length + Object.keys(S.del).length + (S.pPend ? 1 : 0);
   $('sync').textContent = !db ? 'Guardado en este móvil.' : ps ? 'Guardado en este móvil · ' + ps + ' por subir.' : 'Guardado en tu cuenta. Lo ves igual en el móvil y en el ordenador.';
@@ -460,7 +459,7 @@ function renderWhy(n, now) {
   $('whyBlocks').innerHTML = blocks.map(function (b) { return '<div class="block"><h3>' + esc(b.titulo) + '</h3><p>' + esc(fillIn(b.texto || '', n)) + '</p>' + widget(b.kind, n, now) + '</div>'; }).join('');
 }
 $('hoyNext').addEventListener('click', function () { hoyOff++; render(); });
-function fillForm() { var p = S.p; $('fQuit').value = p.quit; $('fHour').value = p.hora; $('fCig').value = p.cig; $('fPack').value = p.gasto; $('fGum').value = p.gum; $('fRec').value = p.record; if (document.activeElement !== $('fWhy')) $('fWhy').value = p.motivo; if (document.activeElement !== $('fFrases')) $('fFrases').value = (S.m.frases || []).join('\n'); }
+function fillForm() { var p = S.p; $('fQuit').value = p.quit; $('fHour').value = p.hora; $('fCig').value = p.cig; $('fPack').value = p.diario; $('fRec').value = p.record; if (document.activeElement !== $('fWhy')) $('fWhy').value = p.motivo; if (document.activeElement !== $('fFrases')) $('fFrases').value = (S.m.frases || []).join('\n'); }
 
 // ---------- Store: on the phone first, synced when there is signal ----------
 var flushing = false;
@@ -492,7 +491,7 @@ function buzz() { try { if (navigator.vibrate) navigator.vibrate(25); } catch (e
 function gum() { var id = addEv('chicle'); buzz(); return id; }
 $('gumBtn').addEventListener('click', function () { var id = gum(); toast('Chicle apuntado', 'Deshacer', function () { delEv(id); }); });
 [['fQuit', 'quit'], ['fHour', 'hora']].forEach(function (x) { $(x[0]).addEventListener('change', function () { if (this.value) { var c = {}; c[x[1]] = this.value; setP(c); } }); });
-[['fCig', 'cig'], ['fPack', 'gasto'], ['fGum', 'gum'], ['fRec', 'record']].forEach(function (x) { $(x[0]).addEventListener('change', function () { var v = parseFloat(this.value); if (v >= 0) { var c = {}; c[x[1]] = v; setP(c); } }); });
+[['fCig', 'cig'], ['fPack', 'diario'], ['fRec', 'record']].forEach(function (x) { $(x[0]).addEventListener('change', function () { var v = parseFloat(this.value); if (v >= 0) { var c = {}; c[x[1]] = v; setP(c); } }); });
 $('fWhy').addEventListener('change', function () { setP({ motivo: this.value.trim() }); });
 function setFrases(list) { S.m = Object.assign({}, S.m, { frases: list }); S.mPend = true; persist(); fillForm(); render(); flush(); }
 $('fFrases').addEventListener('change', function () { setFrases(this.value.split('\n').map(function (l) { return l.trim(); }).filter(Boolean)); });
@@ -504,7 +503,7 @@ function aiPrompt() {
   return 'Una persona ha dejado de fumar y tiene una app que cada día le enseña una de sus frases. Quiere que pulas las que tiene y propongas otras nuevas. Escribe con el mismo género gramatical que usan sus frases.\n\n' +
     'Lo que cuenta de por qué lo deja:\n' + (S.p.motivo ? '«' + S.p.motivo + '»\n' : '') +
     (S.m.bloques || []).map(function (b) { return '- ' + b.titulo + ': ' + (b.texto || ''); }).join('\n') +
-    '\n\nDatos: lleva ' + Math.floor(numbers(Date.now()).d) + ' días sin fumar, fumaba ' + S.p.cig + ' cigarrillos al día de tabaco de liar y aún usa chicles de nicotina de 2 mg.\n\n' +
+    '\n\nDatos: lleva ' + Math.floor(numbers(Date.now()).d) + ' días sin fumar, fumaba ' + S.p.cig + ' cigarrillos al día de cajetilla y aún usa chicles de nicotina de 2 mg.\n\n' +
     'Sus frases ahora, numeradas. Cada línea es «por quién | frase»; el «por quién» sale encima como «Hoy, por …»:\n' +
     (fr.length ? fr.map(function (l, i) { return i + '. ' + l; }).join('\n') : '(aún ninguna)') +
     '\n\nPuedes usar estos huecos, que la app rellena: {dias} días sin fumar, {euros} euros ahorrados, {vida} tiempo de vida ganado en estimación (p. ej. «3,2 días»), {horas} horas de vida que suma cada día.\n\n' +
