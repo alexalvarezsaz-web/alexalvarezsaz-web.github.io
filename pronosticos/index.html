@@ -65,8 +65,16 @@ html, body { max-width: 100%; overflow-x: clip; }
 .it .pc { grid-row: span 2; font: 800 27px/1 var(--display); color: var(--acc); padding-top: 2px; }
 .it .pc small { font-size: 15px; }
 .it .t { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
-.it .m { font-size: 13px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 8px; }
-.it .m .late { color: var(--amber); font-weight: 800; }
+.it .m, .grp-h .m { font-size: 13px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 8px; }
+.m .late { color: var(--amber); font-weight: 800; }
+/* A moment broken into apartados: one card, each apartado its own yes or no */
+.grp { padding: 12px; border-radius: 16px; background: var(--bg); display: grid; gap: 8px; }
+.grp-h { display: grid; gap: 2px; padding: 2px 2px 4px; }
+.grp-h h3 { font-size: 22px; }
+.it.sub { background: var(--surface); }
+.it.sub .pc { font-size: 23px; }
+.it.sub.done .acts { margin-top: 0; }
+.it.sub .m:empty { display: none; }
 .it .acts { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 6px; }
 .it .acts .linkb { flex: none; }
 .yes, .nop { flex: 1 1 0; min-width: 0; min-height: 48px; border: 0; border-radius: 12px; font: 800 16px var(--body); }
@@ -138,6 +146,13 @@ input[type=range] { width: 100%; height: 36px; accent-color: var(--acc); }
 .fb { padding: 14px 16px; border-radius: 16px; font-weight: 700; }
 .fb.ok { background: var(--ok-bg); color: var(--ok); }
 .fb.no { background: var(--no-bg); color: var(--no); }
+.ap { padding: 12px; border-radius: 14px; background: var(--surface); display: grid; gap: 6px; }
+.ap-top { display: flex; gap: 8px; }
+.ap-top input { flex: 1; }
+.x { flex: none; width: 44px; min-height: 44px; border: 1px solid var(--line); border-radius: 10px; background: transparent; font-size: 22px; line-height: 1; color: var(--muted); }
+.ap-p { display: flex; align-items: center; gap: 12px; }
+.ap-p input { flex: 1; min-width: 0; }
+.apv { font: 800 28px/1 var(--display); color: var(--acc); min-width: 3em; text-align: right; }
 @media (prefers-reduced-motion: no-preference) { .hero .pt { animation: pop .5s both; } @keyframes pop { from { opacity: 0; } } }
 </style>
 
@@ -207,7 +222,16 @@ input[type=range] { width: 100%; height: 36px; accent-color: var(--acc); }
 </div></div>
 
 <dialog class="sheet" id="newD" aria-label="Nuevo pronóstico"><div class="sh">
-  <div class="sh-top"><h2>Nuevo pronóstico</h2><button type="button" class="linkb" data-close>Cerrar</button></div>
+  <div class="sh-top"><h2 id="newT">Nuevo pronóstico</h2><button type="button" class="linkb" data-close>Cerrar</button></div>
+  <div class="chips" id="modeChips"><button type="button" data-v="one" class="on">Uno solo</button><button type="button" data-v="group">Un momento con apartados</button></div>
+  <div class="fld" id="grpBox" hidden>
+    <label class="fld"><span class="lab">¿Qué momento?</span><input type="text" id="gname" maxlength="80" placeholder="Ej.: La guardia de hoy"></label>
+    <span class="lab">Apartados</span>
+    <p class="small">Cada uno es un sí o no aparte, con su porcentaje: no tienen que sumar 100 %. Los resuelves por separado y en tu calibración cuentan uno a uno.</p>
+    <div class="list" id="rows"></div>
+    <button type="button" class="ghost" id="addRow">＋ Añadir apartado</button>
+  </div>
+  <div class="fld" id="oneBox">
   <label class="fld"><span class="lab">¿Qué crees que va a pasar?</span><textarea id="txt" rows="3" maxlength="300" placeholder="Ej.: Aprobaré Galénica en junio"></textarea></label>
   <div class="prob">
     <span class="lab">¿Qué probabilidad le das?</span>
@@ -215,8 +239,9 @@ input[type=range] { width: 100%; height: 36px; accent-color: var(--acc); }
     <input type="range" id="pr" min="1" max="99" step="1" value="70" aria-label="Probabilidad en porcentaje">
     <div class="chips" id="pchips"></div>
   </div>
-  <div class="fld"><span class="lab">Tema</span><div class="chips" id="cats"></div><input type="text" id="catx" placeholder="Escribe el tema" maxlength="30" hidden></div>
-  <div class="fld"><span class="lab">¿Cuándo lo sabrás?</span><div class="chips" id="dchips"></div><input type="date" id="due" aria-label="Fecha en la que lo sabrás"></div>
+  </div>
+  <div class="fld" id="catFld"><span class="lab">Tema</span><div class="chips" id="cats"></div><input type="text" id="catx" placeholder="Escribe el tema" maxlength="30" hidden></div>
+  <div class="fld" id="dueFld"><span class="lab">¿Cuándo lo sabrás?</span><div class="chips" id="dchips"></div><input type="date" id="due" aria-label="Fecha en la que lo sabrás"></div>
   <button type="button" class="go" id="save" disabled>Guardar pronóstico</button>
   <p class="small" id="hint"></p>
 </div></dialog>
@@ -307,14 +332,16 @@ function renderHero(list) {
 }
 
 // ---------- Lists ----------
-function itemHtml(o) {
+// sub: an apartado inside a moment's card, whose topic and date are on the card
+function itemHtml(o, sub) {
   var done = isDone(o), late = !done && o.due <= today();
-  var m = '<span>' + esc(o.cat) + ' ·</span><span>' + (done ? 'resuelto ' + when(o.resolved || o.due) : late ? '<span class="late">tocaba ' + when(o.due) + '</span>' : 'lo sabrás ' + when(o.due)) + '</span>';
-  if (done) m += '<span class="res ' + (o.outcome ? 'ok' : 'no') + '">' + (o.outcome ? 'Pasó' : 'No pasó') + '</span>';
+  var m = sub ? '' : '<span>' + esc(o.cat) + ' ·</span><span>' + (done ? 'resuelto ' + when(o.resolved || o.due) : late ? '<span class="late">tocaba ' + when(o.due) + '</span>' : 'lo sabrás ' + when(o.due)) + '</span>';
+  var tag = done ? '<span class="res ' + (o.outcome ? 'ok' : 'no') + '">' + (o.outcome ? 'Pasó' : 'No pasó') + '</span>' : '';
+  if (!sub) m += tag;
   var acts = done
-    ? '<span class="sp"></span><button type="button" class="linkb" data-re="' + o.id + '">Reabrir</button><button type="button" class="linkb" data-del="' + o.id + '">Borrar</button>'
+    ? (sub ? tag : '') + '<span class="sp"></span><button type="button" class="linkb" data-re="' + o.id + '">Reabrir</button><button type="button" class="linkb" data-del="' + o.id + '">Borrar</button>'
     : '<button type="button" class="yes" data-res="' + o.id + '" data-v="1">Pasó</button><button type="button" class="nop" data-res="' + o.id + '" data-v="0">No pasó</button><button type="button" class="linkb" data-del="' + o.id + '">Borrar</button>';
-  return '<div class="it' + (done ? ' done' : '') + '"><span class="pc num">' + o.p + '<small> %</small></span><span class="t">' + esc(o.text) + '</span><span class="m">' + m + '</span><div class="acts">' + acts + '</div></div>';
+  return '<div class="it' + (sub ? ' sub' : '') + (done ? ' done' : '') + '"><span class="pc num">' + o.p + '<small> %</small></span><span class="t">' + esc(o.text) + '</span><span class="m">' + m + '</span><div class="acts">' + acts + '</div></div>';
 }
 function groupTable(list, keyf, title) {
   var g = {}; list.forEach(function (o) { var k = keyf(o); (g[k] = g[k] || []).push(o); });
@@ -324,20 +351,50 @@ function groupTable(list, keyf, title) {
 }
 function hz(o) { var d = dayDiff(o.created, o.due); return d <= 7 ? '1 · Hasta 1 semana' : d <= 31 ? '2 · Hasta 1 mes' : d <= 183 ? '3 · Hasta 6 meses' : '4 · Más de 6 meses'; }
 
+// A unit is a lone forecast or a whole moment; a moment stays open until all its apartados are resolved
+function units(list) {
+  var g = {}, out = [];
+  list.forEach(function (o) {
+    if (!o.gid) return out.push({ items: [o] });
+    if (!g[o.gid]) { g[o.gid] = { gid: o.gid, items: [] }; out.push(g[o.gid]); }
+    g[o.gid].items.push(o);
+  });
+  out.forEach(function (u) {
+    u.items.sort(function (a, b) { return a.id < b.id ? -1 : 1; });
+    var f = u.items[0]; u.name = f.gname || ''; u.cat = f.cat;
+    u.due = u.items.reduce(function (m, o) { return o.due < m ? o.due : m; }, f.due);
+    u.done = u.items.every(isDone);
+    u.resolved = u.items.reduce(function (m, o) { return (o.resolved || '') > m ? o.resolved : m; }, '');
+  });
+  return out;
+}
+function groupHtml(u) {
+  var n = u.items.length, ok = u.items.filter(function (o) { return o.outcome === true; }).length, nd = u.items.filter(isDone).length;
+  var exp = dec(u.items.reduce(function (s, o) { return s + o.p / 100; }, 0), 1), late = !u.done && u.due <= today();
+  var lab = u.done ? 'Pasaron ' + ok + ' de ' + n + ' · esperabas ' + exp : (nd ? nd + ' de ' + n + ' resueltos' : n + (n === 1 ? ' apartado' : ' apartados')) + ' · esperas que pasen ' + exp;
+  var m = '<span>' + esc(u.cat) + ' ·</span><span>' + (u.done ? 'resuelto ' + when(u.resolved) : late ? '<span class="late">tocaba ' + when(u.due) + '</span>' : 'lo sabrás ' + when(u.due)) + '</span>';
+  return '<div class="grp"><div class="grp-h"><span class="lab">' + lab + '</span><h3>' + esc(u.name) + '</h3><span class="m">' + m + '</span></div>' +
+    u.items.map(function (o) { return itemHtml(o, true); }).join('') +
+    '<div class="row">' + (u.done ? '' : '<button type="button" class="linkb" data-add="' + u.gid + '">＋ Añadir apartado</button>') + '<span class="sp"></span><button type="button" class="linkb" data-delg="' + u.gid + '">Borrar momento</button></div></div>';
+}
+function unitHtml(u) { return u.gid ? groupHtml(u) : itemHtml(u.items[0]); }
+
 function render() {
-  var t = today(), list = all();
-  var open = list.filter(function (o) { return !isDone(o); }).sort(function (a, b) { return a.due < b.due ? -1 : a.due > b.due ? 1 : 0; });
-  var done = list.filter(isDone).sort(function (a, b) { return (b.resolved || '') < (a.resolved || '') ? -1 : 1; });
-  var due = open.filter(function (o) { return o.due <= t; }), ahead = open.filter(function (o) { return o.due > t; });
+  var t = today(), list = all(), us = units(list);
+  var open = us.filter(function (u) { return !u.done; }).sort(function (a, b) { return a.due < b.due ? -1 : a.due > b.due ? 1 : 0; });
+  var doneU = us.filter(function (u) { return u.done; }).sort(function (a, b) { return b.resolved < a.resolved ? -1 : 1; });
+  var done = list.filter(isDone);
+  var due = open.filter(function (u) { return u.due <= t; }), ahead = open.filter(function (u) { return u.due > t; });
   renderHero(done);
-  $('dueBox').hidden = !due.length; $('dueList').innerHTML = due.map(itemHtml).join('');
-  $('openList').innerHTML = ahead.length ? ahead.map(itemHtml).join('') : '<p class="empty">' + (due.length ? 'Nada más esperando.' : 'Nada en marcha. Pulsa «＋ Pronóstico» y apunta algo que vaya a pasar pronto: un examen, un partido, si lloverá el sábado.') + '</p>';
+  $('dueBox').hidden = !due.length; $('dueList').innerHTML = due.map(unitHtml).join('');
+  $('openList').innerHTML = ahead.length ? ahead.map(unitHtml).join('') : '<p class="empty">' + (due.length ? 'Nada más esperando.' : 'Nada en marcha. Pulsa «＋ Pronóstico» y apunta algo que vaya a pasar pronto: un examen, un partido, si lloverá el sábado.') + '</p>';
   var st = stats(done);
   $('tiles').hidden = !st;
   if (st) { $('tN').textContent = st.n; $('tB').textContent = dec(st.brier, 3); $('tM').textContent = pc(st.mean); $('tR').textContent = pc(st.rate); }
   $('byBox').hidden = done.length < 3;
   if (done.length >= 3) $('byTables').innerHTML = groupTable(done, function (o) { return o.cat; }, 'Por tema') + groupTable(done, hz, 'Por plazo');
-  $('doneBox').hidden = !done.length; $('doneSum').textContent = 'Resueltos · ' + done.length; $('doneList').innerHTML = done.map(itemHtml).join('');
+  var nDone = doneU.reduce(function (s, u) { return s + u.items.length; }, 0);
+  $('doneBox').hidden = !doneU.length; $('doneSum').textContent = 'Resueltos · ' + nDone; $('doneList').innerHTML = doneU.map(unitHtml).join('');
   var trn = Object.keys(TR).length; $('trSub').textContent = trn ? trn + (trn === 1 ? ' pregunta hecha' : ' preguntas hechas') : 'con preguntas';
   syncTxt();
 }
@@ -355,6 +412,12 @@ document.querySelector('main').addEventListener('click', function (e) {
   } else if (b.dataset.del) {
     var gone = P[b.dataset.del]; if (!gone) return; drop(gone.id);
     toast('Pronóstico borrado', 'Deshacer', function () { put(gone); });
+  } else if (b.dataset.add) {
+    var f = all().filter(function (o) { return o.gid === b.dataset.add; })[0]; if (f) openNew({ gid: f.gid, gname: f.gname, cat: f.cat, due: f.due });
+  } else if (b.dataset.delg) {
+    var gg = all().filter(function (o) { return o.gid === b.dataset.delg; });
+    gg.forEach(function (o) { drop(o.id); });
+    toast('Momento borrado', 'Deshacer', function () { gg.forEach(put); });
   } else if (b.id === 'exp') {
     var s = JSON.stringify({ p: P, t: TR }); $('bk').value = s; $('bk').select();
     try { navigator.clipboard.writeText(s).then(function () { toast('Copia copiada. Guárdala en una nota.'); }, function () { toast('Copia lista: selecciónala y cópiala.'); }); } catch (x) { toast('Copia lista: selecciónala y cópiala.'); }
@@ -371,7 +434,7 @@ document.querySelector('main').addEventListener('click', function (e) {
 // ---------- New forecast ----------
 var CATS = ['Estudios', 'Familia', 'Trabajo', 'Salud', 'Deporte', 'Mundo', 'Vida'], PCH = [5, 10, 25, 40, 50, 60, 75, 90, 95];
 var DCH = [['Mañana', 1], ['1 semana', 7], ['1 mes', 30], ['3 meses', 90], ['1 año', 365]];
-var F = { cat: '', other: false };
+var F = { cat: '', other: false, mode: 'one', gid: null };
 function chipsHtml(items) { return items.map(function (x) { return '<button type="button" data-v="' + esc(x[0]) + '">' + esc(x[1]) + '</button>'; }).join(''); }
 $('pchips').innerHTML = chipsHtml(PCH.map(function (v) { return [v, v + ' %']; }));
 $('cats').innerHTML = chipsHtml(CATS.map(function (c) { return [c, c]; }).concat([['__otro', 'Otro']]));
@@ -379,22 +442,64 @@ $('dchips').innerHTML = chipsHtml(DCH.map(function (d) { return [d[1], d[0]]; })
 function words(v) { return v <= 10 ? 'Casi imposible' : v <= 30 ? 'Poco probable' : v <= 45 ? 'Algo menos que una moneda' : v <= 55 ? 'Una moneda al aire' : v <= 69 ? 'Más bien sí' : v <= 89 ? 'Bastante seguro' : 'Casi seguro'; }
 function setP(v) { $('pr').value = v; $('pv').textContent = v + ' %'; $('pw').textContent = words(+v); [].forEach.call($('pchips').children, function (c) { c.classList.toggle('on', c.dataset.v === String(v)); }); }
 function onOnly(box, b) { [].forEach.call(box.children, function (c) { c.classList.toggle('on', c === b); }); }
-function check() { var ok = $('txt').value.trim() && $('due').value; $('save').disabled = !ok; $('hint').textContent = ok ? '' : !$('txt').value.trim() ? 'Escribe qué crees que va a pasar.' : 'Elige cuándo lo sabrás.'; }
+function check() {
+  var due = $('due').value, n = rowsData().length, msg;
+  if (F.mode === 'one') msg = !$('txt').value.trim() ? 'Escribe qué crees que va a pasar.' : !due ? 'Elige cuándo lo sabrás.' : '';
+  else msg = !$('gname').value.trim() ? 'Ponle nombre al momento.' : !n ? 'Escribe al menos un apartado.' : !due ? 'Elige cuándo lo sabrás.' : '';
+  $('save').disabled = !!msg; $('hint').textContent = msg;
+  $('save').textContent = F.mode === 'one' ? 'Guardar pronóstico' : n > 1 ? 'Guardar ' + n + ' apartados' : 'Guardar apartado';
+}
+// Apartados: rows added to the DOM one by one, so what is typed stays put
+var EX = ['Me pasará algo raro', 'Me equivocaré con las luces', 'Me quedaré dormido', 'Será una noche tranquila', 'Llegaré tarde'];
+function addRow() {
+  var d = document.createElement('div'); d.className = 'ap';
+  d.innerHTML = '<div class="ap-top"><input type="text" class="apt" maxlength="200" placeholder="Ej.: ' + EX[$('rows').children.length % EX.length] + '" aria-label="Apartado"><button type="button" class="x" aria-label="Quitar apartado">×</button></div>' +
+    '<div class="ap-p"><input type="range" class="apr" min="1" max="99" step="1" value="50" aria-label="Probabilidad del apartado"><b class="apv num">50 %</b></div><span class="small apw">' + words(50) + '</span>';
+  $('rows').appendChild(d); return d;
+}
+function rowsData() { return [].map.call($('rows').children, function (ap) { return { text: ap.querySelector('.apt').value.trim(), p: +ap.querySelector('.apr').value }; }).filter(function (r) { return r.text; }); }
+$('rows').addEventListener('input', function (e) {
+  if (e.target.classList.contains('apr')) { var ap = e.target.closest('.ap'); ap.querySelector('.apv').textContent = e.target.value + ' %'; ap.querySelector('.apw').textContent = words(+e.target.value); }
+  check();
+});
+$('rows').addEventListener('click', function (e) { var x = e.target.closest('.x'); if (!x) return; x.closest('.ap').remove(); if (!$('rows').children.length) addRow(); check(); });
+$('addRow').addEventListener('click', function () { addRow().querySelector('.apt').focus(); check(); });
+$('gname').addEventListener('input', check);
+function setMode(m) {
+  F.mode = m; onOnly($('modeChips'), $('modeChips').querySelector('[data-v="' + m + '"]'));
+  $('oneBox').hidden = m !== 'one'; $('grpBox').hidden = m !== 'group';
+  if (m === 'group' && !$('rows').children.length) { addRow(); addRow(); }
+  check();
+}
+$('modeChips').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; setMode(b.dataset.v); (b.dataset.v === 'one' ? $('txt') : $('gname')).focus(); });
 $('pr').addEventListener('input', function () { setP(this.value); });
 $('pchips').addEventListener('click', function (e) { var b = e.target.closest('button'); if (b) setP(b.dataset.v); });
 $('cats').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; onOnly(this, b); F.other = b.dataset.v === '__otro'; F.cat = F.other ? '' : b.dataset.v; $('catx').hidden = !F.other; if (F.other) $('catx').focus(); });
 $('dchips').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; onOnly(this, b); $('due').value = addDays(+b.dataset.v); check(); });
 $('due').addEventListener('input', function () { onOnly($('dchips'), null); check(); });
 $('txt').addEventListener('input', check);
-function openNew() {
-  $('txt').value = ''; $('due').value = ''; $('due').min = today(); $('catx').value = ''; $('catx').hidden = true; F = { cat: '', other: false };
-  onOnly($('cats'), null); onOnly($('dchips'), null); setP(70); check(); $('newD').showModal(); setTimeout(function () { $('txt').focus(); }, 50);
+// g: an existing moment to add apartados to; its name, topic and date stay as they are
+function openNew(g) {
+  $('txt').value = ''; $('due').value = g ? g.due : ''; $('due').min = today(); $('catx').value = ''; $('catx').hidden = true;
+  F = { cat: g ? g.cat : '', other: false, mode: 'one', gid: g ? g.gid : null };
+  $('rows').innerHTML = ''; $('gname').value = g ? g.gname : ''; $('gname').readOnly = !!g;
+  $('newT').textContent = g ? 'Añadir apartados' : 'Nuevo pronóstico';
+  $('modeChips').hidden = $('catFld').hidden = $('dueFld').hidden = !!g;
+  onOnly($('cats'), null); onOnly($('dchips'), null); setP(70);
+  if (g) addRow();
+  setMode(g ? 'group' : 'one'); $('newD').showModal();
+  setTimeout(function () { var el = g ? $('rows').querySelector('.apt') : $('txt'); if (el && $('newD').open) el.focus(); }, 50);
 }
-$('newBtn').addEventListener('click', openNew);
+$('newBtn').addEventListener('click', function () { openNew(null); });
 $('save').addEventListener('click', function () {
   var cat = F.other ? ($('catx').value.trim() || 'Otro') : (F.cat || 'Sin tema'), due = $('due').value;
-  put({ id: uid(), text: $('txt').value.trim(), p: +$('pr').value, cat: cat, created: today(), due: due, outcome: null });
-  $('newD').close(); toast('Guardado. Lo resuelves ' + when(due) + '.');
+  if (F.mode === 'one') {
+    put({ id: uid(), text: $('txt').value.trim(), p: +$('pr').value, cat: cat, created: today(), due: due, outcome: null });
+    $('newD').close(); return toast('Guardado. Lo resuelves ' + when(due) + '.');
+  }
+  var gid = F.gid || uid(), gname = $('gname').value.trim(), rs = rowsData();
+  rs.forEach(function (r) { put({ id: uid(), text: r.text, p: r.p, cat: cat, created: today(), due: due, outcome: null, gid: gid, gname: gname }); });
+  $('newD').close(); toast((rs.length === 1 ? '1 apartado guardado' : rs.length + ' apartados guardados') + '. Los resuelves ' + when(due) + '.');
 });
 document.querySelectorAll('.sheet').forEach(function (d) { d.addEventListener('click', function (e) { if (e.target.closest('[data-close]')) d.close(); }); });
 
