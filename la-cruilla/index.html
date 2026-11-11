@@ -480,7 +480,8 @@ renderAll();
 // Apps built later in this repo, added to the pages once (a marker keeps a deleted one from coming back).
 // The link is the app's folder next to this one, so it only runs where the apps are served over https.
 var NEW_PAGES = [['formigues', { nombre: 'Formigues', texto: 'Diario y mapa del hormiguero de las Messor', categoria: 'Naturaleza', desde: '2026-04-21' }, '../formigues/'],
-  ['per-molts-anys', { nombre: 'Per molts anys', texto: 'Los cumpleaños de tu gente, con avisos e ideas de regalo', categoria: 'Casa' }, '../per-molts-anys/']];
+  ['per-molts-anys', { nombre: 'Per molts anys', texto: 'Los cumpleaños de tu gente, con avisos e ideas de regalo', categoria: 'Casa' }, '../per-molts-anys/'],
+  ['pronosticos', { nombre: 'Pronósticos', texto: 'Apunta lo que crees que va a pasar y mira cómo de bien calibrado estás.', categoria: 'Otros' }, '../pronosticos/']];
 var adding = false;
 async function addOnce() {
   if (adding || location.protocol !== 'https:') return;
