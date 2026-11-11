@@ -113,6 +113,22 @@ h1 { margin: 0; display: flex; align-items: center; gap: .28em; font: 800 clamp(
 .stat { position: absolute !important; top: 8px; right: 12px; text-align: right; font: 800 34px/1 var(--font-display); letter-spacing: -.02em; }
 .stat small { display: block; font: 500 11px var(--font-mono); letter-spacing: .02em; color: var(--t-soft); }
 @media (min-width: 720px) { .stat { font-size: 40px; } .stat small { font-size: 12px; } }
+/* A live figure read from the app: the unit and one short line, with a dot that says it is current */
+.stat.live { max-width: calc(100% - 24px); }
+/* The live figure takes the place of the category label and the fixed description */
+.tile.has-live .desc { display: none; }
+.stat.live small { margin-left: auto; max-width: 12em; font: 600 12px/1.15 var(--font-body); letter-spacing: 0; overflow: hidden; display: -webkit-box !important; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.stat.live .lv { margin-top: 3px; display: flex !important; align-items: center; justify-content: flex-end; gap: 5px; font: 600 11.500px/1.2 var(--font-body); white-space: nowrap; text-overflow: ellipsis; letter-spacing: 0; color: rgba(250, 244, 228, .95); }
+.stat .lv::before { content: ""; flex: none; width: 6px; height: 6px; border-radius: 50%; background: #7ef0a8; box-shadow: 0 0 0 2px rgba(126, 240, 168, .25); }
+.stat .lv { max-width: 15em; margin-left: auto; }
+.tile.poster .stat { text-shadow: 0 1px 6px rgba(0, 0, 0, .5); }
+.tile.poster .stat small { color: rgba(250, 244, 228, .92); }
+/* Phone tiles are short: keep the figure and its unit, drop the extra line */
+@media (max-width: 719px) { .stat.live .lv { display: none !important; } .stat.live small { max-width: 11.500em; font-size: 11.500px; -webkit-line-clamp: 1; } }
+@media (prefers-reduced-motion: no-preference) {
+  .stat .lv::before { animation: beat 2.4s ease-in-out infinite; }
+  @keyframes beat { 50% { box-shadow: 0 0 0 4px rgba(126, 240, 168, 0); } }
+}
 .note-tag { justify-self: start; margin-top: 3px; padding: 0 6px; border-radius: 4px; background: rgba(255, 255, 255, .18); font-size: 12px; font-weight: 500; }
 .tile:hover { filter: brightness(1.1); }
 .tile:focus-visible { outline-offset: 2px; }
@@ -364,6 +380,174 @@ function renderRecent() {
   $('recent').innerHTML = show ? 'Última abierta: <a data-id="' + esc(best.id) + '" href="' + esc(best.url) + '" target="_blank" rel="noopener">' + esc(best.nombre) + '</a> ' + esc(ago(visits[best.id])) : '';
 }
 
+// ---------- Live figures: each poster shows one number read straight from its app ----------
+// Every app keeps its data under apps/<app>/ in the same Firebase project; the owner's account can read them all.
+// Where Firebase is not around (the claude.ai copy) or an app cannot be read, the tile keeps its date stat or nothing.
+var LL = 'cruilla-vivo', LIVE = {}, RAW = {}, liveWait = 0;
+try { LIVE = JSON.parse(localStorage.getItem(LL) || '{}') || {}; } catch (e) { LIVE = {}; }
+function isoDay(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function dayGap(a, b) { return Math.round((new Date(b + 'T12:00:00') - new Date(a + 'T12:00:00')) / 864e5); }
+function plural(n, one, many) { return n === 1 ? one : many; }
+function inDays(n) { return n === 0 ? 'hoy' : n === 1 ? 'mañana' : 'en ' + n + ' días'; }
+function agoDays(n) { return n <= 0 ? 'hoy' : n === 1 ? 'ayer' : 'hace ' + n + ' días'; }
+function bigDays(n, unit) { return n === 0 ? { n: 'Hoy', u: '' } : n === 1 ? { n: 'Mañana', u: '' } : { n: n, u: unit }; }
+function thousands(n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+function docs(r, k) { return (r && r[k]) || []; }
+// Same rule as Cuándo Toca: one-off, ranges and weekly / monthly / yearly repeats
+function calOn(e, s) {
+  if (!e.d) return false;
+  if (e.f && e.f >= e.d) return s >= e.d && s <= e.f;
+  if (s < e.d) return false;
+  if (!e.r) return s === e.d;
+  var a = new Date(e.d + 'T12:00:00'), b = new Date(s + 'T12:00:00');
+  if (e.r === 'w') return dayGap(e.d, s) % 7 === 0;
+  if (e.r === 'm') return a.getDate() === b.getDate();
+  if (e.r === 'y') return a.getDate() === b.getDate() && a.getMonth() === b.getMonth();
+  return false;
+}
+// [key, path, optional query]: a path with one slash is a document, otherwise a collection
+var LIVE_SRC = {
+  calendario: [['ev', 'eventos']],
+  bolets: [['sal', 'salidas']],
+  territorio: [['sit', 'config/sitios']],
+  'sense-fum': [['perfil', 'config/perfil'], ['chicles', 'eventos', function (q) { return q.where('tipo', '==', 'chicle'); }]],
+  tfg: [['cfg', 'config/tfg'], ['hitos', 'hitos']],
+  piso: [['pro', 'proyectos', function (q) { return q.where('estado', '==', 'En marcha'); }], ['citas', 'citas']],
+  viladomat: [['tareas', 'tareas']],
+  'la-sessio': [['hist', 'hist', function (q) { return q.orderBy('ts', 'desc').limit(80); }]],
+  'cims-coves': [['sal', 'salidas']],
+  sempiterno: [['est', 'estado']],
+  formigues: [['ev', 'eventos', function (q) { return q.orderBy('t', 'desc').limit(60); }]],
+  'per-molts-anys': [['gente', 'personas']],
+  rebotica: [['turnos', 'guardias']],
+  pronosticos: [['pred', 'predicciones']]
+};
+// Each returns { n: big figure, u: its unit, s: one short line } or null when there is nothing worth showing
+var LIVE_FN = {
+  calendario: function (r) {
+    var ev = docs(r, 'ev'), d = new Date();
+    for (var i = 0; i <= 30; i++) {
+      var s = isoDay(new Date(d.getFullYear(), d.getMonth(), d.getDate() + i));
+      var on = ev.filter(function (e) { return calOn(e, s); }).sort(function (a, b) { return (a.h || '').localeCompare(b.h || ''); });
+      if (!on.length) continue;
+      if (i === 0) return { n: on.length, u: plural(on.length, 'plan hoy', 'planes hoy'), s: on[0].t || '' };
+      var b = bigDays(i, 'días'); b.s = on[0].t || ''; return b;
+    }
+    return null;
+  },
+  bolets: function (r) {
+    var f = docs(r, 'sal').map(function (x) { return x.fecha || ''; }).filter(Boolean).sort();
+    if (!f.length) return null;
+    var y = String(new Date().getFullYear()), year = f.filter(function (x) { return x.slice(0, 4) === y; }).length, n = Math.max(0, dayGap(f[f.length - 1], isoDay(new Date())));
+    return n === 0 ? { n: 'Hoy', u: '', s: 'de salida · ' + year + ' este año' } : { n: n, u: plural(n, 'día sin salir', 'días sin salir'), s: year + plural(year, ' salida', ' salidas') + ' este año' };
+  },
+  territorio: function (r) {
+    var it = (r.sit && r.sit.items) || []; if (!it.length) return null;
+    return { n: it.length, u: plural(it.length, 'sitio guardado', 'sitios guardados'), s: '' };
+  },
+  'sense-fum': function (r) {
+    var p = r.perfil; if (!p || !p.quit) return null;
+    var q = p.quit.split('-'), h = (p.hora || '00:00').split(':'), at = new Date(+q[0], +q[1] - 1, +q[2], +h[0] || 0, +h[1] || 0);
+    var d = Math.max(0, (Date.now() - at) / 864e5), net = Math.max(0, d * (+p.gasto || 0) / 14 - docs(r, 'chicles').length * (+p.gum || 0)), w = Math.floor(d);
+    return { n: w, u: plural(w, 'día sin fumar', 'días sin fumar'), s: p.gasto ? thousands(net) + ' € ahorrados' : '' };
+  },
+  tfg: function (r) {
+    var h = docs(r, 'hitos'), done = h.filter(function (x) { return x.hecha; }).length, line = h.length ? done + ' de ' + h.length + ' hitos' : '';
+    var e = r.cfg && r.cfg.entrega, n = e ? dayGap(isoDay(new Date()), e) : -1;
+    if (n >= 0) { var b = bigDays(n, 'días para entregar'); b.s = line; return b; }
+    return h.length ? { n: done + '/' + h.length, u: 'hitos hechos', s: '' } : null;
+  },
+  piso: function (r) {
+    var p = docs(r, 'pro').length, t = isoDay(new Date());
+    var c = docs(r, 'citas').filter(function (x) { return x.fecha && x.fecha >= t; }).sort(function (a, b) { return a.fecha.localeCompare(b.fecha); })[0];
+    var s = c ? 'Cita con ' + (c.persona || 'alguien') + ' ' + inDays(dayGap(t, c.fecha)) : '';
+    if (!p && !s) return null;
+    return { n: p, u: plural(p, 'proyecto en marcha', 'proyectos en marcha'), s: s };
+  },
+  viladomat: function (r) {
+    var est = ['Invierno', 'Invierno', 'Primavera', 'Primavera', 'Primavera', 'Verano', 'Verano', 'Verano', 'Otoño', 'Otoño', 'Otoño', 'Invierno'][new Date().getMonth()];
+    var all = docs(r, 'tareas'); if (!all.length) return null;
+    var t = all.filter(function (x) { return !x.hecha && x.estacion === est; });
+    return t.length ? { n: t.length, u: plural(t.length, 'tarea de ', 'tareas de ') + est.toLowerCase(), s: t[0].texto || '' } : { n: '✓', u: 'nada pendiente en ' + est.toLowerCase(), s: '' };
+  },
+  'la-sessio': function (r) {
+    var h = docs(r, 'hist'); if (!h.length) return null;
+    var m = new Date(), from = new Date(m.getFullYear(), m.getMonth(), 1).getTime(), n = h.filter(function (x) { return x.ts >= from; }).length;
+    return { n: n, u: plural(n, 'vista este mes', 'vistas este mes'), s: h[0].t ? 'Última: ' + h[0].t : '' };
+  },
+  'cims-coves': function (r) {
+    var y = String(new Date().getFullYear()), s = docs(r, 'sal').filter(function (x) { return String(x.fecha || '').slice(0, 4) === y; });
+    if (!s.length) return null;
+    var up = 0, down = 0; s.forEach(function (x) { var m = +x.metros || 0; if (x.tipo === 'Cueva') down += m; else up += m; });
+    return up ? { n: thousands(up), u: 'm subidos en ' + y, s: down ? thousands(down) + ' m bajo tierra' : '' } : { n: thousands(down), u: 'm bajo tierra en ' + y, s: '' };
+  },
+  sempiterno: function (r) {
+    var t = isoDay(new Date()), mine = docs(r, 'est').filter(function (e) { return e.mia; }); if (!mine.length) return null;
+    var due = mine.filter(function (e) { return (e.prox || t) <= t; }).length;
+    return due ? { n: due, u: plural(due, 'palabra por repasar', 'palabras por repasar'), s: mine.length + ' tuyas' } : { n: mine.length, u: 'palabras tuyas', s: 'Repaso al día' };
+  },
+  formigues: function (r) {
+    var c = docs(r, 'ev').filter(function (x) { return x.tipo === 'comida' && x.t; })[0];
+    return c ? { n: null, u: '', s: 'Comida ' + agoDays(dayGap(isoDay(new Date(c.t)), isoDay(new Date()))) } : null;
+  },
+  'per-molts-anys': function (r) {
+    var now = new Date(), t0 = new Date(now.getFullYear(), now.getMonth(), now.getDate()), best = null;
+    docs(r, 'gente').forEach(function (p) {
+      var d = +p.dia, m = +p.mes; if (!d || !m) return;
+      for (var y = now.getFullYear(); y <= now.getFullYear() + 1; y++) {
+        var leap = (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0, at = new Date(y, m - 1, m === 2 && d === 29 && !leap ? 28 : d), n = Math.round((at - t0) / 864e5);
+        if (n >= 0) { if (!best || n < best.n) best = { n: n, p: p }; break; }
+      }
+    });
+    if (!best) return null;
+    var k = { cumple: 'Cumple', santo: 'Santo', aniv: 'Aniversario' }[best.p.tipo || 'cumple'] || best.p.etiqueta || 'Fecha';
+    var b = bigDays(best.n, 'días'); b.s = k + ' de ' + (best.p.nombre || '—'); return b;
+  },
+  rebotica: function (r) {
+    var t = isoDay(new Date()), g = docs(r, 'turnos').filter(function (x) { return x.fecha && x.fecha >= t; }).sort(function (a, b) { return a.fecha.localeCompare(b.fecha); })[0];
+    if (!g) return null;
+    var b = bigDays(dayGap(t, g.fecha), 'días para el turno'); b.s = g.turno || (b.u ? '' : 'Turno'); return b;
+  },
+  pronosticos: function (r) {
+    var t = isoDay(new Date()), p = docs(r, 'pred'), open = p.filter(function (o) { return o.outcome !== true && o.outcome !== false; });
+    if (!p.length) return null;
+    var late = open.filter(function (o) { return o.due && o.due <= t; }).length, shut = p.length - open.length;
+    return late ? { n: late, u: 'por resolver', s: open.length + ' abiertos' } : { n: open.length, u: plural(open.length, 'abierto', 'abiertos'), s: shut + plural(shut, ' resuelto', ' resueltos') };
+  }
+};
+var LIVE_ALIAS = { 'diari-bolets': 'bolets' };
+// The app a page opens: its folder in the link, else its id
+function appOf(o) {
+  var m = /\/([a-z0-9-]+)\/?(?:index\.html)?(?:[?#].*)?$/.exec(o.url || ''), a = m && m[1];
+  return a && LIVE_SRC[a] ? a : LIVE_ALIAS[o.id] || o.id;
+}
+function liveUpdate(app) {
+  var v = null; try { v = LIVE_FN[app](RAW[app] || {}); } catch (e) { v = null; }
+  if (v) LIVE[app] = v; else delete LIVE[app];
+  clearTimeout(liveWait);
+  liveWait = setTimeout(function () { try { localStorage.setItem(LL, JSON.stringify(LIVE)); } catch (e) {} if (loaded) render(); }, 120);
+}
+var liveOn = false;
+function startLive() {
+  if (liveOn || !(window.firebase && firebase.firestore)) return;
+  liveOn = true;
+  var fs = firebase.firestore();
+  Object.keys(LIVE_SRC).forEach(function (app) {
+    RAW[app] = {};
+    var base = fs.collection('apps').doc(app);
+    LIVE_SRC[app].forEach(function (src) {
+      var p = src[1].split('/');
+      var done = function (val) { RAW[app][src[0]] = val; liveUpdate(app); };
+      // A read the account may not make (a shared login) just leaves that tile without its figure
+      var fail = function () {};
+      if (p.length === 2) base.collection(p[0]).doc(p[1]).onSnapshot(function (s) { done(s.exists ? s.data() : null); }, fail);
+      else { var q = base.collection(p[0]); (src[2] ? src[2](q) : q).onSnapshot(function (s) { done(s.docs.map(function (x) { return x.data(); })); }, fail); }
+    });
+  });
+  // Days roll over without new data: redraw once an hour
+  setInterval(function () { Object.keys(LIVE_SRC).forEach(function (a) { if (RAW[a]) liveUpdate(a); }); }, 36e5);
+}
+
 // Tile sizes: a photo gets the most room, a countdown a wide tile. The last tile stretches to close the mosaic.
 function layout(list) { // every tile is the same size
   return list.map(function () { return { d: 1, dr: 1, m: 1, mr: 1 }; });
@@ -375,11 +559,14 @@ function render() {
   list.forEach(function (o, i) {
     var s = sizes[i], left = daysLeft(o.fecha), since = daysSince(o.desde), photo = safeBlob(o.foto), art = !photo && POSTERS[o.id], big = s.d > 1 && (o.grande || photo || left !== null || since !== null);
     var kind = [o.categoria === 'Otros' ? '' : o.categoria, o.lugar].filter(Boolean).join(' · ');
-    var stat = left !== null ? '<span class="stat">' + (left === 0 ? 'Hoy' : left) + (left === 0 ? '' : '<small>' + (left === 1 ? 'día' : 'días') + '</small>') + '</span>' : since !== null ? '<span class="stat">' + since + '<small>' + (since === 1 ? 'día' : 'días') + '</small></span>' : '';
+    var lv = LIVE[appOf(o)], ln = lv && (lv.n != null ? lv.n : since);
+    if (lv && lv.n != null && !lv.u && lv.s) lv = { n: lv.n, u: lv.s, s: '' }; // "Hoy" reads with its line as the unit
+    var stat = lv && ln != null ? '<span class="stat live">' + esc(ln) + (lv.n != null ? (lv.u ? '<small>' + esc(lv.u) + '</small>' : '') : '<small>' + (since === 1 ? 'día' : 'días') + '</small>') + (lv.s ? '<small class="lv">' + esc(lv.s) + '</small>' : '') + '</span>' :
+      left !== null ? '<span class="stat">' + (left === 0 ? 'Hoy' : left) + (left === 0 ? '' : '<small>' + (left === 1 ? 'día' : 'días') + '</small>') + '</span>' : since !== null ? '<span class="stat">' + since + '<small>' + (since === 1 ? 'día' : 'días') + '</small></span>' : '';
     var inner = (art || (photo ? '<img src="/_blob/' + esc(o.foto) + '" alt="">' : artFor(o))) +
-      '<span class="kind">' + (o.fijada ? '★ ' : '') + esc(kind) + '</span>' + stat +
+      '<span class="kind">' + (o.fijada ? '★ ' : '') + (stat.indexOf('stat live') > 0 ? '' : esc(kind)) + '</span>' + stat +
       '<span class="body"><span class="name">' + esc(o.nombre) + '</span>' + (o.texto ? '<span class="desc">' + esc(o.texto) + '</span>' : '') + (o.aviso ? '<span class="note-tag">' + esc(o.aviso) + '</span>' : '') + '</span>';
-    var cls = 'tile' + (art ? ' poster' : photo ? ' photo' : ''), bg = 'style="--c:var(' + catColor(o.categoria) + ')"';
+    var cls = 'tile' + (art ? ' poster' : photo ? ' photo' : '') + (stat.indexOf('stat live') > 0 ? ' has-live' : ''), bg = 'style="--c:var(' + catColor(o.categoria) + ')"';
     var tile = safeUrl(o.url) ? '<a class="' + cls + '" ' + bg + ' data-id="' + esc(o.id) + '" href="' + esc(o.url) + '" target="_blank" rel="noopener">' + inner + '</a>' : '<span class="' + cls + '" ' + bg + '>' + inner + '</span>';
     var prev = list[i - 1], next = list[i + 1], tools = '';
     if (canEdit && editMode) {
@@ -525,6 +712,7 @@ async function addOnce() {
     var user = await window.claude.use('user');
     canEdit = user ? (await user.canEdit()) === true : false;
     var uid = user && user.id ? await user.id() : null;
+    if (uid) startLive();
     if (uid) {
       visitDoc = db.collection('data/users/' + uid).doc('visitas');
       visitDoc.onSnapshot(function (x) {
