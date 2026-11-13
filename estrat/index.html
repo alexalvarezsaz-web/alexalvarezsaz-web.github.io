@@ -110,7 +110,8 @@ h2, h3 { font-family: var(--display); line-height: 1.1; margin: 0; }
 .mk.ok { box-shadow: 0 0 0 3px #6fcf8f, 0 1px 4px rgba(0,0,0,.55); }
 .mk.next { box-shadow: 0 0 0 4px #f2be4a, 0 1px 6px rgba(0,0,0,.6); }
 .mk.fade { opacity: .25; }
-.mk.mina { background: #3a3530; } .mk.deer { width: 14px; height: 14px; background: #7a5a2e; border-width: 1.5px; }
+.mk.mina { background: #3a3530; }
+.mk.pos { width: 26px; height: 26px; background: rgba(26,18,11,.75); border: 2px dashed #f2be4a; color: #f2be4a; } .mk.pos svg { width: 16px; height: 16px; } .mk.deer { width: 14px; height: 14px; background: #7a5a2e; border-width: 1.5px; }
 .ico svg { width: 26px; height: 26px; vertical-align: middle; }
 /* Warning banner for protected ground and the outing pill */
 .warn { position: fixed; z-index: 520; top: calc(56px + env(safe-area-inset-top, 0px)); left: calc(10px + env(safe-area-inset-left, 0px)); right: calc(10px + env(safe-area-inset-right, 0px)); border-radius: 14px; padding: 10px 14px; font-weight: 700; font-size: 15px; box-shadow: 0 2px 10px rgba(0,0,0,.3); display: flex; gap: 10px; align-items: center; }
@@ -299,13 +300,13 @@ var BASES = {
 };
 var GEO = L.tileLayer.wms('https://geoserveis.icgc.cat/servei/catalunya/geologia-territorial/wms', { layers: 'geologia-territorial-50000-geologic', format: 'image/png', transparent: true, version: '1.3.0', opacity: .55, maxZoom: 19, attribution: 'Mapa geològic ICGC' });
 var IEIG = L.tileLayer.wms('https://geoserveis.icgc.cat/servei/catalunya/espais-interes-geologic/wms', { layers: 'espais-interes-geologic', format: 'image/png', transparent: true, version: '1.1.1', opacity: .8, maxZoom: 19 });
-var gSitios = L.layerGroup(), gPiezas = L.layerGroup(), gPbdb = L.layerGroup(), gPein = L.layerGroup(), gMinas = L.layerGroup(), gCiervos = L.layerGroup(), gRuta = L.layerGroup(), gCorte = L.layerGroup().addTo(map);
-var PREF = { base: 'sat', geo: true, op: 55, ieig: true, pein: true, minas: false, ciervos: false, pbdb: false, sitios: true, piezas: true, campo: false };
+var gPosibles = L.layerGroup(), gSitios = L.layerGroup(), gPiezas = L.layerGroup(), gPbdb = L.layerGroup(), gPein = L.layerGroup(), gMinas = L.layerGroup(), gCiervos = L.layerGroup(), gRuta = L.layerGroup(), gCorte = L.layerGroup().addTo(map);
+var PREF = { base: 'sat', geo: true, op: 55, ieig: true, pein: true, minas: false, ciervos: false, pbdb: false, posibles: true, sitios: true, piezas: true, campo: false };
 try { Object.assign(PREF, JSON.parse(localStorage.getItem(LS + '-capas') || '{}')); } catch (e) {}
 function applyLayers() {
   Object.keys(BASES).forEach(function (k) { if (k === PREF.base) BASES[k].addTo(map); else map.removeLayer(BASES[k]); });
   GEO.setOpacity(PREF.op / 100);
-  [[GEO, PREF.geo], [IEIG, PREF.ieig], [gPein, PREF.pein], [gMinas, PREF.minas], [gCiervos, PREF.ciervos], [gSitios, PREF.sitios], [gPiezas, PREF.piezas], [gPbdb, PREF.pbdb], [gRuta, true]].forEach(function (a) { if (a[1]) a[0].addTo(map); else map.removeLayer(a[0]); });
+  [[GEO, PREF.geo], [IEIG, PREF.ieig], [gPein, PREF.pein], [gMinas, PREF.minas], [gCiervos, PREF.ciervos], [gPosibles, PREF.posibles], [gSitios, PREF.sitios], [gPiezas, PREF.piezas], [gPbdb, PREF.pbdb], [gRuta, true]].forEach(function (a) { if (a[1]) a[0].addTo(map); else map.removeLayer(a[0]); });
   if (PREF.pbdb) loadPbdb();
   if (PREF.pein) loadPein();
   if (PREF.minas) loadMinas();
@@ -400,6 +401,74 @@ document.addEventListener('click', function (e) {
   openSitio(null, { lat: ll[0], lng: ll[1], nombre: b.dataset.nm, tipo: 'mineral' });
 });
 
+// ---------- Possible sites: documented fossil localities, kept apart from your own sites ----------
+// p: 'libre' = the inventory lists no protection; 'inv' = in the Generalitat's palaeontological inventory; 'bcil' = legally protected (look around it)
+// Sources checked 13 Nov 2026: Diputació de Barcelona heritage inventory (exact coordinates) and the Paleobiology Database (published papers)
+var DIBA = 'https://patrimonicultural.diba.cat/print/pdf/node/', PBDBC = 'https://paleobiodb.org/data1.2/occs/list.txt?show=ref,loc,strat&coll_id=';
+var POSIBLES = [
+  { id: 'v-espa', n: 'L\'Espà', m: 'Saldes', ll: [42.22097, 1.68703], e: 'Campanià', q: 'Rudistas en colonias densas y braquiópodos del Cretácico superior (Biradiolites, Radiolitella).', p: 'libre', a: 'Fácil', f: [['Inventari Diba 08190-128', DIBA + '60052']] },
+  { id: 'v-gresolet', n: 'Gresolet', m: 'Saldes', ll: [42.22008, 1.70162], e: 'Eocè', q: 'Foraminíferos del Eoceno. En el camino de Gresolet hacia cal Pistraus: esponjas, braquiópodos y erizos del Cretácico superior.', p: 'libre', a: 'Fácil', f: [['Inventari Diba 08190-124', DIBA + '60048']] },
+  { id: 'v-pedraforca', n: 'Pedraforca (Saldes)', m: 'Saldes', ll: [42.23416, 1.70955], e: 'Cretaci inferior', q: 'Foraminíferos, bivalvos, gasterópodos, cefalópodos, braquiópodos, crustáceos, erizos y corales del Cretácico inferior. Está dentro del PEIN del Pedraforca.', p: 'libre', a: 'Fácil', f: [['Inventari Diba 08190-125', DIBA + '60049']] },
+  { id: 'v-macaners', n: 'Maçaners', m: 'Saldes', ll: [42.23381, 1.76174], e: 'Santonià', q: 'Esponjas, bivalvos, braquiópodos y erizos del Cretácico superior; corales del Cretácico inferior y briozoos del Eoceno. Cerca (área del Pedraforca, ~1 km) hay hipurítidos del Santoniense al Maastrichtiense.', p: 'libre', a: 'Fácil', f: [['Inventari Diba 08190-126', DIBA + '60050'], ['PBDB: rudistas de Vicens (1992)', PBDBC + '161392']] },
+  { id: 'v-palomera', n: 'Pla de Palomera', m: 'Saldes', ll: [42.21003, 1.75191], e: 'Cretaci inferior', q: 'Bivalvos y gasterópodos del Cretácico inferior; carofitas (algas) del Cretácico superior.', p: 'libre', a: 'Fácil', f: [['Inventari Diba 08190-127', DIBA + '60051']] },
+  { id: 'v-pistercer', n: 'Pis Tercer (Costafreda)', m: 'Saldes', ll: [42.22365, 1.72145], e: 'Maastrichtià', q: 'Huellas de dinosaurio en la pared de la bocamina del pis Tercer (Carbones Pedraforca), la misma veta que Fumanya. Mina de lignito: escombrera con pirita y plantas.', p: 'inv', a: 'Abierto', f: [['Inventari Diba 08190-148', DIBA + '60072']] },
+  { id: 'v-muga', n: 'Serrat de la Muga', m: 'Gósol', ll: [42.242, 1.664], e: 'Juràssic', q: 'Braquiópodos del Lías (Pliensbachiense–Toarciense), varias capas fosilíferas.', p: 'libre', a: '?', x: 'Coordenadas del artículo, ±100 m', f: [['PBDB: Alméras y Fauré (2000)', PBDBC + '160711']] },
+  { id: 'v-comabona', n: 'La Coma Bona (nord de Porxos)', m: 'Guardiola de Berguedà', ll: [42.134, 1.759], e: 'Juràssic', q: 'Braquiópodos del Lías en muchas capas (del Pliensbachiense al Toarciense superior).', p: 'libre', a: '?', x: 'Coordenadas del artículo, ±100 m', f: [['PBDB: Alméras y Fauré (2000)', PBDBC + '160294']] },
+  { id: 'v-santcorneli', n: 'Anticlinal de Sant Corneli', m: 'Cercs', ll: [42.18333, 1.86667], e: 'Santonià', q: 'Sucesión del Coniaciense al Santoniense con mucha fauna de rudistas (93 registros) y otros bivalvos.', p: 'libre', a: '?', x: 'Coordenadas aproximadas, ±1 km', f: [['PBDB: Vicens, López y Obrador (1998)', PBDBC + '162694']] },
+  { id: 'v-santroma', n: 'Plaça de Sant Romà (Sant Corneli)', m: 'Cercs', ll: [42.183, 1.853], e: 'Maastrichtià', q: 'Espinas de raya y dientes de tiburón del Maastrichtiense inferior.', p: 'libre', a: '?', x: '±100 m', f: [['PBDB: Marmi et al. (2010)', PBDBC + '277291']] },
+  { id: 'v-canpetit', n: 'Can Petit', m: 'Fígols', ll: [42.1817, 1.82907], e: 'Maastrichtià', q: '20 m de estratos con fauna marina de invertebrados; aquí se describió el braquiópodo Almerarhynchia. Sin señalizar.', p: 'libre', a: 'Difícil', f: [['Inventari Diba 08080-10', DIBA + '99726']] },
+  { id: 'v-peguera-escull', n: 'Escull de rudistes del torrent de Peguera', m: 'Cercs', ll: [42.14957, 1.82166], e: 'Maastrichtià', q: 'Arrecife de rudistas en el mismo lecho del torrente, tramo encajado. La erosión del torrente lo renueva.', p: 'libre', a: 'Difícil', f: [['Inventari Diba 08268-113', DIBA + '66603']] },
+  { id: 'v-cercs', n: 'Cercs poble (torrent de Peguera)', m: 'Cercs', ll: [42.14721, 1.85719], e: 'Maastrichtià', q: 'Lutitas grises con impresiones de troncos en el paso estrecho del torrente; el pueblo está sobre el Gres de Reptiles.', p: 'libre', a: 'Difícil', f: [['Inventari Diba 08268-115', DIBA + '66605']] },
+  { id: 'v-calros', n: 'Cal Ros de Merolla', m: 'Cercs', ll: [42.13126, 1.84785], e: 'Maastrichtià', q: 'Prospección del ICP 2012–13: fragmentos de hueso y cáscara de huevo de dinosaurio, tortugas y cocodrilos. Más al sur, en los Cingles de Cal Ros, reptiles del Maastrichtiense superior.', p: 'libre', a: 'Difícil', f: [['Inventari Diba 08268-114', DIBA + '66604'], ['PBDB: Blanco et al. (2015)', PBDBC + '173498']] },
+  { id: 'v-portet', n: 'El Portet', m: 'Berga', ll: [42.09306, 1.80528], e: 'Maastrichtià', q: 'La evidencia de saurópodo más reciente de Europa (Maastrichtiense superior).', p: 'libre', a: '?', x: 'Coordenadas exactas del artículo', f: [['PBDB: Sellés et al. (2016)', PBDBC + '219381']] },
+  { id: 'v-jou', n: 'Torrent del Jou', m: 'Vallcebre', ll: [42.2026, 1.8593], e: 'Maastrichtià', q: 'Restos de reptiles del Gres de Reptiles (Maastrichtiense superior).', p: 'libre', a: '?', f: [['PBDB: Blanco et al. (2015)', PBDBC + '173500']] },
+  { id: 'v-peguera1', n: 'Peguera-1', m: 'Fígols', ll: [42.16331, 1.76662], e: 'Maastrichtià', q: 'Huesos de saurópodo del Campaniense–Maastrichtiense, excavado en 2004–06. Sin señalizar.', p: 'inv', a: 'Difícil', f: [['Inventari Diba 08080-11', DIBA + '99727']] },
+  { id: 'v-bullidor', n: 'Font del Bullidor', m: 'Fígols', ll: [42.17875, 1.80152], e: 'Maastrichtià', q: 'Varias puestas de huevos de dinosaurio del Cretácico superior, junto a Fumanya.', p: 'inv', a: 'Abierto', f: [['Inventari Diba 08080-8', DIBA + '99724']] },
+  { id: 'v-falgars', n: 'Falgars (Roca de la Lluna)', m: 'La Pobla de Lillet', ll: [42.22127, 1.96767], e: 'Maastrichtià', q: 'Afloramientos de fauna marina del Cretácico junto a la pista, cerca del mirador de la Roca de la Lluna: erizos (Stereocidaris falgarensis, Hemiaster batalleri) y esponjas.', p: 'inv', a: 'Fácil', f: [['Inventari Diba 08166-72', DIBA + '57772'], ['PBDB: esponjas de Falgars', PBDBC + '112575']] },
+  { id: 'v-santjulia', n: 'L\'olla de Sant Julià de Cerdanyola', m: 'Sant Julià de Cerdanyola', ll: [42.22292, 1.89942], e: 'Santonià', q: 'Gran parte del término, sobre todo la olla, tiene fauna marina del Cretácico superior: moluscos y corales.', p: 'libre', a: 'Difícil', x: 'Punto central del término, no un afloramiento concreto', f: [['Inventari Diba 08903-184', DIBA + '81698']] },
+  { id: 'v-terrers', n: 'Els Terrers de Vilada', m: 'Vilada', ll: [42.13387, 1.92359], e: 'Lutecià', q: 'Yacimiento clásico del Eoceno junto a la C-26, a la entrada oeste del pueblo: nummulites, assilinas, erizos (Eupatagus, Schizaster), cangrejos (Callianassa…), bivalvos y gasterópodos.', p: 'inv', a: 'Fácil', f: [['Inventari Diba 08299-121', DIBA + '72497'], ['Colección de Vilada del Museu Geològic del Seminari', DIBA + '72525']] },
+  { id: 'v-ribera', n: 'Ribera de Vilada', m: 'Castell de l\'Areny / Vilada', ll: [42.1556, 1.94937], e: 'Lutecià', q: 'Peces fósiles de la Formación Vallfogona (Eoceno medio); en Borredà salieron una veintena en los años 80, con dos especies nuevas.', p: 'inv', a: 'Fácil', f: [['Inventari Diba 08057-157', DIBA + '46131'], ['Inventari Diba 08299-122', DIBA + '72498']] },
+  { id: 'v-rella', n: 'Roca de la Rella', m: 'Puig-reig', ll: [41.97598, 1.85793], e: 'Oligocè', q: 'Más de 200 huellas de mamíferos en la Molassa de Solsona, 120 m al este de una gran cantera. Acceso por el km 58 de la C-1411a, desvío a cal Feliu.', p: 'inv', a: 'Difícil', f: [['Inventari Diba 08175-319', DIBA + '79093']] },
+  { id: 'v-frontanya', n: 'Sant Jaume de Frontanyà', m: 'Sant Jaume de Frontanyà', ll: [42.17547, 2.01149], e: 'Bartonià', q: 'Seis yacimientos lacustres del Eoceno con mamíferos: primates (Pseudoloris, Anchomomys), perisodáctilos, artiodáctilos y roedores. Alrededor de la BV-4656.', p: 'bcil', a: 'Restringido', f: [['Inventari Diba 08216-114', DIBA + '92199'], ['PBDB: Sant Jaume de Frontanyà-3C', PBDBC + '142030']] }
+];
+var PROT = { libre: ['ok', 'Sin protección'], inv: ['nt', 'Inventariado'], bcil: ['no', 'Protegido'] };
+var descartes = {};
+try { descartes = JSON.parse(localStorage.getItem(LS + '-descartes') || '{}'); } catch (e) {}
+function posibleAdded(v) { return list('sitios').filter(function (s) { return s.origen === v.id; })[0] || null; }
+function posGeo(v) { return v.e + ' · ' + v.q.split('.')[0]; }
+function drawPosibles() {
+  gPosibles.clearLayers();
+  POSIBLES.forEach(function (v) {
+    if (descartes[v.id] || posibleAdded(v)) return;
+    var e = eraDe({ geo: posGeo(v) }), fade = filtroEra && (!e || e[0] !== filtroEra);
+    L.marker(v.ll, { icon: L.divIcon({ className: '', html: '<div class="mk pos ' + (fade ? 'fade' : '') + '">' + svgIco('fosil') + '</div>', iconSize: [26, 26], iconAnchor: [13, 13] }), title: 'Posible: ' + v.n })
+      .on('click', function () { openPosible(v.id); }).addTo(gPosibles);
+  });
+}
+function protTag(v) { var t = PROT[v.p] || PROT.libre; return '<span class="tag ' + t[0] + '">' + t[1] + '</span>'; }
+function openPosible(id) {
+  var v = POSIBLES.filter(function (x) { return x.id === id; })[0]; if (!v) return;
+  editingForm = true; tab = 'sitios'; Array.prototype.forEach.call($('bar').children, function (b) { b.classList.toggle('on', b.dataset.tab === 'sitios'); });
+  var ya = posibleAdded(v), e = eraDe({ geo: posGeo(v) });
+  showSheet(head(esc(v.n)) + '<div class="card" style="border-style:dashed"><span class="tag" style="background:#f2be4a;color:#1a120b">Posible sitio</span> ' + protTag(v) + (descartes[v.id] ? ' <span class="tag nt">Descartado</span>' : '') +
+    '<p class="small">' + esc(v.m) + ' · ' + esc(v.e) + (e ? ' (' + e[0] + ')' : '') + ' · acceso ' + esc(v.a.toLowerCase()) + (lastPos ? ' · a ' + km(dist(lastPos, v.ll)) : '') + '</p>' +
+    '<p style="margin:8px 0 0">' + esc(v.q) + '</p>' + (v.x ? '<p class="small">📌 ' + esc(v.x) + '</p>' : '') +
+    '<div class="small" style="margin-top:8px">Fuentes: ' + v.f.map(function (s) { return '<a href="' + esc(s[1]) + '" target="_blank" rel="noopener">' + esc(s[0]) + '</a>'; }).join(' · ') + '</div></div>' +
+    '<div class="row" style="flex-wrap:wrap">' + (ya ? '<button type="button" class="go" data-sitio="' + ya.id + '">✓ Ya en mis sitios</button>' : '<button type="button" class="go" data-act="posAdd" data-id="' + v.id + '">+ Añadir a mis sitios</button>') +
+    '<button type="button" class="ghost" data-act="verMapa" data-ll="' + v.ll.join(',') + '">Ver en el mapa</button><a class="ghost" style="text-decoration:none" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=' + v.ll.join(',') + '">Cómo llegar</a>' +
+    (ya ? '' : '<button type="button" class="linkb" data-act="posDesc" data-id="' + v.id + '">' + (descartes[v.id] ? 'Recuperar' : 'Descartar') + '</button>') + '</div>');
+}
+function posiblesHtml() {
+  var vs = POSIBLES.filter(function (v) { return !posibleAdded(v); }), vivos = vs.filter(function (v) { return !descartes[v.id]; }), desc = vs.length - vivos.length;
+  vivos.sort(function (a, b) { return lastPos ? dist(lastPos, a.ll) - dist(lastPos, b.ll) : (a.p === 'libre' ? 0 : 1) - (b.p === 'libre' ? 0 : 1) || a.n.localeCompare(b.n); });
+  return '<details class="card" style="border-style:dashed;margin-top:14px"' + (posOpen ? ' open' : '') + ' id="posDet"><summary>Posibles sitios verificados · ' + vivos.length + '</summary>' +
+    '<p class="small">Yacimientos documentados en el inventario de patrimonio de la Diputació de Barcelona o en artículos de la Paleobiology Database. Aún no son tuyos: añádelos cuando los quieras visitar.</p>' +
+    '<ul class="lst" style="margin-top:8px">' + vivos.map(function (v) { return '<li><button type="button" data-pos="' + v.id + '" style="border-style:dashed"><span class="ico" style="color:#c98a12">' + svgIco('fosil') + '</span><span class="grow"><b>' + esc(v.n) + '</b> ' + protTag(v) + '<div class="small">' + esc(v.m + ' · ' + v.e) + (lastPos ? ' · ' + km(dist(lastPos, v.ll)) : '') + '</div></span></button></li>'; }).join('') + '</ul>' +
+    (desc ? '<button type="button" class="linkb" data-act="posVerDesc">Ver ' + desc + ' descartados</button>' : '') + '</details>';
+}
+var posOpen = false;
+document.addEventListener('toggle', function (e) { if (e.target.id === 'posDet') posOpen = e.target.open; }, true);
+
 // Red deer, roe deer and fallow deer seen by people (iNaturalist): where to look for shed antlers
 var ciervosDone = false;
 function loadCiervos() {
@@ -473,7 +542,7 @@ function drawPins() {
     if (p.lat == null) return; var e = eraDe(p), fade = filtroEra && (!e || e[0] !== filtroEra);
     L.marker([p.lat, p.lng], { icon: mkIcon(p.tipo, 'sm ' + (fade ? 'fade' : '')), title: p.nombre || '', zIndexOffset: fade ? -500 : 200 }).on('click', function () { openPieza(p.id); }).addTo(gPiezas);
   });
-  drawRuta(); renderSalidaPill();
+  drawPosibles(); drawRuta(); renderSalidaPill();
 }
 
 // Tapping the map: the rock underneath, and save a site or a find there
@@ -629,7 +698,7 @@ function renderSitios() {
   showSheet(head('Mis sitios', '<button type="button" class="go" data-act="newSitio">+ Sitio</button>') +
     (ss.length ? '<button type="button" class="ghost" data-act="salida" style="width:100%;margin-bottom:10px;text-align:left">🥾 ' + (SALIDA ? 'Salida en curso · ' + salidaSitios().filter(function (s) { return SALIDA.done[s.id]; }).length + '/' + SALIDA.ids.length : 'Preparar la salida de hoy') + '</button>' : '') +
     (ss.length ? '<ul class="lst">' + ss.map(function (s) { var st = estado(s); return '<li><button type="button" data-sitio="' + s.id + '"><span class="ico" style="color:' + (TCOL[s.tipo] || TCOL.otro) + '">' + svgIco(s.tipo) + '</span><span class="grow"><b>' + esc(s.nombre) + '</b> ' + stTag(st) + '<div class="small">' + esc(st.why || s.geo || '') + '</div></span></button></li>'; }).join('') + '</ul>'
-      : '<p class="empty">Aún no hay sitios. Toca el mapa donde quieras y pulsa «Guardar sitio», o usa «+ Sitio».</p>') +
+      : '<p class="empty">Aún no hay sitios. Toca el mapa donde quieras y pulsa «Guardar sitio», o usa «+ Sitio».</p>') + posiblesHtml() +
     '<div class="row" style="margin-top:6px"><label class="ghost" style="cursor:pointer">Importar de Google Maps<input type="file" id="imp" accept=".json,.geojson,.csv" hidden multiple></label></div><p class="small">Acepta los archivos de Google Takeout: «Sitios guardados.json» o las listas en CSV del apartado «Guardado».</p>');
 }
 // Museum label: catalogue number, scientific name in italics, common name, stratum, place and date
@@ -822,6 +891,14 @@ $('sheet').addEventListener('click', function (e) {
   if (b.closest('#fC')) { readSitio(); draft.cond = { tipo: b.dataset.v, max: draft.cond.max != null ? draft.cond.max : 40, meses: draft.cond.meses || [], mm: draft.cond.mm || 20 }; formSitio(); return; }
   if (b.closest('#fM')) { var v = +b.dataset.v, ms = draft.cond.meses || (draft.cond.meses = []), i = ms.indexOf(v); if (i >= 0) ms.splice(i, 1); else ms.push(v); ms.sort(function (a, c) { return a - c; }); b.classList.toggle('on'); return; }
   if (b.dataset.era) return setEra(b.dataset.era);
+  if (b.dataset.pos) return openPosible(b.dataset.pos);
+  if (act === 'posAdd') {
+    var v = POSIBLES.filter(function (x) { return x.id === b.dataset.id; })[0]; if (!v) return;
+    var ns = { id: uid('s'), nombre: v.n, tipo: 'fosil', origen: v.id, notas: v.q + '\n' + v.m + ' · acceso ' + v.a.toLowerCase() + (v.x ? ' · ' + v.x : '') + '\nFuente: ' + v.f.map(function (s) { return s[0] + ' ' + s[1]; }).join(' · '), cond: { tipo: '' }, lat: v.ll[0], lng: v.ll[1], geo: posGeo(v), erosion: /torrent|erosi/i.test(v.q + v.n), ts: Date.now() };
+    put('sitios', ns); toast('Añadido a tus sitios'); editingForm = false; return showSitio(S.sitios[ns.id]);
+  }
+  if (act === 'posDesc') { var did = b.dataset.id; if (descartes[did]) delete descartes[did]; else descartes[did] = 1; try { localStorage.setItem(LS + '-descartes', JSON.stringify(descartes)); } catch (e) {} drawPins(); return descartes[did] ? renderSitios() : openPosible(did); }
+  if (act === 'posVerDesc') { editingForm = true; return showSheet(head('Descartados') + '<ul class="lst">' + POSIBLES.filter(function (v) { return descartes[v.id] && !posibleAdded(v); }).map(function (v) { return '<li><button type="button" data-pos="' + v.id + '" style="border-style:dashed;opacity:.7"><span class="grow"><b>' + esc(v.n) + '</b><div class="small">' + esc(v.m + ' · ' + v.e) + '</div></span></button></li>'; }).join('') + '</ul>'); }
   if (act === 'salida') return renderSalida();
   if (act === 'salStart') {
     var ids = Array.prototype.map.call(document.querySelectorAll('#salSel input:checked'), function (x) { return x.value; });
@@ -916,6 +993,7 @@ $('layBtn').addEventListener('click', function () {
     '<label><input type="checkbox" data-k="minas"' + (PREF.minas ? ' checked' : '') + '> Minas, bocaminas y canteras (OpenStreetMap)</label>' +
     '<label><input type="checkbox" data-k="pbdb"' + (PREF.pbdb ? ' checked' : '') + '> Fósiles registrados (Paleobiology Database)</label>' +
     '<label><input type="checkbox" data-k="ciervos"' + (PREF.ciervos ? ' checked' : '') + '> Ciervos y corzos vistos (iNaturalist)</label>' +
+    '<label><input type="checkbox" data-k="posibles"' + (PREF.posibles ? ' checked' : '') + '> Posibles sitios verificados (borde discontinuo)</label>' +
     '<label><input type="checkbox" data-k="sitios"' + (PREF.sitios ? ' checked' : '') + '> Mis sitios</label>' +
     '<label><input type="checkbox" data-k="piezas"' + (PREF.piezas ? ' checked' : '') + '> Mis piezas</label>' +
     '<label><input type="checkbox" data-k="campo"' + (PREF.campo ? ' checked' : '') + '> Modo campo: alto contraste y botones grandes</label></div>' +
