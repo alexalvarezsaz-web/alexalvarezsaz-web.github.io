@@ -83,7 +83,7 @@ h2, h3 { font-family: var(--display); line-height: 1.1; margin: 0; }
 .geo { border-left: 5px solid var(--gc, var(--acc)); padding-left: 10px; }
 .geo b { font-family: var(--display); font-size: 18px; }
 .lay label { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); }
-.lay input[type=checkbox], .lay input[type=radio] { width: 20px; height: 20px; accent-color: var(--acc); }
+.lay input[type=checkbox], .lay input[type=radio] { width: 20px; height: 20px; flex: 0 0 auto; accent-color: var(--acc); }
 .lay input[type=range] { width: 100%; accent-color: var(--acc); }
 .months { display: grid; grid-template-columns: repeat(12, 1fr); gap: 2px; margin-top: 6px; }
 .months span { font-size: 11px; text-align: center; padding: 4px 0; border-radius: 4px; background: var(--line); color: var(--muted); }
@@ -100,17 +100,70 @@ h2, h3 { font-family: var(--display); line-height: 1.1; margin: 0; }
 .pin { font-size: 22px; line-height: 1; filter: drop-shadow(0 1px 2px rgba(0,0,0,.6)); }
 .dot { width: 12px; height: 12px; border-radius: 50%; background: #e8c45a; border: 2px solid #3a2a10; }
 .me { width: 18px; height: 18px; border-radius: 50%; background: #2a7fff; border: 3px solid #fff; box-shadow: 0 0 0 6px rgba(42,127,255,.25); }
-.pickhint { position: fixed; z-index: 700; left: 50%; transform: translateX(-50%); bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
+.pickhint { position: fixed; z-index: 700; left: 50%; transform: translateX(-50%); bottom: calc(80px + env(safe-area-inset-bottom, 0px)); max-width: calc(100% - 140px); }
+#corteBtn { bottom: calc(188px + env(safe-area-inset-bottom, 0px)); }
+.bar { grid-template-columns: repeat(5, 1fr); }
+/* Map markers: one drawn icon per type (ammonite, crystal, antler, skull) */
+.mk { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; border: 2px solid #fff; color: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.55); }
+.mk svg { width: 19px; height: 19px; display: block; }
+.mk.sm { width: 24px; height: 24px; border-width: 1.5px; } .mk.sm svg { width: 15px; height: 15px; }
+.mk.ok { box-shadow: 0 0 0 3px #6fcf8f, 0 1px 4px rgba(0,0,0,.55); }
+.mk.next { box-shadow: 0 0 0 4px #f2be4a, 0 1px 6px rgba(0,0,0,.6); }
+.mk.fade { opacity: .25; }
+.mk.mina { background: #3a3530; } .mk.deer { width: 14px; height: 14px; background: #7a5a2e; border-width: 1.5px; }
+.ico svg { width: 26px; height: 26px; vertical-align: middle; }
+/* Warning banner for protected ground and the outing pill */
+.warn { position: fixed; z-index: 520; top: calc(56px + env(safe-area-inset-top, 0px)); left: calc(10px + env(safe-area-inset-left, 0px)); right: calc(10px + env(safe-area-inset-right, 0px)); border-radius: 14px; padding: 10px 14px; font-weight: 700; font-size: 15px; box-shadow: 0 2px 10px rgba(0,0,0,.3); display: flex; gap: 10px; align-items: center; }
+.warn.in { background: #a8382b; color: #fff; } .warn.near { background: #c98a12; color: #1a120b; } .warn.pein { background: var(--surface); color: var(--ink); border: 2px solid #c98a12; font-weight: 600; }
+.warn button { margin-left: auto; background: none; border: 0; color: inherit; font-size: 18px; padding: 0 4px; }
+#salidaPill { position: fixed; z-index: 520; left: calc(12px + env(safe-area-inset-left, 0px)); bottom: calc(80px + env(safe-area-inset-bottom, 0px)); max-width: calc(100% - 90px); text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.toast { position: fixed; z-index: 800; left: 50%; transform: translateX(-50%); top: calc(110px + env(safe-area-inset-top, 0px)); background: var(--ink); color: var(--bg); border-radius: 14px; padding: 12px 16px; font-weight: 700; box-shadow: 0 4px 16px rgba(0,0,0,.35); display: flex; gap: 12px; align-items: center; max-width: calc(100% - 24px); }
+.toast button { background: var(--acc); color: var(--acc-ink); border: 0; border-radius: 10px; padding: 8px 12px; font-weight: 700; white-space: nowrap; }
+/* Museum labels in the vitrina: cream card, serif, catalogue number, scientific name in italics */
+.label { --cream: #f6efdc; --lab-ink: #2a2118; background: var(--cream); color: var(--lab-ink); border: 1px solid #cdbf9f; border-radius: 4px; padding: 12px 14px; font-family: var(--display); box-shadow: 0 1px 0 #cdbf9f, 0 3px 8px rgba(0,0,0,.12); }
+.lst li button.label { padding: 10px 12px; margin-bottom: 10px; border-radius: 4px; border: 1px solid #cdbf9f; background: var(--cream); }
+.label .num { font: 700 12px/1 var(--body); letter-spacing: .12em; color: #8a6d45; }
+.label .sci { font-style: italic; font-weight: 600; font-size: 18px; }
+.label .com { font-family: var(--body); font-size: 14px; color: #5b4c3a; }
+.label .meta { font-family: var(--body); font-size: 13px; color: #6e5d48; margin-top: 3px; }
+.label hr { border: 0; border-top: 1px solid #cdbf9f; margin: 8px 0; }
+.stats { display: grid; gap: 4px; }
+.sbar { display: grid; grid-template-columns: 92px 1fr 28px; gap: 8px; align-items: center; font-size: 14px; }
+.sbar i { display: block; height: 12px; border-radius: 3px; background: var(--acc); min-width: 3px; }
+.sbar span:first-child { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+details.card summary { font-weight: 700; cursor: pointer; }
+/* Vertical geologic timeline */
+.tl { display: grid; grid-template-columns: 74px 1fr; }
+.tl .age { font-size: 12px; color: var(--muted); text-align: right; padding: 4px 8px 0 0; border-top: 1px solid var(--line); }
+.tl .band { border-top: 1px solid rgba(0,0,0,.2); padding: 8px 10px; background: var(--c); color: #1a120b; text-align: left; border-left: 0; border-right: 0; border-bottom: 0; border-radius: 0; display: block; width: 100%; }
+.tl .band.on { outline: 3px solid var(--ink); outline-offset: -3px; }
+.tl .band b { font-family: var(--display); font-size: 17px; }
+.tl .band .pz { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.tl .band .pz span { background: rgba(255,255,255,.75); border-radius: 999px; padding: 2px 8px; font-size: 13px; }
+.prof { width: 100%; max-width: 620px; height: auto; display: block; margin: 0 auto; }
+/* Field mode: high contrast, bigger targets */
+body.campo { --bg: #000; --surface: #111; --ink: #fff; --muted: #e6e6e6; --line: #fff; --acc: #ffd400; --acc-ink: #000; --bar: #000; --on-bar: #ffd400; --on-bar-2: #fff; font-size: 18px; }
+body.campo .fab { width: 60px; height: 60px; font-size: 26px; border: 2px solid #fff; }
+body.campo #layBtn { bottom: calc(150px + env(safe-area-inset-bottom, 0px)); } body.campo #corteBtn { bottom: calc(220px + env(safe-area-inset-bottom, 0px)); }
+body.campo .bar button { font-size: 14px; } body.campo .bar button b { font-size: 26px; }
+body.campo .go, body.campo .ghost { padding: 14px 18px; font-size: 18px; }
+body.campo .small { font-size: 16px; }
+body.campo .pill { border: 2px solid #fff; font-size: 16px; }
+body.campo .label { --cream: #fff; --lab-ink: #000; }
 </style>
 
 <div id="map" role="application" aria-label="Mapa"></div>
 <div class="top">
   <span class="pill brand">Estrat</span>
   <button type="button" class="pill alert" id="alertBtn">Cargando avisos…</button>
+  <button type="button" class="pill" id="eraPill" hidden></button>
 </div>
 <button type="button" class="fab" id="layBtn" aria-label="Capas">🗺️</button>
 <button type="button" class="fab" id="locBtn" aria-label="Mi posición">◎</button>
+<button type="button" class="fab" id="corteBtn" aria-label="Corte geológico">📐</button>
 <button type="button" class="pill pickhint" id="pickHint" hidden>Toca el mapa para colocar el punto · Cancelar</button>
+<div class="warn" id="warn" role="alert" hidden></div>
+<button type="button" class="pill" id="salidaPill" hidden></button>
 
 <section class="sheet" id="sheet" hidden><div class="grip"></div><div id="sheetBody"></div></section>
 
@@ -118,6 +171,7 @@ h2, h3 { font-family: var(--display); line-height: 1.1; margin: 0; }
   <button type="button" data-tab="mapa" class="on"><b>⛰︎</b>Mapa</button>
   <button type="button" data-tab="sitios"><b>📍</b>Sitios</button>
   <button type="button" data-tab="vitrina"><b>🐚</b>Vitrina</button>
+  <button type="button" data-tab="tiempo"><b>⏳</b>Tiempo</button>
   <button type="button" data-tab="avisos"><b>🗓︎</b>Avisos</button>
 </nav>
 
@@ -245,15 +299,132 @@ var BASES = {
 };
 var GEO = L.tileLayer.wms('https://geoserveis.icgc.cat/servei/catalunya/geologia-territorial/wms', { layers: 'geologia-territorial-50000-geologic', format: 'image/png', transparent: true, version: '1.3.0', opacity: .55, maxZoom: 19, attribution: 'Mapa geològic ICGC' });
 var IEIG = L.tileLayer.wms('https://geoserveis.icgc.cat/servei/catalunya/espais-interes-geologic/wms', { layers: 'espais-interes-geologic', format: 'image/png', transparent: true, version: '1.1.1', opacity: .8, maxZoom: 19 });
-var gSitios = L.layerGroup(), gPiezas = L.layerGroup(), gPbdb = L.layerGroup();
-var PREF = { base: 'sat', geo: true, op: 55, ieig: false, pbdb: false, sitios: true, piezas: true };
+var gSitios = L.layerGroup(), gPiezas = L.layerGroup(), gPbdb = L.layerGroup(), gPein = L.layerGroup(), gMinas = L.layerGroup(), gCiervos = L.layerGroup(), gRuta = L.layerGroup(), gCorte = L.layerGroup().addTo(map);
+var PREF = { base: 'sat', geo: true, op: 55, ieig: true, pein: true, minas: false, ciervos: false, pbdb: false, sitios: true, piezas: true, campo: false };
 try { Object.assign(PREF, JSON.parse(localStorage.getItem(LS + '-capas') || '{}')); } catch (e) {}
 function applyLayers() {
   Object.keys(BASES).forEach(function (k) { if (k === PREF.base) BASES[k].addTo(map); else map.removeLayer(BASES[k]); });
   GEO.setOpacity(PREF.op / 100);
-  [[GEO, PREF.geo], [IEIG, PREF.ieig], [gSitios, PREF.sitios], [gPiezas, PREF.piezas], [gPbdb, PREF.pbdb]].forEach(function (a) { if (a[1]) a[0].addTo(map); else map.removeLayer(a[0]); });
+  [[GEO, PREF.geo], [IEIG, PREF.ieig], [gPein, PREF.pein], [gMinas, PREF.minas], [gCiervos, PREF.ciervos], [gSitios, PREF.sitios], [gPiezas, PREF.piezas], [gPbdb, PREF.pbdb], [gRuta, true]].forEach(function (a) { if (a[1]) a[0].addTo(map); else map.removeLayer(a[0]); });
   if (PREF.pbdb) loadPbdb();
+  if (PREF.pein) loadPein();
+  if (PREF.minas) loadMinas();
+  if (PREF.ciervos) loadCiervos();
+  document.body.classList.toggle('campo', !!PREF.campo);
   try { localStorage.setItem(LS + '-capas', JSON.stringify(PREF)); } catch (e) {}
+}
+// Cache JSON from slow public services for a week, so the layers also show up without coverage
+function cachedJson(key, days, getter) {
+  var k = LS + '-cache-' + key;
+  try { var c = JSON.parse(localStorage.getItem(k) || 'null'); if (c && Date.now() - c.t < days * 864e5) return Promise.resolve(c.d); } catch (e) {}
+  return getter().then(function (d) { try { localStorage.setItem(k, JSON.stringify({ t: Date.now(), d: d })); } catch (e) {} return d; }, function (err) {
+    try { var c = JSON.parse(localStorage.getItem(k) || 'null'); if (c) return c.d; } catch (e) {} throw err;
+  });
+}
+
+// Protected natural areas (PEIN, natural parks) from the EEA's register of nationally designated areas
+var PEIN = [], peinDone = false;
+function loadPein() {
+  if (peinDone) return; peinDone = true;
+  var u = 'https://bio.discomap.eea.europa.eu/arcgis/rest/services/ProtectedSites/CDDAv21_Dyna_WM/MapServer/1/query?f=geojson&where=1%3D1&geometry=1.45,41.9,2.25,42.42&geometryType=esriGeometryEnvelope&inSR=4326&outSR=4326&spatialRel=esriSpatialRelIntersects&outFields=siteName,designationTypeCode&returnGeometry=true&maxAllowableOffset=0.0004&geometryPrecision=5';
+  cachedJson('pein', 30, function () { return fetch(u).then(function (r) { return r.json(); }); }).then(function (j) {
+    var seen = {};
+    PEIN = (j.features || []).filter(function (f) { var k = f.properties.siteName + f.properties.designationTypeCode; if (seen[k] || !f.geometry) return false; seen[k] = 1; return true; });
+    PEIN.forEach(function (f) {
+      var nm = (f.properties.siteName || '').replace(/`/g, '\'');
+      L.geoJSON(f, { interactive: false, style: { color: '#d8402f', weight: 2, dashArray: '6 5', fill: true, fillColor: '#d8402f', fillOpacity: .05 } }).addTo(gPein);
+      f.properties.nom = nm;
+    });
+  }).catch(function () { peinDone = false; });
+}
+function inRing(pt, ring) { var x = pt[0], y = pt[1], ins = false; for (var i = 0, j = ring.length - 1; i < ring.length; j = i++) { var xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1]; if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) ins = !ins; } return ins; }
+function peinAt(lat, lng) {
+  var pt = [lng, lat], out = [];
+  PEIN.forEach(function (f) { var g = f.geometry, polys = g.type === 'Polygon' ? [g.coordinates] : g.type === 'MultiPolygon' ? g.coordinates : []; if (polys.some(function (p) { return inRing(pt, p[0]) && !p.slice(1).some(function (h) { return inRing(pt, h); }); })) out.push(f.properties.nom); });
+  return out.filter(function (x, i) { return out.indexOf(x) === i; });
+}
+// Protected geological sites (ICGC). One-pixel query at a point → the site's name, or null
+function ieigAt(lat, lng) {
+  var d = .0005, u = 'https://geoserveis.icgc.cat/servei/catalunya/espais-interes-geologic/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetFeatureInfo&LAYERS=espais-interes-geologic&QUERY_LAYERS=espais-interes-geologic&STYLES=&SRS=EPSG:4326&BBOX=' + [lng - d, lat - d, lng + d, lat + d].join(',') + '&WIDTH=3&HEIGHT=3&X=1&Y=1&INFO_FORMAT=text/plain&FEATURE_COUNT=1';
+  return fetch(u).then(function (r) { return r.text(); }).then(function (t) {
+    var i0 = t.indexOf('OBJECTID;'); if (i0 < 0) return null;
+    var parts = t.slice(i0).split(';').map(function (x) { return x.trim(); }), n = parts.findIndex(function (x) { return /^\d+$/.test(x); });
+    if (n < 1) return null; var p = {}; for (var i = 0; i < n; i++) p[parts[i]] = parts[n + i];
+    return p.NOM_ESPAI ? { nom: p.NOM_ESPAI, desc: p.DESCRIPCIO || '' } : null;
+  }).catch(function () { return null; });
+}
+
+// Mines, adits, shafts and quarries from OpenStreetMap: spoil heaps are where minerals turn up
+var minasDone = false;
+function pistaMina(t) {
+  var s = ((t.name || '') + ' ' + (t.mineral || '') + ' ' + (t.resource || '') + ' ' + (t.description || '')).toLowerCase();
+  if (/barit|bòfia/.test(s)) return 'Barita: busca cristales tabulares blancos y pesados en la escombrera.';
+  if (/guix|yeso|gypsum/.test(s)) return 'Yesos: cristales de yeso, jacintos (cuarzos rojos) y aragonito.';
+  if (/grav|àrid|arid|sand/.test(s)) return 'Gravera: cantos rodados de todo el Pirineo; a veces fósiles sueltos.';
+  if (/pedrer|quarry|calc/.test(s) || t.landuse === 'quarry') return 'Cantera: mira los bloques sueltos y el material de rechazo, a menudo con fósiles de la caliza o marga.';
+  if (/fumanya|paleont/.test(s)) return 'Yacimiento protegido de icnitas: no se toca nada dentro; mira solo canchales fuera del perímetro.';
+  return 'Mina de lignito del Garumniense: en las escombreras salen pirita, marcasita, azufre, yeso y plantas fósiles.';
+}
+// Snapshot from OpenStreetMap (13 Nov 2026): [lat, lng, kind q=quarry a=adit s=shaft m=mine, name, mineral]. Overpass is often overloaded, so the app starts from this and refreshes monthly when it answers
+var MINAS0 = [[42.29510,1.89589,"s","Antiga Mina de Barita de la Bòfia",""],[42.21499,1.95817,"m","Mina del Moreno",""],[42.22080,1.97180,"a","Mina d'Arderiu",""],[42.21679,1.95765,"a","",""],[42.22513,2.01921,"a","",""],[42.22051,1.97136,"a","Mina d'Arderiu",""],[42.22802,1.96805,"a","Mina l'Artiga de Capdevila",""],[42.22511,1.96896,"a","Mines del Cable",""],[42.21708,1.95973,"a","Mina Moreno",""],[42.34210,2.12550,"s","Mina Saragossa",""],[42.22347,1.72131,"s","",""],[42.13975,1.62799,"q","Mina",""],[42.12837,1.84793,"q","",""],[42.13079,1.85010,"q","",""],[41.96108,1.58213,"q","",""],[42.17200,1.89731,"a","Mina de les Agudes","coal"],[42.35088,1.68195,"q","Pedrera de Montellà",""],[41.97651,1.85589,"q","",""],[42.07399,1.95698,"q","Pedrera de la Roca dels Plans",""],[42.01622,1.99120,"q","Graves i excavacions Castellot SA",""],[42.23850,1.87754,"q","",""],[42.23541,2.01830,"q","la Guixera",""],[42.03546,1.56122,"q","",""],[41.95542,1.62218,"q","",""],[42.03353,1.93764,"q","",""],[42.19080,1.79949,"q","Conjunt paleontològic de Fumanya Nord",""],[42.05152,1.87441,"q","",""],[42.06326,1.87383,"q","",""],[42.06428,1.87301,"q","",""],[42.12425,1.84486,"q","",""],[42.11916,1.70445,"q","",""],[42.17389,1.84979,"q","",""],[42.26529,1.97766,"q","les Pedreres",""],[42.23059,1.68568,"q","la Gravera",""],[42.14134,1.63844,"q","",""],[42.12794,1.85285,"q","",""],[42.18096,1.79557,"q","Conjunt paleontològic de Fumanya Sud",""],[42.33588,1.75385,"q","Pedrera del Pi",""],[42.00075,1.57937,"q","",""],[42.00040,1.58206,"q","",""],[42.05130,1.87788,"q","",""],[42.04711,1.87953,"q","Gravera Velvor SA",""],[42.12968,1.68925,"q","",""]];
+var KIND = { q: 'Cantera', a: 'Bocamina', s: 'Pozo de mina', m: 'Mina', h: 'Escombrera' };
+function drawMinas(rows) {
+  gMinas.clearLayers();
+  rows.forEach(function (m) {
+    var ll = [m[0], m[1]], kind = KIND[m[2]] || 'Mina', t = { name: m[3], mineral: m[4], landuse: m[2] === 'q' ? 'quarry' : '' };
+    var html = '<b>' + esc(m[3] || kind) + '</b><div class="small">' + kind + (m[4] ? ' · ' + esc(m[4]) : '') + '</div><p class="small" style="margin-top:6px">' + esc(pistaMina(t)) + '</p><div class="pop-act"><button type="button" class="ghost" data-mina="' + ll.join(',') + '" data-nm="' + esc(m[3] || kind) + '">📍 Guardar sitio</button></div><p class="small">Datos de OpenStreetMap.</p>';
+    L.marker(ll, { icon: L.divIcon({ className: '', html: '<div class="mk sm mina">' + svgIco('mina') + '</div>', iconSize: [24, 24], iconAnchor: [12, 12] }), title: m[3] || kind }).bindPopup(html).addTo(gMinas);
+  });
+}
+function loadMinas() {
+  if (minasDone) return; minasDone = true;
+  var k = LS + '-cache-minas', c = null;
+  try { c = JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) {}
+  drawMinas(c && c.d && c.d.length ? c.d : MINAS0);
+  if (c && Date.now() - c.t < 30 * 864e5) return;
+  var q = '[out:json][timeout:25];(nwr["historic"~"^(mine|mine_shaft|mine_adit)$"](41.95,1.5,42.4,2.2);nwr["man_made"~"^(adit|mineshaft|spoil_heap)$"](41.95,1.5,42.4,2.2);nwr["landuse"~"^(quarry|spoil_heap)$"](41.95,1.5,42.4,2.2););out center tags;';
+  var ac = window.AbortController ? new AbortController() : null; if (ac) setTimeout(function () { ac.abort(); }, 30000);
+  fetch('https://overpass-api.de/api/interpreter', { method: 'POST', body: 'data=' + encodeURIComponent(q), headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, signal: ac && ac.signal }).then(function (r) { if (!r.ok) throw r; return r.json(); }).then(function (j) {
+    var rows = (j.elements || []).map(function (el) {
+      var t = el.tags || {}, ll = el.center ? [el.center.lat, el.center.lon] : [el.lat, el.lon], s = (t.man_made || '') + (t.historic || '') + (t.landuse || '');
+      if (ll[0] == null || /bunker/i.test(t.name || '')) return null;
+      return [+ll[0].toFixed(5), +ll[1].toFixed(5), t.landuse === 'quarry' ? 'q' : /spoil/.test(s) ? 'h' : /adit/.test(s) ? 'a' : /shaft/.test(s) ? 's' : 'm', t.name || '', t.mineral || t.resource || ''];
+    }).filter(Boolean);
+    if (rows.length < 10) return;
+    try { localStorage.setItem(k, JSON.stringify({ t: Date.now(), d: rows })); } catch (e) {}
+    drawMinas(rows);
+  }).catch(function () {});
+}
+document.addEventListener('click', function (e) {
+  var b = e.target.closest('[data-mina]'); if (!b) return; var ll = b.dataset.mina.split(',').map(Number); map.closePopup();
+  openSitio(null, { lat: ll[0], lng: ll[1], nombre: b.dataset.nm, tipo: 'mineral' });
+});
+
+// Red deer, roe deer and fallow deer seen by people (iNaturalist): where to look for shed antlers
+var ciervosDone = false;
+function loadCiervos() {
+  if (ciervosDone) return; ciervosDone = true;
+  var sp = [['Cervus elaphus', 'Ciervo'], ['Capreolus capreolus', 'Corzo'], ['Dama dama', 'Gamo']];
+  cachedJson('ciervos', 7, function () {
+    return Promise.all(sp.map(function (s) { return fetch('https://api.inaturalist.org/v1/observations?taxon_name=' + encodeURIComponent(s[0]) + '&swlat=41.95&swlng=1.5&nelat=42.4&nelng=2.2&per_page=200&order_by=observed_on&geoprivacy=open').then(function (r) { return r.json(); }).then(function (j) { return (j.results || []).map(function (o) { return { n: s[1], d: o.observed_on, ll: o.location, u: o.uri, f: o.photos && o.photos[0] ? o.photos[0].url : '' }; }); }); }))
+      .then(function (a) { return [].concat.apply([], a); });
+  }).then(function (obs) {
+    obs.forEach(function (o) {
+      if (!o.ll) return; var ll = o.ll.split(',').map(Number);
+      L.marker(ll, { icon: L.divIcon({ className: '', html: '<div class="mk deer" title="' + o.n + '"></div>', iconSize: [14, 14] }) })
+        .bindPopup('<b>' + o.n + '</b><div class="small">Visto el ' + esc((o.d || '').split('-').reverse().join('/')) + '</div>' + (o.f ? '<img src="' + esc(o.f) + '" alt="" style="margin-top:6px;border-radius:8px;max-height:120px">' : '') + '<p class="small"><a href="' + esc(o.u) + '" target="_blank" rel="noopener">Ver en iNaturalist</a></p>').addTo(gCiervos);
+    });
+  }).catch(function () { ciervosDone = false; });
+}
+
+// Typical fossils of the same age near a point, from the Paleobiology Database
+function pbdbEdad(lat, lng, e) {
+  if (!e || e[2] < 3) return Promise.resolve(null);
+  var d = .2, u = 'https://paleobiodb.org/data1.2/occs/list.json?lngmin=' + (lng - d * 1.3) + '&lngmax=' + (lng + d * 1.3) + '&latmin=' + (lat - d) + '&latmax=' + (lat + d) + '&min_ma=' + e[1] + '&max_ma=' + e[2] + '&show=class&limit=500';
+  return fetch(u).then(function (r) { return r.json(); }).then(function (j) {
+    var by = {}; (j.records || []).forEach(function (o) { var k = o.tna; if (!k) return; by[k] = by[k] || { n: 0, g: [o.cll, o.phl].filter(function (x) { return x && !/^NO_/.test(x); })[0] || '' }; by[k].n++; });
+    return Object.keys(by).sort(function (a, b) { return by[b].n - by[a].n; }).slice(0, 10).map(function (k) { return { t: k, g: by[k].g, n: by[k].n }; });
+  }).catch(function () { return null; });
 }
 var pbdbDone = false;
 function loadPbdb() {
@@ -268,11 +439,41 @@ function loadPbdb() {
       });
     }).catch(function () { pbdbDone = false; });
 }
-function pinIcon(em) { return L.divIcon({ className: '', html: '<div class="pin">' + em + '</div>', iconSize: [24, 24], iconAnchor: [12, 20] }); }
+// Drawn icons per type, so the map reads at a glance: ammonite, crystal, antler, skull
+var ICO = {
+  fosil: '<path d="M12 21a9 9 0 1 1 9-9c0 3.9-3.1 7-7 7s-6-2.7-6-6 2.2-5 5-5 4 1.8 4 4-1.3 3-3 3-2-1-2-2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+  mineral: '<path d="M8 3h8l4 6-8 12L4 9zM4 9h16M9 9l3 12 3-12-3-6z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>',
+  cuerno: '<path d="M13 22c0-6-1-10-4-14M9 8 5 6.5M10.6 11.5 6 12M9 8l1-5M12.6 15.5c2.5-1.5 4.4-4.5 5-8.5M17.6 7l1.9-3M15.8 11.3h3.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+  craneo: '<path d="M12 3a8 8 0 0 0-8 8c0 2.5 1.2 4.3 3 5.3V20h10v-3.7c1.8-1 3-2.8 3-5.3a8 8 0 0 0-8-8z" fill="currentColor"/><circle cx="9" cy="11.5" r="2" fill="rgba(0,0,0,.6)"/><circle cx="15" cy="11.5" r="2" fill="rgba(0,0,0,.6)"/><path d="M10 20v-2.5M14 20v-2.5" stroke="rgba(0,0,0,.6)" stroke-width="1.5"/>',
+  otro: '<circle cx="12" cy="12" r="5" fill="currentColor"/>',
+  mina: '<path d="M3.5 9.5C7 5 13 4 18 6M11 6.5 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'
+};
+var TCOL = { fosil: '#8a5a2b', mineral: '#6b4fa0', cuerno: '#4f6f24', craneo: '#5e5346', otro: '#b4541f' };
+function svgIco(k) { return '<svg viewBox="0 0 24 24" aria-hidden="true">' + (ICO[k] || ICO.otro) + '</svg>'; }
+function mkIcon(tipo, cls) { var s = /sm/.test(cls || '') ? 24 : 30; return L.divIcon({ className: '', html: '<div class="mk ' + (cls || '') + '" style="background:' + (TCOL[tipo] || TCOL.otro) + '">' + svgIco(tipo) + '</div>', iconSize: [s, s], iconAnchor: [s / 2, s / 2] }); }
+// Geologic age of a piece or site, read from the saved stratum text ("Maastrichtià · Argiles…")
+var PERIODOS = [['Actual', 0, 0, '#e4ddd0'], ['Cuaternario', 0, 2.58, '#f9f97f'], ['Neógeno', 2.58, 23, '#ffe619'], ['Paleógeno', 23, 66, '#fd9a52'], ['Cretácico', 66, 145, '#7fc64e'], ['Jurásico', 145, 201, '#34b2c9'], ['Triásico', 201, 252, '#b06fc0'], ['Paleozoico', 252, 539, '#67a599']];
+function eraDe(o) {
+  if (!o) return null;
+  if (!o.geo && (o.tipo === 'cuerno' || o.tipo === 'craneo')) return PERIODOS[0];
+  var e = eraOf({ Edat: (o.geo || '').split(' · ')[0] }); if (!e) return null;
+  var mid = (e[1] + e[2]) / 2;
+  for (var i = 1; i < PERIODOS.length; i++) if (mid >= PERIODOS[i][1] && mid < PERIODOS[i][2]) return PERIODOS[i];
+  return null;
+}
+var filtroEra = null;
 function drawPins() {
-  gSitios.clearLayers(); gPiezas.clearLayers();
-  list('sitios').forEach(function (s) { if (s.lat == null) return; var st = estado(s); L.marker([s.lat, s.lng], { icon: pinIcon((TIPOS[s.tipo] || TIPOS.otro)[0] + (st.ok === true ? '✅' : '')) }).on('click', function () { openSitio(s.id); }).addTo(gSitios); });
-  list('piezas').forEach(function (p) { if (p.lat == null) return; L.marker([p.lat, p.lng], { icon: pinIcon('🔸') }).on('click', function () { openPieza(p.id); }).addTo(gPiezas); });
+  gSitios.clearLayers(); gPiezas.clearLayers(); gRuta.clearLayers();
+  var nx = salidaNext();
+  list('sitios').forEach(function (s) {
+    if (s.lat == null) return; var st = estado(s), e = eraDe(s), fade = filtroEra && (!e || e[0] !== filtroEra);
+    L.marker([s.lat, s.lng], { icon: mkIcon(s.tipo, (st.ok === true ? 'ok ' : '') + (nx && nx.id === s.id ? 'next ' : '') + (fade ? 'fade' : '')), title: s.nombre }).on('click', function () { openSitio(s.id); }).addTo(gSitios);
+  });
+  list('piezas').forEach(function (p) {
+    if (p.lat == null) return; var e = eraDe(p), fade = filtroEra && (!e || e[0] !== filtroEra);
+    L.marker([p.lat, p.lng], { icon: mkIcon(p.tipo, 'sm ' + (fade ? 'fade' : '')), title: p.nombre || '', zIndexOffset: fade ? -500 : 200 }).on('click', function () { openPieza(p.id); }).addTo(gPiezas);
+  });
+  drawRuta(); renderSalidaPill();
 }
 
 // Tapping the map: the rock underneath, and save a site or a find there
@@ -280,10 +481,18 @@ var picking = null;
 map.on('click', function (e) {
   var lat = e.latlng.lat, lng = e.latlng.lng;
   if (picking) { var cb = picking; stopPick(); cb(lat, lng); return; }
-  var pop = L.popup().setLatLng(e.latlng).setContent('<p class="small">Mirando el estrato…</p>').openOn(map);
-  geologyAt(lat, lng).then(function (p) {
+  var pop = L.popup({ maxWidth: 300 }).setLatLng(e.latlng).setContent('<p class="small">Mirando el estrato…</p>').openOn(map);
+  Promise.all([geologyAt(lat, lng), PREF.ieig ? ieigAt(lat, lng) : null]).then(function (r) {
+    var p = r[0], ie = r[1], pe = peinAt(lat, lng), era = p ? eraOf(p) : null;
     lastGeo = { lat: lat, lng: lng, p: p };
-    pop.setContent(geoHtml(p) + '<div class="pop-act"><button type="button" class="ghost" data-pop="sitio">📍 Guardar sitio</button><button type="button" class="ghost" data-pop="pieza">🐚 Pieza aquí</button></div>');
+    var prot = (ie ? '<div class="warn in" style="position:static;margin-bottom:8px;box-shadow:none">⛔ Dentro de «' + esc(ie.nom) + '» (espacio de interés geológico): busca material caído fuera del perímetro.</div>' : '') +
+      (pe.length ? '<p class="small" style="margin:0 0 6px">🟥 Espacio natural: ' + esc(pe.join(', ')) + '</p>' : '');
+    var base = prot + geoHtml(p) + '<div id="pbdbEdad"></div><div class="pop-act"><button type="button" class="ghost" data-pop="sitio">📍 Guardar sitio</button><button type="button" class="ghost" data-pop="pieza">🐚 Pieza aquí</button></div>';
+    pop.setContent(base);
+    pbdbEdad(lat, lng, era).then(function (ts) {
+      if (!ts || !map.hasLayer(pop) || lastGeo.lat !== lat) return;
+      pop.setContent(base.replace('<div id="pbdbEdad"></div>', ts.length ? '<div style="margin-top:8px"><div class="lab">Fósiles de esta edad a menos de 20 km (PBDB)</div><div style="max-height:120px;overflow:auto">' + ts.map(function (t) { return '<div><i>' + esc(t.t) + '</i> <span class="small">' + esc(t.g) + (t.n > 1 ? ' · ' + t.n : '') + '</span></div>'; }).join('') + '</div></div>' : '<p class="small">La PBDB no tiene fósiles de esta edad en 20 km.</p>'));
+    });
   });
 });
 var lastGeo = null;
@@ -293,7 +502,7 @@ document.addEventListener('click', function (e) {
   if (b.dataset.pop === 'sitio') openSitio(null, { lat: lastGeo.lat, lng: lastGeo.lng, geo: geoShort(lastGeo.p) });
   else openPieza(null, { lat: lastGeo.lat, lng: lastGeo.lng, geo: geoShort(lastGeo.p) });
 });
-function startPick(cb) { picking = cb; hideSheet(); $('pickHint').hidden = false; }
+function startPick(cb, hint) { picking = cb; hideSheet(); $('pickHint').textContent = (hint || 'Toca el mapa para colocar el punto') + ' · Cancelar'; $('pickHint').hidden = false; }
 function stopPick() { picking = null; $('pickHint').hidden = true; }
 $('pickHint').addEventListener('click', function () { var cb = picking; stopPick(); if (cb) cb(null); });
 
@@ -307,10 +516,97 @@ $('locBtn').addEventListener('click', function () {
     lastPos = [p.coords.latitude, p.coords.longitude];
     if (!me) { me = L.marker(lastPos, { icon: L.divIcon({ className: '', html: '<div class="me"></div>', iconSize: [18, 18] }), zIndexOffset: 1000 }).addTo(map); meAcc = L.circle(lastPos, { radius: p.coords.accuracy, color: '#2a7fff', weight: 1, fillOpacity: .08 }).addTo(map); map.setView(lastPos, 15); }
     else { me.setLatLng(lastPos); meAcc.setLatLng(lastPos).setRadius(p.coords.accuracy); if (follow) map.panTo(lastPos); }
+    onPos(lastPos[0], lastPos[1]);
   }, function () { $('locBtn').classList.remove('on'); watch = null; alert('No se pudo leer el GPS. Revisa el permiso de ubicación.'); }, { enableHighAccuracy: true, maximumAge: 5000 });
 });
 map.on('dragstart', function () { follow = false; });
 function here() { return lastPos ? { lat: lastPos[0], lng: lastPos[1] } : null; }
+function dist(a, b) { var R = 6371000, r = Math.PI / 180, dLat = (b[0] - a[0]) * r, dLng = (b[1] - a[1]) * r, x = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(a[0] * r) * Math.cos(b[0] * r) * Math.sin(dLng / 2) * Math.sin(dLng / 2); return 2 * R * Math.asin(Math.sqrt(x)); }
+function km(m) { return m < 1000 ? Math.round(m / 10) * 10 + ' m' : dec(m / 1000, 1) + ' km'; }
+
+// Walking near protected ground: a red banner inside a geological site, amber within ~150 m, a quiet note inside a PEIN area
+var protLast = null, protBusy = false, protShown = '', protMuted = '';
+function onPos(lat, lng) {
+  checkLlegada(lat, lng); renderSalidaPill();
+  if (protBusy || (protLast && dist(protLast, [lat, lng]) < 40)) return;
+  protBusy = true; protLast = [lat, lng];
+  var o = .00135, k = o / Math.cos(lat * Math.PI / 180); // ~150 m
+  var pts = [[lat, lng], [lat + o, lng], [lat - o, lng], [lat, lng + k], [lat, lng - k]];
+  Promise.all(PREF.ieig ? pts.map(function (p) { return ieigAt(p[0], p[1]); }) : []).then(function (r) {
+    protBusy = false;
+    var inside = r[0], near = r.slice(1).filter(Boolean)[0], pe = peinAt(lat, lng), msg = '', cls = '';
+    if (inside) { cls = 'in'; msg = '⛔ Estás dentro de «' + inside.nom + '». Aquí no se recoge: busca material caído fuera del perímetro.'; }
+    else if (near) { cls = 'near'; msg = '⚠️ A menos de 150 m de «' + near.nom + '» (yacimiento protegido).'; }
+    else if (pe.length) { cls = 'pein'; msg = '🟥 Espacio natural protegido: ' + pe.join(', '); }
+    if (msg && msg !== protShown && navigator.vibrate && cls !== 'pein') navigator.vibrate([200, 100, 200]);
+    protShown = msg; showWarn(msg === protMuted ? '' : msg, cls);
+  });
+}
+function showWarn(msg, cls) {
+  var w = $('warn'); if (!msg) { w.hidden = true; return; }
+  w.className = 'warn ' + cls; w.innerHTML = '<span>' + esc(msg) + '</span><button type="button" aria-label="Ocultar aviso">✕</button>'; w.hidden = false;
+}
+$('warn').addEventListener('click', function (e) { if (e.target.closest('button')) { protMuted = protShown; this.hidden = true; } });
+function toast(html, btn, fn) {
+  var t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); t.innerHTML = '<span>' + html + '</span>' + (btn ? '<button type="button">' + esc(btn) + '</button>' : '');
+  document.body.appendChild(t); var done = function () { t.remove(); };
+  if (btn) t.querySelector('button').onclick = function () { done(); fn(); };
+  setTimeout(done, btn ? 15000 : 4000);
+}
+
+// ---------- Outing mode: today's sites in walking order, one tap to log a find on arrival ----------
+var SALIDA = null;
+try { SALIDA = JSON.parse(localStorage.getItem(LS + '-salida') || 'null'); } catch (e) {}
+if (SALIDA && SALIDA.dia !== new Date().toISOString().slice(0, 10)) SALIDA = null;
+function saveSalida() { try { localStorage.setItem(LS + '-salida', JSON.stringify(SALIDA)); } catch (e) {} }
+function salidaSitios() { return SALIDA ? SALIDA.ids.map(function (id) { return S.sitios[id]; }).filter(Boolean) : []; }
+function salidaNext() { return salidaSitios().filter(function (s) { return !SALIDA.done[s.id]; })[0] || null; }
+function ordenar(ids, from) {
+  // Nearest neighbour from where you are (or from the first site), good enough for a handful of stops
+  var rest = ids.map(function (id) { return S.sitios[id]; }).filter(function (s) { return s && s.lat != null; }), out = [], cur = from;
+  if (!cur && rest.length) cur = [rest[0].lat, rest[0].lng];
+  while (rest.length) { rest.sort(function (a, b) { return dist(cur, [a.lat, a.lng]) - dist(cur, [b.lat, b.lng]); }); var s = rest.shift(); out.push(s.id); cur = [s.lat, s.lng]; }
+  return out;
+}
+function drawRuta() {
+  var ss = salidaSitios(); if (ss.length < 1) return;
+  var pts = ss.map(function (s) { return [s.lat, s.lng]; });
+  if (lastPos) pts.unshift(lastPos);
+  L.polyline(pts, { color: '#f2be4a', weight: 4, dashArray: '8 8', opacity: .9, interactive: false }).addTo(gRuta);
+  ss.forEach(function (s, i) { L.marker([s.lat, s.lng], { interactive: false, icon: L.divIcon({ className: '', html: '<div style="transform:translate(14px,-16px);background:#f2be4a;color:#1a120b;border-radius:999px;font:800 12px var(--body);padding:1px 6px;width:max-content">' + (SALIDA.done[s.id] ? '✓' : i + 1) + '</div>', iconSize: [0, 0] }) }).addTo(gRuta); });
+}
+function renderSalidaPill() {
+  var b = $('salidaPill'); if (!SALIDA) { b.hidden = true; return; }
+  var ss = salidaSitios(), n = salidaNext(), hechos = ss.filter(function (s) { return SALIDA.done[s.id]; }).length;
+  b.textContent = '🥾 ' + hechos + '/' + ss.length + (n ? ' · ' + n.nombre + (lastPos ? ' (' + km(dist(lastPos, [n.lat, n.lng])) + ')' : '') : ' · ¡Salida completa!');
+  b.hidden = false;
+}
+$('salidaPill').addEventListener('click', function () { renderSalida(); });
+var avisado = {};
+function checkLlegada(lat, lng) {
+  var n = salidaNext(); if (!n || avisado[n.id]) return;
+  if (dist([lat, lng], [n.lat, n.lng]) < 80) { avisado[n.id] = 1; if (navigator.vibrate) navigator.vibrate(300); toast('Has llegado a ' + esc(n.nombre), '🐚 Apuntar pieza', function () { llegue(n.id, true); }); }
+}
+function llegue(id, pieza) {
+  var s = S.sitios[id]; if (!s || !SALIDA) return;
+  SALIDA.done[id] = Date.now(); saveSalida(); drawPins();
+  if (pieza) { var h = here(); openPieza(null, { sitio: id, zona: s.nombre, tipo: s.tipo, lat: h ? h.lat : s.lat, lng: h ? h.lng : s.lng, geo: s.geo || '' }); }
+  else renderSalida();
+}
+function renderSalida() {
+  editingForm = false; tab = 'sitios'; Array.prototype.forEach.call($('bar').children, function (b) { b.classList.toggle('on', b.dataset.tab === 'sitios'); });
+  if (!SALIDA) {
+    var ss = list('sitios').filter(function (s) { return s.lat != null; }).sort(function (a, b) { return (estado(b).ok === true) - (estado(a).ok === true) || (lastPos ? dist(lastPos, [a.lat, a.lng]) - dist(lastPos, [b.lat, b.lng]) : a.nombre.localeCompare(b.nombre)); });
+    return showSheet(head('Salida de hoy') + '<p class="small" style="margin-top:0">Marca los sitios de hoy. Los ordeno por cercanía y te aviso al llegar a cada uno.</p>' +
+      (ss.length ? '<div class="lay" id="salSel">' + ss.map(function (s) { var st = estado(s); return '<label><input type="checkbox" value="' + s.id + '"><span class="ico">' + svgIco(s.tipo) + '</span><span class="grow"><b>' + esc(s.nombre) + '</b> ' + stTag(st) + (lastPos ? '<div class="small">' + km(dist(lastPos, [s.lat, s.lng])) + '</div>' : '') + '</span></label>'; }).join('') + '</div><button type="button" class="go" data-act="salStart" style="margin-top:12px">Empezar salida</button>' : '<p class="empty">Primero guarda algún sitio.</p>'));
+  }
+  var ss2 = salidaSitios(), nx = salidaNext(), hoy = list('piezas').filter(function (p) { return p.salida === SALIDA.dia; });
+  showSheet(head('Salida de hoy') + '<ol class="lst">' + ss2.map(function (s, i) {
+    var dn = SALIDA.done[s.id];
+    return '<li><div class="card" style="' + (nx && nx.id === s.id ? 'border:2px solid var(--amber)' : '') + (dn ? ';opacity:.6' : '') + '"><div class="row"><span class="ico">' + svgIco(s.tipo) + '</span><span class="grow"><b>' + (i + 1) + '. ' + esc(s.nombre) + '</b>' + (dn ? ' ✓' : '') + '<div class="small">' + (lastPos ? km(dist(lastPos, [s.lat, s.lng])) + ' · ' : '') + esc(estado(s).why || s.geo || '') + '</div></span></div>' +
+      '<div class="pop-act"><button type="button" class="go" data-act="salPieza" data-id="' + s.id + '">🐚 Apuntar pieza</button>' + (dn ? '' : '<button type="button" class="ghost" data-act="salDone" data-id="' + s.id + '">Hecho</button>') + '<a class="ghost" style="text-decoration:none" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&travelmode=walking&destination=' + s.lat + ',' + s.lng + '">Ir</a></div></div></li>';
+  }).join('') + '</ol>' + '<p class="small">' + (hoy.length ? hoy.length + ' piezas apuntadas hoy.' : 'Aún sin piezas hoy.') + '</p><div class="row"><button type="button" class="ghost" data-act="salReorder">Reordenar desde aquí</button><button type="button" class="linkb danger" data-act="salEnd">Terminar salida</button></div>');
+}
 
 // ---------- Sheets ----------
 var tab = 'mapa';
@@ -318,11 +614,11 @@ function showSheet(html) { $('sheetBody').innerHTML = html; $('sheet').hidden = 
 function hideSheet() { $('sheet').hidden = true; }
 function setTab(t) {
   tab = t; Array.prototype.forEach.call($('bar').children, function (b) { b.classList.toggle('on', b.dataset.tab === t); });
-  if (t === 'mapa') hideSheet(); else if (t === 'sitios') renderSitios(); else if (t === 'vitrina') renderVitrina(); else renderAvisos();
+  if (t === 'mapa') hideSheet(); else if (t === 'sitios') renderSitios(); else if (t === 'vitrina') renderVitrina(); else if (t === 'tiempo') renderTiempo(); else renderAvisos();
 }
 $('bar').addEventListener('click', function (e) { var b = e.target.closest('button'); if (b) setTab(b.dataset.tab === tab && tab !== 'mapa' ? 'mapa' : b.dataset.tab); });
 $('alertBtn').addEventListener('click', function () { setTab('avisos'); });
-function refresh() { drawPins(); renderAlert(); if (!$('sheet').hidden && !editingForm) { if (tab === 'sitios') renderSitios(); else if (tab === 'vitrina') renderVitrina(); else if (tab === 'avisos') renderAvisos(); } }
+function refresh() { drawPins(); renderAlert(); if (!$('sheet').hidden && !editingForm) { if (tab === 'sitios') renderSitios(); else if (tab === 'vitrina') renderVitrina(); else if (tab === 'tiempo') renderTiempo(); else if (tab === 'avisos') renderAvisos(); } }
 var editingForm = false;
 function head(title, extra) { return '<div class="sh-top"><h2>' + title + '</h2><div class="row">' + (extra || '') + '<button type="button" class="linkb" data-act="close">Cerrar</button></div></div>'; }
 function stTag(st) { return st.ok === true ? '<span class="tag ok">Accesible</span>' : st.ok === false ? '<span class="tag no">Ahora no</span>' : ''; }
@@ -331,18 +627,70 @@ function renderSitios() {
   editingForm = false;
   var ss = list('sitios').sort(function (a, b) { return (estado(b).ok === true) - (estado(a).ok === true) || a.nombre.localeCompare(b.nombre); });
   showSheet(head('Mis sitios', '<button type="button" class="go" data-act="newSitio">+ Sitio</button>') +
-    (ss.length ? '<ul class="lst">' + ss.map(function (s) { var st = estado(s); return '<li><button type="button" data-sitio="' + s.id + '"><span class="ico">' + (TIPOS[s.tipo] || TIPOS.otro)[0] + '</span><span class="grow"><b>' + esc(s.nombre) + '</b> ' + stTag(st) + '<div class="small">' + esc(st.why || s.geo || '') + '</div></span></button></li>'; }).join('') + '</ul>'
+    (ss.length ? '<button type="button" class="ghost" data-act="salida" style="width:100%;margin-bottom:10px;text-align:left">🥾 ' + (SALIDA ? 'Salida en curso · ' + salidaSitios().filter(function (s) { return SALIDA.done[s.id]; }).length + '/' + SALIDA.ids.length : 'Preparar la salida de hoy') + '</button>' : '') +
+    (ss.length ? '<ul class="lst">' + ss.map(function (s) { var st = estado(s); return '<li><button type="button" data-sitio="' + s.id + '"><span class="ico" style="color:' + (TCOL[s.tipo] || TCOL.otro) + '">' + svgIco(s.tipo) + '</span><span class="grow"><b>' + esc(s.nombre) + '</b> ' + stTag(st) + '<div class="small">' + esc(st.why || s.geo || '') + '</div></span></button></li>'; }).join('') + '</ul>'
       : '<p class="empty">Aún no hay sitios. Toca el mapa donde quieras y pulsa «Guardar sitio», o usa «+ Sitio».</p>') +
     '<div class="row" style="margin-top:6px"><label class="ghost" style="cursor:pointer">Importar de Google Maps<input type="file" id="imp" accept=".json,.geojson,.csv" hidden multiple></label></div><p class="small">Acepta los archivos de Google Takeout: «Sitios guardados.json» o las listas en CSV del apartado «Guardado».</p>');
 }
+// Museum label: catalogue number, scientific name in italics, common name, stratum, place and date
+function numTxt(p) { return p.num ? 'EST-' + String(p.num).padStart(4, '0') : 'EST-····'; }
+function fechaTxt(f) { var p = (f || '').split('-'); return p.length === 3 ? +p[2] + ' ' + MES[+p[1] - 1] + ' ' + p[0] : f; }
+function etiqueta(p) {
+  var e = eraDe(p), t = TIPOS[p.tipo] || TIPOS.otro, ed = (p.geo || '').split(' · ')[0];
+  return '<div class="num">' + numTxt(p) + ' · ' + t[1].toUpperCase() + '</div>' +
+    (p.cient ? '<div class="sci">' + esc(p.cient) + '</div>' + (p.nombre ? '<div class="com">' + esc(p.nombre) + '</div>' : '') : '<div class="sci" style="font-style:normal">' + esc(p.nombre || t[1]) + '</div>') +
+    '<div class="meta">' + esc([e && e[0] !== 'Actual' ? ed + (ed !== e[0] ? ' · ' + e[0] : '') : '', p.zona, p.fecha ? fechaTxt(p.fecha) : ''].filter(Boolean).join(' · ')) + '</div>';
+}
+function numerar() {
+  // Catalogue numbers in order of finding; pieces that already have one keep it
+  var ps = list('piezas'), mx = ps.reduce(function (a, p) { return Math.max(a, p.num || 0); }, 0);
+  ps.filter(function (p) { return !p.num; }).sort(function (a, b) { return (a.fecha || '').localeCompare(b.fecha || '') || (a.ts || 0) - (b.ts || 0); }).forEach(function (p) { p.num = ++mx; put('piezas', p); });
+}
+function barras(m, colors, max) {
+  var ks = Object.keys(m).sort(function (a, b) { return m[b] - m[a]; }).slice(0, max || 8), mx = Math.max.apply(null, ks.map(function (k) { return m[k]; }).concat([1]));
+  return '<div class="stats">' + ks.map(function (k) { return '<div class="sbar"><span title="' + esc(k) + '">' + esc(k) + '</span><i style="width:' + Math.round(m[k] / mx * 100) + '%;' + (colors && colors[k] ? 'background:' + colors[k] : '') + '"></i><span>' + m[k] + '</span></div>'; }).join('') + '</div>';
+}
+function statsHtml(ps) {
+  var an = {}, er = {}, si = {}, ti = {}, col = {};
+  ps.forEach(function (p) {
+    var y = (p.fecha || '').slice(0, 4) || 'Sin fecha'; an[y] = (an[y] || 0) + 1;
+    var e = eraDe(p), ek = e ? e[0] : 'Sin estrato'; er[ek] = (er[ek] || 0) + 1; if (e) col[ek] = e[3];
+    var sk = p.sitio && S.sitios[p.sitio] ? S.sitios[p.sitio].nombre : p.zona || 'Sin sitio'; si[sk] = (si[sk] || 0) + 1;
+    var tk = (TIPOS[p.tipo] || TIPOS.otro)[1]; ti[tk] = (ti[tk] || 0) + 1;
+  });
+  var anos = Object.keys(an).sort().reverse(), anH = '<div class="stats">' + anos.slice(0, 8).map(function (k) { var mx = Math.max.apply(null, anos.map(function (x) { return an[x]; })); return '<div class="sbar"><span>' + k + '</span><i style="width:' + Math.round(an[k] / mx * 100) + '%"></i><span>' + an[k] + '</span></div>'; }).join('') + '</div>';
+  return '<details class="card"><summary>Estadísticas · ' + ps.length + ' piezas</summary>' +
+    '<div class="lab" style="margin-top:10px">Por tipo</div>' + barras(ti) + '<div class="lab" style="margin-top:10px">Por año</div>' + anH +
+    '<div class="lab" style="margin-top:10px">Por era</div>' + barras(er, col) + '<div class="lab" style="margin-top:10px">Por sitio</div>' + barras(si) + '</details>';
+}
 function renderVitrina() {
   editingForm = false;
-  var ps = list('piezas').sort(function (a, b) { return (b.fecha || '').localeCompare(a.fecha || ''); }), cnt = {};
-  ps.forEach(function (p) { cnt[p.tipo] = (cnt[p.tipo] || 0) + 1; });
+  var ps = list('piezas').sort(function (a, b) { return (b.num || 0) - (a.num || 0) || (b.fecha || '').localeCompare(a.fecha || ''); });
   showSheet(head('Vitrina', '<button type="button" class="go" data-act="newPieza">+ Pieza</button>') +
-    (ps.length ? '<p class="small" style="margin:0 0 10px">' + Object.keys(cnt).map(function (k) { return (TIPOS[k] || TIPOS.otro)[0] + ' ' + cnt[k]; }).join(' · ') + '</p><ul class="lst">' + ps.map(function (p) {
-      return '<li><button type="button" data-pieza="' + p.id + '">' + (p.fotos && p.fotos[0] ? '<img class="th" src="/_blob/' + esc(p.fotos[0]) + '" alt="">' : '<span class="ico">' + (TIPOS[p.tipo] || TIPOS.otro)[0] + '</span>') + '<span class="grow"><b>' + esc(p.nombre || (TIPOS[p.tipo] || TIPOS.otro)[1]) + '</b><div class="small">' + esc([p.fecha ? p.fecha.slice(0, 4) : '', p.zona || '', p.geo ? p.geo.split(' · ')[0] : ''].filter(Boolean).join(' · ')) + '</div></span></button></li>';
+    (ps.length ? statsHtml(ps) + '<ul class="lst">' + ps.map(function (p) {
+      return '<li><button type="button" class="label" data-pieza="' + p.id + '">' + (p.fotos && p.fotos[0] ? '<img class="th" src="/_blob/' + esc(p.fotos[0]) + '" alt="">' : '<span class="ico" style="color:' + (TCOL[p.tipo] || TCOL.otro) + '">' + svgIco(p.tipo) + '</span>') + '<span class="grow">' + etiqueta(p) + '</span></button></li>';
     }).join('') + '</ul>' : '<p class="empty">Tu colección aparecerá aquí: foto, dónde y cuándo, y de qué estrato viene.</p>'));
+}
+// Vertical geologic timeline: youngest on top, each find placed in its period
+function renderTiempo() {
+  editingForm = false;
+  var by = {}; list('piezas').forEach(function (p) { var e = eraDe(p), k = e ? e[0] : '?'; (by[k] = by[k] || []).push(p); });
+  var sit = {}; list('sitios').forEach(function (s) { var e = eraDe(s); if (e) sit[e[0]] = (sit[e[0]] || 0) + 1; });
+  showSheet(head('Tiempo') + '<p class="small" style="margin-top:0">De lo más reciente (arriba) a lo más antiguo. Toca una era para ver en el mapa solo sus piezas y sitios, con el geológico más marcado.</p>' +
+    '<div class="tl">' + PERIODOS.map(function (p) {
+      var ps = by[p[0]] || [], h = p[0] === 'Actual' ? 56 : Math.max(60, Math.round(28 + Math.sqrt(p[2] - p[1]) * 9));
+      return '<div class="age">' + (p[0] === 'Actual' ? 'hoy' : (p[1] < 1 ? '0' : p[1]) + ' Ma') + '</div><button type="button" class="band' + (filtroEra === p[0] ? ' on' : '') + '" data-era="' + p[0] + '" style="--c:' + p[3] + ';min-height:' + h + 'px"><b>' + p[0] + '</b> <span style="font-size:13px;color:#3a2e22">' + (p[0] === 'Actual' ? 'cuernas y cráneos' : p[1] + '–' + p[2] + ' Ma') + ' · ' + ps.length + ' piezas' + (sit[p[0]] ? ' · ' + sit[p[0]] + ' sitios' : '') + '</span>' +
+        (ps.length ? '<div class="pz">' + ps.slice(0, 12).map(function (x) { return '<span>' + (x.cient ? '<i>' + esc(x.cient) + '</i>' : esc(x.nombre || (TIPOS[x.tipo] || TIPOS.otro)[1])) + '</span>'; }).join('') + (ps.length > 12 ? '<span>+' + (ps.length - 12) + '</span>' : '') + '</div>' : '') + '</button>';
+    }).join('') + '</div>' + (by['?'] ? '<p class="small">' + by['?'].length + ' piezas sin estrato: colócalas en el mapa para saber su edad.</p>' : ''));
+}
+function setEra(era) {
+  filtroEra = filtroEra === era ? null : era;
+  GEO.setOpacity(filtroEra ? Math.max(PREF.op, 85) / 100 : PREF.op / 100);
+  $('eraPill').hidden = !filtroEra; $('eraPill').textContent = '⏳ ' + filtroEra + ' ✕';
+  drawPins();
+  if (!filtroEra) return;
+  var pts = list('piezas').concat(list('sitios')).filter(function (o) { var e = eraDe(o); return o.lat != null && e && e[0] === filtroEra; }).map(function (o) { return [o.lat, o.lng]; });
+  setTab('mapa'); if (pts.length) map.fitBounds(pts, { padding: [60, 60], maxZoom: 15 });
 }
 function renderAvisos() {
   editingForm = false;
@@ -390,11 +738,12 @@ function formSitio() {
     (c.tipo === 'baells' ? '<div class="row" style="margin-top:8px"><span>Accesible por debajo del</span><input id="fMax" inputmode="decimal" style="width:80px" value="' + (c.max != null ? String(c.max).replace('.', ',') : '40') + '"><span>%</span></div>' : '') +
     (c.tipo === 'meses' ? '<div class="chips" id="fM" style="margin-top:8px">' + MES.map(function (x, i) { return '<button type="button" data-v="' + (i + 1) + '" class="' + ((c.meses || []).indexOf(i + 1) >= 0 ? 'on' : '') + '">' + x + '</button>'; }).join('') + '</div>' : '') +
     (c.tipo === 'lluvia' ? '<div class="row" style="margin-top:8px"><span>Con al menos</span><input id="fMm" inputmode="decimal" style="width:80px" value="' + (c.mm || 20) + '"><span>mm en 7 días</span></div>' : '') + '</div>' +
+    '<div class="fld lay"><label><input type="checkbox" id="fEr"' + (d.erosion ? ' checked' : '') + '> Ladera o cárcava que la lluvia renueva (te aviso tras lluvias fuertes ahí)</label></div>' +
     '<div class="fld"><span class="lab">Notas</span><textarea id="fNo" rows="3" placeholder="Cómo se llega, qué sale, dónde mirar…">' + esc(d.notas) + '</textarea></div>' +
     '<p class="err" id="fErr"></p><div class="row"><button type="button" class="go" data-act="saveSitio">Guardar</button>' + (S.sitios[d.id] ? '<button type="button" class="linkb danger" data-act="delSitio">Eliminar</button>' : '') + '</div>');
 }
 function readSitio() {
-  var d = draft; if (!$('fN')) return; d.nombre = $('fN').value.trim(); d.notas = $('fNo').value;
+  var d = draft; if (!$('fN')) return; d.nombre = $('fN').value.trim(); d.notas = $('fNo').value; d.erosion = !!($('fEr') && $('fEr').checked);
   if ($('fMax')) d.cond.max = num($('fMax').value); if ($('fMm')) d.cond.mm = num($('fMm').value);
 }
 function setPlace(o, lat, lng, after) { o.lat = lat; o.lng = lng; o.geo = ''; after(); geologyAt(lat, lng).then(function (p) { if (p) { o.geo = geoShort(p); if (draft === o && editingForm) after(); } }); }
@@ -414,7 +763,7 @@ function openPieza(id, preset) {
 function showPieza(p) {
   editingForm = true; if (tab !== 'vitrina') { tab = 'vitrina'; Array.prototype.forEach.call($('bar').children, function (b) { b.classList.toggle('on', b.dataset.tab === 'vitrina'); }); }
   showSheet(head(esc(p.nombre || (TIPOS[p.tipo] || TIPOS.otro)[1])) + (p.fotos && p.fotos.length ? '<div class="thumbs" style="margin-bottom:10px">' + p.fotos.map(function (f) { return '<a href="/_blob/' + esc(f) + '" target="_blank"><img src="/_blob/' + esc(f) + '" alt="Foto" style="width:120px;height:120px;object-fit:cover;border-radius:12px"></a>'; }).join('') + '</div>' : '') +
-    '<div class="card"><span class="tag nt">' + (TIPOS[p.tipo] || TIPOS.otro).join(' ') + '</span>' + (p.fecha ? '<p class="small">Encontrado el ' + p.fecha.split('-').reverse().join('/') + (p.zona ? ' · ' + esc(p.zona) : '') + '</p>' : '') + (p.geo ? '<p class="small">🪨 ' + esc(p.geo) + '</p>' : '') + (p.id_ia ? '<p class="small">🔎 ' + esc(p.id_ia) + '</p>' : '') + (p.notas ? '<p style="white-space:pre-wrap;margin:8px 0 0">' + esc(p.notas) + '</p>' : '') + '</div>' +
+    '<div class="label" style="margin-bottom:12px">' + etiqueta(p) + '<hr>' + (p.geo ? '<div class="meta">🪨 ' + esc(p.geo) + '</div>' : '') + (p.sitio && S.sitios[p.sitio] ? '<div class="meta">📍 ' + esc(S.sitios[p.sitio].nombre) + '</div>' : '') + (p.id_ia ? '<div class="meta">🔎 ' + esc(p.id_ia) + '</div>' : '') + (p.notas ? '<p style="white-space:pre-wrap;margin:8px 0 0;font-family:var(--body);font-size:15px">' + esc(p.notas) + '</p>' : '') + '</div>' +
     '<div class="row">' + (p.lat != null ? '<button type="button" class="go" data-act="verMapa" data-ll="' + p.lat + ',' + p.lng + '">Ver en el mapa</button>' : '') + '<button type="button" class="ghost" data-act="editPieza" data-id="' + p.id + '">Editar</button></div>');
 }
 function formPieza() {
@@ -425,13 +774,14 @@ function formPieza() {
     (sample && d.fotos.length ? '<button type="button" class="ghost" data-act="ia" style="justify-self:start">🔎 ¿Qué es?</button>' : '') + '<p class="small" id="fotoNote"></p></div>' +
     '<div class="fld"><span class="lab">Tipo</span><div class="chips" id="fT">' + Object.keys(TIPOS).map(function (k) { return '<button type="button" data-v="' + k + '" class="' + (d.tipo === k ? 'on' : '') + '">' + TIPOS[k].join(' ') + '</button>'; }).join('') + '</div></div>' +
     '<div class="fld"><span class="lab">Qué es</span><input id="fN" value="' + esc(d.nombre) + '" placeholder="Nummulites, pirita, cuerna de corzo…"></div>' +
+    '<div class="fld"><span class="lab">Nombre científico (opcional)</span><input id="fSc" value="' + esc(d.cient || '') + '" placeholder="Nummulites perforatus" style="font-style:italic"></div>' +
     '<div class="fld"><span class="lab">Cuándo</span><input id="fF" type="date" value="' + esc(d.fecha) + '"></div>' +
     '<div class="fld"><span class="lab">Dónde (más o menos)</span><input id="fZ" value="' + esc(d.zona) + '" placeholder="Torrent de…, Cercs"><div class="small">' + (d.lat != null ? dec(d.lat, 4) + ', ' + dec(d.lng, 4) + (d.geo ? '<br>🪨 ' + esc(d.geo) : '') : 'Sin punto en el mapa') + '</div><div class="row"><button type="button" class="ghost" data-act="pHere">Donde estoy</button><button type="button" class="ghost" data-act="pPick">Elegir en el mapa</button></div></div>' +
     '<div class="fld"><span class="lab">Notas</span><textarea id="fNo" rows="3">' + esc(d.notas) + '</textarea></div>' +
     '<p class="err" id="fErr"></p><div class="row"><button type="button" class="go" data-act="savePieza">Guardar</button>' + (S.piezas[d.id] ? '<button type="button" class="linkb danger" data-act="delPieza">Eliminar</button>' : '') + '</div>');
   var f = $('fFile'); if (f) f.addEventListener('change', addFotos);
 }
-function readPieza() { var d = pdraft; if (!$('fN')) return; d.nombre = $('fN').value.trim(); d.fecha = $('fF').value; d.zona = $('fZ').value.trim(); d.notas = $('fNo').value; }
+function readPieza() { var d = pdraft; if (!$('fN')) return; d.nombre = $('fN').value.trim(); d.cient = $('fSc') ? $('fSc').value.trim() : d.cient || ''; d.fecha = $('fF').value; d.zona = $('fZ').value.trim(); d.notas = $('fNo').value; }
 function shrink(f) {
   return new Promise(function (res) {
     var img = new Image(), u = URL.createObjectURL(f);
@@ -471,10 +821,26 @@ $('sheet').addEventListener('click', function (e) {
   if (b.closest('#fT')) { (draft && $('fC') ? draft : pdraft).tipo = b.dataset.v; Array.prototype.forEach.call(b.parentNode.children, function (x) { x.classList.toggle('on', x === b); }); return; }
   if (b.closest('#fC')) { readSitio(); draft.cond = { tipo: b.dataset.v, max: draft.cond.max != null ? draft.cond.max : 40, meses: draft.cond.meses || [], mm: draft.cond.mm || 20 }; formSitio(); return; }
   if (b.closest('#fM')) { var v = +b.dataset.v, ms = draft.cond.meses || (draft.cond.meses = []), i = ms.indexOf(v); if (i >= 0) ms.splice(i, 1); else ms.push(v); ms.sort(function (a, c) { return a - c; }); b.classList.toggle('on'); return; }
+  if (b.dataset.era) return setEra(b.dataset.era);
+  if (act === 'salida') return renderSalida();
+  if (act === 'salStart') {
+    var ids = Array.prototype.map.call(document.querySelectorAll('#salSel input:checked'), function (x) { return x.value; });
+    if (!ids.length) return;
+    SALIDA = { dia: new Date().toISOString().slice(0, 10), ids: ordenar(ids, lastPos), done: {} }; saveSalida(); drawPins();
+    var pts = salidaSitios().map(function (s) { return [s.lat, s.lng]; }); if (lastPos) pts.push(lastPos);
+    setTab('mapa'); if (pts.length) map.fitBounds(pts, { padding: [70, 70], maxZoom: 15 });
+    if (watch === null) $('locBtn').click();
+    return;
+  }
+  if (act === 'salPieza') return llegue(b.dataset.id, true);
+  if (act === 'salDone') return llegue(b.dataset.id, false);
+  if (act === 'salReorder') { var pend = SALIDA.ids.filter(function (id) { return !SALIDA.done[id]; }), dn = SALIDA.ids.filter(function (id) { return SALIDA.done[id]; }); SALIDA.ids = dn.concat(ordenar(pend, lastPos)); saveSalida(); drawPins(); return renderSalida(); }
+  if (act === 'salEnd') { SALIDA = null; avisado = {}; try { localStorage.removeItem(LS + '-salida'); } catch (e) {} drawPins(); return renderSitios(); }
   if (b.dataset.sitio) return openSitio(b.dataset.sitio);
   if (b.dataset.pieza) return openPieza(b.dataset.pieza);
   if (b.dataset.rmf != null) { readPieza(); var gone = pdraft.fotos.splice(+b.dataset.rmf, 1)[0]; if (gone && assets && !(S.piezas[pdraft.id] && (S.piezas[pdraft.id].fotos || []).indexOf(gone) >= 0)) assets.delete(gone).catch(function () {}); formPieza(); return; }
   if (act === 'close') return setTab('mapa');
+  if (act === 'corteGo') return corte();
   if (act === 'newSitio') return openSitio(null, here() || {});
   if (act === 'newPieza') return openPieza(null);
   if (act === 'editSitio') { draft = JSON.parse(JSON.stringify(S.sitios[b.dataset.id])); if (!draft.cond) draft.cond = { tipo: '' }; return formSitio(); }
@@ -488,7 +854,15 @@ $('sheet').addEventListener('click', function (e) {
   }
   if (act === 'ia') return identify();
   if (act === 'saveSitio') { readSitio(); if (!draft.nombre) { $('fErr').textContent = 'Ponle un nombre.'; return; } if (draft.lat == null) { $('fErr').textContent = 'Coloca el sitio en el mapa.'; return; } if (draft.cond.tipo !== 'meses') delete draft.cond.meses; draft.ts = Date.now(); put('sitios', draft); editingForm = false; return showSitio(S.sitios[draft.id]); }
-  if (act === 'savePieza') { readPieza(); pdraft.ts = Date.now(); put('piezas', pdraft); editingForm = false; return renderVitrina(); }
+  if (act === 'savePieza') {
+    readPieza(); pdraft.ts = Date.now();
+    if (!pdraft.num) pdraft.num = list('piezas').reduce(function (a, p) { return Math.max(a, p.num || 0); }, 0) + 1;
+    if (pdraft.sitio && SALIDA && SALIDA.ids.indexOf(pdraft.sitio) >= 0 && !pdraft.salida) pdraft.salida = SALIDA.dia;
+    var enSalida = !!(pdraft.salida && SALIDA && pdraft.salida === SALIDA.dia);
+    put('piezas', pdraft); editingForm = false;
+    if (enSalida) { toast('Guardada ' + numTxt(pdraft)); return renderSalida(); }
+    return renderVitrina();
+  }
   if (act === 'delSitio' || act === 'delPieza') {
     if (!b.classList.contains('sure')) { b.classList.add('sure'); b.textContent = '¿Seguro? Eliminar'; return; }
     if (act === 'delSitio') { drop('sitios', draft.id); renderSitios(); } else { drop('piezas', pdraft.id); renderVitrina(); }
@@ -537,10 +911,14 @@ $('layBtn').addEventListener('click', function () {
     '<label><input type="radio" name="base" value="topo"' + (PREF.base === 'topo' ? ' checked' : '') + '> Topográfico ICGC</label>' +
     '<label><input type="checkbox" data-k="geo"' + (PREF.geo ? ' checked' : '') + '> Mapa geológico 1:50.000 (ICGC)</label>' +
     '<div style="padding:4px 0 8px"><span class="small">Transparencia del geológico</span><input type="range" min="15" max="100" value="' + PREF.op + '" id="op"></div>' +
-    '<label><input type="checkbox" data-k="ieig"' + (PREF.ieig ? ' checked' : '') + '> Espais d\'interès geològic (yacimientos protegidos)</label>' +
+    '<label><input type="checkbox" data-k="ieig"' + (PREF.ieig ? ' checked' : '') + '> Espais d\'interès geològic (yacimientos protegidos, aviso con GPS)</label>' +
+    '<label><input type="checkbox" data-k="pein"' + (PREF.pein ? ' checked' : '') + '> Espacios naturales protegidos (PEIN, parques) en rojo</label>' +
+    '<label><input type="checkbox" data-k="minas"' + (PREF.minas ? ' checked' : '') + '> Minas, bocaminas y canteras (OpenStreetMap)</label>' +
     '<label><input type="checkbox" data-k="pbdb"' + (PREF.pbdb ? ' checked' : '') + '> Fósiles registrados (Paleobiology Database)</label>' +
+    '<label><input type="checkbox" data-k="ciervos"' + (PREF.ciervos ? ' checked' : '') + '> Ciervos y corzos vistos (iNaturalist)</label>' +
     '<label><input type="checkbox" data-k="sitios"' + (PREF.sitios ? ' checked' : '') + '> Mis sitios</label>' +
-    '<label><input type="checkbox" data-k="piezas"' + (PREF.piezas ? ' checked' : '') + '> Mis piezas</label></div>' +
+    '<label><input type="checkbox" data-k="piezas"' + (PREF.piezas ? ' checked' : '') + '> Mis piezas</label>' +
+    '<label><input type="checkbox" data-k="campo"' + (PREF.campo ? ' checked' : '') + '> Modo campo: alto contraste y botones grandes</label></div>' +
     '<p class="small">Toca cualquier punto del mapa para ver la roca, su edad y qué fósiles o minerales buscar.</p>' +
     ('serviceWorker' in navigator && location.protocol === 'https:' ? '<div class="card" style="margin-top:10px"><div class="lab">Sin cobertura</div><p class="small">El GPS funciona sin datos. Descarga el Berguedà (satélite + geológico, zoom hasta calle) para verlo en el monte.</p><button type="button" class="ghost" id="dl">Descargar el Berguedà (~40 MB)</button><p class="small" id="dlNote"></p></div>' : ''));
 });
@@ -580,18 +958,92 @@ document.addEventListener('click', async function (e) {
 });
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(function () {});
 
+// ---------- Rain on each hillside site: fresh erosion uncovers fossils ----------
+function loadLluviaSitios() {
+  var ss = list('sitios').filter(function (s) { return s.lat != null && (s.erosion || (s.cond && s.cond.tipo === 'lluvia') || /marg|lutit|argil/i.test(s.geo || '')); }).slice(0, 50);
+  if (!ss.length) return Promise.resolve();
+  var u = 'https://api.open-meteo.com/v1/forecast?latitude=' + ss.map(function (s) { return s.lat.toFixed(3); }).join(',') + '&longitude=' + ss.map(function (s) { return s.lng.toFixed(3); }).join(',') + '&daily=precipitation_sum&past_days=7&forecast_days=1&timezone=Europe%2FMadrid';
+  return fetch(u).then(function (r) { return r.json(); }).then(function (j) {
+    var arr = Array.isArray(j) ? j : [j];
+    arr.forEach(function (x, i) {
+      var p = (x.daily && x.daily.precipitation_sum || []).slice(0, -1).map(function (v) { return v || 0; }), n = p.length;
+      if (!n) return;
+      var tres = p.slice(-3).reduce(function (a, v) { return a + v; }, 0), semana = p.reduce(function (a, v) { return a + v; }, 0);
+      var ultimo = -1; for (var k = n - 1; k >= 0; k--) if (p[k] >= 10) { ultimo = n - 1 - k; break; }
+      LIVE.lluviaSitio[ss[i].id] = { tres: tres, semana: semana, hace: ultimo };
+    });
+  }).catch(function () {});
+}
+LIVE.lluviaSitio = {};
+function avisoLluvia(s) {
+  var l = LIVE.lluviaSitio[s.id]; if (!l || l.semana < 20) return null;
+  // After a heavy rain, wait for the slope to dry a day or two; the best window is 1–4 days after
+  var cuando = l.hace <= 0 ? 'espera a que seque (1–2 días)' : l.hace <= 4 ? 'buen momento: la ladera ya ha drenado' : 'aún vale la pena';
+  return '🌧️ ' + s.nombre + ': ' + dec(l.semana, 0) + ' mm esta semana, ' + cuando;
+}
+var _alertas = alertas;
+alertas = function () {
+  var out = _alertas(), extra = [];
+  list('sitios').forEach(function (s) { var a = avisoLluvia(s); if (a) extra.push(a); });
+  return extra.concat(out);
+};
+
+// ---------- Geological cross-section along a line you draw ----------
+var corteA = null;
+$('corteBtn').addEventListener('click', function () { corte(); });
+function corte() {
+  gCorte.clearLayers(); corteA = null;
+  startPick(function (lat, lng) {
+    if (lat == null) return;
+    corteA = [lat, lng]; L.circleMarker(corteA, { radius: 6, color: '#f2be4a', fillOpacity: 1 }).addTo(gCorte);
+    startPick(function (lat2, lng2) { if (lat2 == null) { gCorte.clearLayers(); return; } perfil(corteA, [lat2, lng2]); }, 'Ahora el final del corte');
+  }, 'Toca el inicio del corte');
+}
+async function perfil(a, b) {
+  var N = 40, pts = [];
+  for (var i = 0; i <= N; i++) pts.push([a[0] + (b[0] - a[0]) * i / N, a[1] + (b[1] - a[1]) * i / N]);
+  L.polyline([a, b], { color: '#f2be4a', weight: 4 }).addTo(gCorte);
+  var L0 = dist(a, b);
+  showSheet(head('Corte geológico') + '<p class="small">Leyendo ' + (N + 1) + ' puntos del mapa geológico y la altitud…</p>');
+  tab = 'corte';
+  var elev = await fetch('https://api.open-meteo.com/v1/elevation?latitude=' + pts.map(function (p) { return p[0].toFixed(5); }).join(',') + '&longitude=' + pts.map(function (p) { return p[1].toFixed(5); }).join(',')).then(function (r) { return r.json(); }).then(function (j) { return j.elevation; }).catch(function () { return null; });
+  var geos = new Array(pts.length);
+  for (var k = 0; k < pts.length; k += 6) await Promise.all(pts.slice(k, k + 6).map(function (p, j) { return geologyAt(p[0], p[1]).then(function (g) { geos[k + j] = g; }); }));
+  if (tab !== 'corte') return;
+  if (!elev) return showSheet(head('Corte geológico') + '<p class="err">No se pudo leer la altitud. Prueba con cobertura.</p>');
+  var lo = Math.min.apply(null, elev), hi = Math.max.apply(null, elev), pad = Math.max(30, (hi - lo) * .15); lo -= pad; hi += pad;
+  var W = 340, H = 170, base = H, x = function (i) { return i / N * W; }, y = function (v) { return 8 + (hi - v) / (hi - lo) * (H - 20); };
+  var cols = '', unidades = [], prev = null;
+  for (var i = 0; i < N; i++) {
+    var g = geos[i], e = g ? eraOf(g) : null, c = e ? e[3] : '#bbb';
+    cols += '<polygon points="' + x(i) + ',' + y(elev[i]) + ' ' + x(i + 1) + ',' + y(elev[i + 1]) + ' ' + x(i + 1) + ',' + base + ' ' + x(i) + ',' + base + '" fill="' + c + '" stroke="' + c + '" stroke-width=".6"/>';
+    var key = g ? (g.Codi || '') + (g.Descripcio || '') : 'sin';
+    if (key !== prev) { unidades.push({ i: i, g: g, e: e }); prev = key; }
+  }
+  var line = elev.map(function (v, i) { return x(i).toFixed(1) + ',' + y(v).toFixed(1); }).join(' ');
+  var ticks = unidades.slice(1).map(function (u) { return '<line x1="' + x(u.i) + '" x2="' + x(u.i) + '" y1="' + y(elev[u.i]) + '" y2="' + base + '" stroke="rgba(0,0,0,.35)" stroke-width=".8" stroke-dasharray="2 2"/>'; }).join('');
+  var svg = '<svg class="prof" viewBox="0 -2 ' + W + ' ' + (H + 18) + '" role="img" aria-label="Perfil del terreno coloreado por la edad de la roca">' + cols + ticks + '<polyline points="' + line + '" fill="none" stroke="#1a120b" stroke-width="1.6"/>' +
+    '<text x="2" y="' + (H + 13) + '" font-size="10" fill="currentColor">A · ' + Math.round(elev[0]) + ' m</text><text x="' + W + '" y="' + (H + 13) + '" font-size="10" text-anchor="end" fill="currentColor">B · ' + Math.round(elev[N]) + ' m · ' + km(L0) + '</text></svg>';
+  var leyenda = unidades.map(function (u) { var d = u.i / N * L0; return '<div class="row" style="align-items:flex-start;margin:6px 0"><span style="flex:0 0 14px;height:14px;border-radius:3px;margin-top:3px;background:' + (u.e ? u.e[3] : '#bbb') + '"></span><span class="grow"><b>' + km(d) + '</b> · ' + esc(u.g ? geoShort(u.g) : 'Sin dato') + '</span></div>'; }).join('');
+  showSheet(head('Corte geológico', '<button type="button" class="ghost" data-act="corteGo">Otro</button>') + '<div class="card">' + svg + '<p class="small">Altitud real (×' + dec(L0 / (hi - lo) * (H - 20) / W, 1) + ' exageración vertical) coloreada por la roca que aflora en cada punto. No muestra el buzamiento de las capas en profundidad.</p></div>' +
+    '<div class="lab">Lo que cruzas de A a B</div>' + leyenda);
+}
+
 // ---------- Start ----------
+$('eraPill').addEventListener('click', function () { setEra(filtroEra); });
 applyLayers(); drawPins(); renderAlert();
-Promise.all([loadBaells(), loadLluvia()]).then(refresh);
+Promise.all([loadBaells(), loadLluvia(), loadLluviaSitios()]).then(refresh);
+if (!PREF.pein) loadPein(); // the GPS warnings need the PEIN outlines even with the layer hidden
 
 // ---------- Sync: local copy first, the account when there is one ----------
 (async function () {
   try {
-    var c = window.claude && await window.claude.use('db'); if (!c) return;
+    var c = window.claude && await window.claude.use('db'); if (!c) { numerar(); return; }
     db = c;
     try { assets = await window.claude.use('assets'); } catch (e) {}
     try { var sm = await window.claude.use('sample'); var lim = sm ? await sm.limits().catch(function () { return null; }) : null; sample = lim && lim.images ? sm : null; } catch (e) {}
     function cached(s) { return !!(s.metadata && s.metadata.fromCache); }
+    var seenRain = false;
     ['sitios', 'piezas'].forEach(function (col) {
       var seen = false;
       c.collection(col).onSnapshot(function (snap) {
@@ -602,6 +1054,8 @@ Promise.all([loadBaells(), loadLluvia()]).then(refresh);
         } else if (!synced && !snap.docs.length) return;
         var keep = {}; if (!synced) Object.keys(S[col]).forEach(function (k) { if (!m[k]) keep[k] = S[col][k]; });
         S[col] = Object.assign(keep, m); persist(); refresh();
+        if (col === 'piezas' && !cached(snap)) numerar();
+        if (col === 'sitios' && !cached(snap) && !seenRain) { seenRain = true; loadLluviaSitios().then(renderAlert); }
       }, function () {});
     });
   } catch (e) {}
