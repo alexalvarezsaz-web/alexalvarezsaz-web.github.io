@@ -597,9 +597,9 @@ var ZONES = {
   'ni.c1': 'Nidus · arriba izquierda', 'ni.seta': 'Nidus · la seta', 'ni.c3': 'Nidus · arriba centro', 'ni.c4': 'Nidus · arriba derecha', 'ni.c5': 'Nidus · lóbulo derecho', 'ni.c6': 'Nidus · derecha', 'ni.c7': 'Nidus · abajo derecha', 'ni.c8': 'Nidus · abajo centro', 'ni.c9': 'Nidus · abajo izquierda',
   cinis: 'Cinis, el basurero', v1: 'Forrajeo V1', 'fg.izq': 'Forrajeo grande · corteza', 'fg.der': 'Forrajeo grande · arena'
 };
-var MODS = { tubo: ['Tubo de ensayo', ['tubo']], antcrilic: ['AntCrilic', ['ac.izq', 'ac.gran', 'ac.centro', 'ac.abajo', 'ac.forr'], ['deposito']], nidus: ['Nidus V1', ['ni.c1', 'ni.seta', 'ni.c3', 'ni.c4', 'ni.c5', 'ni.c6', 'ni.c7', 'ni.c8', 'ni.c9'], ['hydra']], cinis: ['Cinis', ['cinis'], ['cinis']], v1: ['Forrajeo V1', ['v1']], fg: ['Forrajeo grande', ['fg.izq', 'fg.der']] };
-var POINTS = [['hydra', 'Hydra', '💧'], ['deposito', 'Depósito AntCrilic', '💧'], ['cinis', 'Vaciar Cinis', '🗑️']];
-CADA.hydra = 12; CADA.deposito = 14; CADA.cinis = 30;
+var MODS = { tubo: ['Tubo de ensayo', ['tubo']], antcrilic: ['AntCrilic', ['ac.izq', 'ac.gran', 'ac.centro', 'ac.abajo', 'ac.forr'], ['deposito']], nidus: ['Nidus V1', ['ni.c1', 'ni.seta', 'ni.c3', 'ni.c4', 'ni.c5', 'ni.c6', 'ni.c7', 'ni.c8', 'ni.c9'], ['hydra']], cinis: ['Cinis', ['cinis'], ['cinis']], v1: ['Forrajeo V1', ['v1']], fg: ['Forrajeo grande', ['fg.der'], ['granero']] };
+var POINTS = [['hydra', 'Hydra', '💧'], ['deposito', 'Depósito AntCrilic', '💧'], ['cinis', 'Vaciar Cinis', '🗑️'], ['granero', 'Granero', '🌾']];
+CADA.hydra = 12; CADA.deposito = 14; CADA.cinis = 30; CADA.granero = 0;
 var ZFIELDS = [['hormigas', 'Hormigas', ['Ninguna', 'Pocas', 'Bastantes', 'Muchas']], ['huevos', 'Huevos'], ['larvas', 'Larvas'], ['pupas', 'Pupas'], ['semillas', 'Semillas'], ['basura', 'Basura']];
 var QUEEN = [['', 'No'], ['?', 'Puede'], ['si', 'Sí, la he visto']];
 // What the photos showed on 6 Nov 2026
@@ -682,13 +682,21 @@ function acrilSvg(c, k) {
     [[34, 182], [86, 302], [156, 290]].map(function (d) { return '<circle cx="' + d[0] + '" cy="' + d[1] + '" r="8" fill="#fff"/>'; }).join('') + pointEl(c, 'deposito', 100, 156, 17);
 }
 function fgSvg(c, k) {
-  return zoneEl(c, 'fg.izq', '<rect width="150" height="220" fill="#7a4a2e"/>', marks('fg.izq', zone(c, 'fg.izq'), 75, 120, 70, 90, k)) +
-    zoneEl(c, 'fg.der', '<rect x="150" width="150" height="220" fill="#e8d9b5"/>', marks('fg.der', zone(c, 'fg.der'), 225, 110, 70, 90, k)) +
-    '<path d="M150 0 V96 M150 124 V220" stroke="#cfe3ea" stroke-width="4"/>' +
-    '<g pointer-events="none"><path d="M10 20 L70 14 L78 70 L20 84Z" fill="#8c8f94"/><circle cx="42" cy="48" r="20" fill="#111"/><circle cx="42" cy="48" r="13" fill="#2b2b2b"/>' +
-    '<rect x="78" y="112" width="44" height="24" rx="3" fill="#151515"/><circle cx="118" cy="178" r="9" fill="#b9b9b9"/><circle cx="166" cy="196" r="9" fill="#b9b9b9"/>' +
-    '<path d="M228 26 L290 22 L292 74 L222 78Z" fill="#7b8794"/><rect x="242" y="34" width="28" height="26" rx="3" fill="#f4f4f4"/>' +
-    '<ellipse cx="226" cy="150" rx="30" ry="20" fill="#b7b9b4"/><path d="M164 40 C176 70 168 100 186 116" stroke="#b49a77" stroke-width="9" fill="none" stroke-linecap="round"/><rect x="206" y="4" width="10" height="9" rx="2" fill="#e7d7b5"/></g>';
+  // Since 15 Nov 2026 it is all sand, with the granero as the only thing in it (the bark half and the props are gone)
+  return zoneEl(c, 'fg.der', '<rect width="300" height="220" fill="#e8d9b5"/>', marks('fg.der', zone(c, 'fg.der'), 150, 90, 130, 80, k)) +
+    (c ? '<g transform="translate(150 216) scale(1.4) translate(-259 -216)">' + graneroEl(c) + '</g>' : '');
+}
+// The seed silo printed in Nov 2026 (Diseños 3D/Comedero forrajeo): 62 × 30 mm, a hopper over a gate and a ledge, a 5 × 5 cm
+// acrylic window at the front, a 10 mm port on its left with a stair up from the sand. It stands on its base, buried on the
+// sand against the front wall (the bottom edge here), window facing out. Tapping it logs a refill.
+function graneroEl(c) {
+  var p = pointState(c, 'granero');
+  return '<g data-point="granero" role="button" tabindex="0" aria-label="' + esc('Granero, en la arena junto a la pared delantera: ' + p.txt) + '">' +
+    '<rect x="226" y="180" width="66" height="36" rx="3" fill="#cfc6b4" stroke="rgba(0,0,0,.25)"/>' +
+    [0, 1, 2, 3, 4, 5].map(function (i) { return '<rect x="' + (228 + i * 2.6) + '" y="' + (192 - i) + '" width="2.6" height="' + (16 + i * 2) + '" fill="' + (i % 2 ? '#b9af9b' : '#a99f8a') + '"/>'; }).join('') +
+    '<rect x="244" y="186" width="44" height="24" rx="4" fill="#f4efe4" stroke="' + ST_COLOR[p.st] + '" stroke-width="3.5"/>' +
+    '<rect x="250" y="206" width="32" height="4" fill="#a9d8f2"/>' +
+    '<text x="266" y="204" text-anchor="middle" font-size="16">🌾</text></g>';
 }
 // The tubes between modules, named so ants can walk along them
 var TUBES = { t1: 'M122 150 H152', t2: 'M238 150 H285 C305 150 315 110 335 110', t3: 'M285 150 V256', t4: 'M285 215 H322 Q332 215 332 226 V258 H347', t5: 'M503 258 C560 258 548 340 600 340 H690 C708 340 712 300 712 292' };
@@ -741,7 +749,7 @@ function overviewSvg(c) {
     hydraEl(c) +
     '<g data-mod="cinis" role="button" tabindex="0" aria-label="Cinis, el basurero: ' + esc(zoneWords(zone(c, 'cinis'))) + '"><rect x="255" y="255" width="62" height="62" rx="5" fill="#efe9dd" filter="url(#fShadow)"/><circle cx="292" cy="294" r="13" fill="#8c8c8c"/><circle cx="292" cy="294" r="13" fill="none" stroke="#6d6d6d" stroke-width="3" stroke-dasharray="3 3"/>' + marks('cinis', zone(c, 'cinis'), 286, 286, 26, 26, .8) + pointEl(c, 'cinis', 310, 262, 7) + label(286, 346, 'Cinis') + '</g>' +
     '<g data-mod="v1" role="button" tabindex="0" aria-label="Forrajeo V1: ' + esc(zoneWords(zone(c, 'v1'))) + '"><rect x="345" y="226" width="160" height="82" rx="6" fill="#6f8597" filter="url(#fShadow)"/><rect x="353" y="234" width="144" height="66" rx="3" fill="#5a4636"/>' + [[372, 246], [392, 286], [478, 290], [470, 242], [410, 258]].map(function (s, i) { return '<circle cx="' + s[0] + '" cy="' + s[1] + '" r="' + (5 + i % 3 * 2) + '" fill="' + ['#b7a08a', '#8f7a66', '#c9b29a'][i % 3] + '"/>'; }).join('') + '<circle cx="455" cy="268" r="17" fill="#4a3a2c"/>' + marks('v1', zone(c, 'v1'), 425, 267, 70, 30, .8) + '<rect x="353" y="234" width="144" height="66" rx="3" fill="url(#gGlare)" pointer-events="none"/>' + label(425, 334, 'Forrajeo V1') + '</g>' +
-    '<g data-mod="fg" role="button" tabindex="0" aria-label="Forrajeo grande: toca para ver sus dos partes"><g transform="translate(700 70) scale(.9333)" filter="url(#fShadow)">' + fgSvg(c, 1) + '<rect width="300" height="220" fill="url(#gGlare)" pointer-events="none"/></g>' + label(840, 306, 'Forrajeo grande') + '</g>' +
+    '<g data-mod="fg" role="button" tabindex="0" aria-label="Forrajeo grande, todo arena: toca para apuntar qué hay; el granero se toca aparte"><g transform="translate(700 70) scale(.9333)" filter="url(#fShadow)">' + fgSvg(c, 1) + '<rect width="300" height="220" fill="url(#gGlare)" pointer-events="none"/></g>' + label(840, 306, 'Forrajeo grande') + '</g>' +
     seedBadges(c) + queenBadge(c) + '<rect class="tint" width="1000" height="360" fill="#ff8a3d"/><rect class="veil" width="1000" height="360" fill="#ff3030"/>';
 }
 // Where they keep seeds: a wheat badge on each module with a zone marked "bastante" or "mucha" semillas, gold-ringed when "mucha".
@@ -797,7 +805,7 @@ $('tmPlay').addEventListener('click', function () {
   tmTimer = setInterval(function () { tmI++; if (tmI >= tmDays.length - 1) { tmI = -1; tmStop(); } drawMap(cur()); }, 700);
 });
 // ---------- The map reacts to what you log: ants fetch the food, water drips in, Cinis sparkles ----------
-var FOOD_FX = { azucar: ['🍯', '#f2c04e'], proteina: ['🦗', '#5b7f3a'], semillas: ['🌾', '#8a5a2b'] }, WATER_FX = { hydra: [563, 66], deposito: [195, 100] }, fxN = 0;
+var FOOD_FX = { azucar: ['🍯', '#f2c04e'], proteina: ['🦗', '#5b7f3a'], semillas: ['🌾', '#8a5a2b'], granero: ['🌾', '#8a5a2b'] }, WATER_FX = { hydra: [563, 66], deposito: [195, 100] }, fxN = 0;
 function mapReact(k) {
   if (REDUCED || !isMap(cur()) || $('mapWrap').hidden) return;
   var g = document.createElementNS('http://www.w3.org/2000/svg', 'g'), out = '', life = 3200, id = 'fxp' + (++fxN), i, w = WATER_FX[k];
