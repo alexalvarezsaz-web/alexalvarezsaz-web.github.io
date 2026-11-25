@@ -206,7 +206,7 @@ label input, label select { width: 100%; min-width: 0; padding: 9px 11px; font-w
 <script>
 // ---------- State ----------
 var CATS = [['Naturaleza', '--t-nat'], ['Viajes', '--t-via'], ['Estudios', '--t-est'], ['Trabajo', '--t-tra'], ['Casa', '--t-cas'], ['Salud', '--t-sal'], ['Ocio', '--t-oci'], ['Otros', '--t-otr']];
-var LS = 'cruilla-v1', LV = 'cruilla-visitas', items = [], visits = {}, loaded = false, db = null, visitDoc = null, canEdit = false, editMode = false, status = 'Cargando tus páginas…', filter = 'all', editing = null;
+var LS = 'cruilla-v1', LV = 'cruilla-visitas', items = [], visits = {}, loaded = false, db = null, visitDoc = null, canEdit = false, editMode = false, status = 'Cargando tus páginas…', filter = 'fav', editing = null;
 try { var c0 = JSON.parse(localStorage.getItem(LS) || 'null'); if (Array.isArray(c0)) { items = c0; loaded = c0.length > 0; } } catch (e) {}
 try { visits = JSON.parse(localStorage.getItem(LV) || '{}') || {}; } catch (e) {}
 // Every open is counted (timestamps, kept 30 days). The mosaic orders itself by opens in the last 14 days.
@@ -355,20 +355,26 @@ function ago(ts) {
   var n = Math.round((Date.UTC(b.getFullYear(), b.getMonth(), b.getDate()) - Date.UTC(a.getFullYear(), a.getMonth(), a.getDate())) / 864e5);
   return n <= 0 ? 'hoy' : n === 1 ? 'ayer' : 'hace ' + n + ' días';
 }
+// The home view is the favourites; until any page is starred (or the pages have loaded) it shows them all
+function view() { return filter === 'fav' && !items.some(function (o) { return o.fijada; }) ? 'all' : filter; }
 
 function matches() {
   var q = norm($('q').value.trim());
   return items.filter(function (o) {
-    if (filter !== 'all' && o.categoria !== filter) return false;
+    // Searching looks through every page, even from the favourites view
+    if (view() === 'fav') { if (!q && !o.fijada) return false; }
+    else if (view() !== 'all' && o.categoria !== filter) return false;
     return !q || norm([o.nombre, o.texto, o.categoria, o.lugar, o.aviso].join(' ')).indexOf(q) >= 0;
   });
 }
 
 function renderChips() {
   var used = CATS.filter(function (c) { return items.some(function (o) { return o.categoria === c[0]; }); });
-  if (filter !== 'all' && !used.some(function (c) { return c[0] === filter; })) filter = 'all';
-  $('chips').hidden = used.length < 2;
-  $('chips').innerHTML = '<button class="chip" type="button" data-c="all" aria-pressed="' + (filter === 'all') + '">Todas</button>' + used.map(function (c) {
+  // Home shows only the starred pages; with none starred it falls back to all of them
+  var favs = items.some(function (o) { return o.fijada; });
+  if (filter !== 'fav' && filter !== 'all' && !used.some(function (c) { return c[0] === filter; })) filter = 'all';
+  $('chips').hidden = used.length < 2 && !favs;
+  $('chips').innerHTML = (favs ? '<button class="chip" type="button" data-c="fav" aria-pressed="' + (filter === 'fav') + '">★ Favoritas</button>' : '') + '<button class="chip" type="button" data-c="all" aria-pressed="' + (view() === 'all') + '">Todas</button>' + used.map(function (c) {
     return '<button class="chip" type="button" data-c="' + esc(c[0]) + '" aria-pressed="' + (filter === c[0]) + '"><i class="dot" style="--m:var(' + c[1] + ')"></i>' + esc(c[0]) + '</button>';
   }).join('');
 }
@@ -376,7 +382,7 @@ function renderChips() {
 function renderRecent() {
   var best = null;
   items.forEach(function (o) { if (visits[o.id] && safeUrl(o.url) && (!best || visits[o.id] > visits[best.id])) best = o; });
-  var show = best && !$('q').value.trim() && filter === 'all';
+  var show = best && !$('q').value.trim() && (view() === 'all' || view() === 'fav');
   $('recent').hidden = !show;
   $('recent').innerHTML = show ? 'Última abierta: <a data-id="' + esc(best.id) + '" href="' + esc(best.url) + '" target="_blank" rel="noopener">' + esc(best.nombre) + '</a> ' + esc(ago(visits[best.id])) : '';
 }
@@ -555,7 +561,7 @@ function layout(list) { // every tile is the same size
 }
 
 function render() {
-  var list = matches(), qv = $('q').value.trim(), canMove = !qv && filter === 'all', html = '';
+  var list = matches(), qv = $('q').value.trim(), canMove = !qv && view() === 'all', html = '';
   var adder = canEdit && canMove && (editMode || !items.length), sizes = layout(list);
   list.forEach(function (o, i) {
     var s = sizes[i], left = daysLeft(o.fecha), since = daysSince(o.desde), photo = safeBlob(o.foto), art = !photo && POSTERS[o.id], big = s.d > 1 && (o.grande || photo || left !== null || since !== null);
@@ -571,17 +577,19 @@ function render() {
     var tile = safeUrl(o.url) ? '<a class="' + cls + '" ' + bg + ' data-id="' + esc(o.id) + '" href="' + esc(o.url) + '" target="_blank" rel="noopener">' + inner + '</a>' : '<span class="' + cls + '" ' + bg + '>' + inner + '</span>';
     var prev = list[i - 1], next = list[i + 1], tools = '';
     if (canEdit && editMode) {
-      tools = '<div class="tools"><button type="button" data-act="pin" data-id="' + esc(o.id) + '" aria-pressed="' + !!o.fijada + '" aria-label="Fijar ' + esc(o.nombre) + '">★</button>' +
+      tools = '<div class="tools"><button type="button" data-act="pin" data-id="' + esc(o.id) + '" aria-pressed="' + !!o.fijada + '" aria-label="Favorita: ' + esc(o.nombre) + '" title="Favorita">★</button>' +
         '<button type="button" data-act="edit" data-id="' + esc(o.id) + '" aria-label="Editar ' + esc(o.nombre) + '">✎</button></div>';
     }
     html += '<li class="slot" style="--i:' + i + ';--d:' + s.d + ';--dr:' + s.dr + ';--m:' + s.m + ';--mr:' + s.mr + '">' + tile + tools + '</li>';
   });
   if (!list.length) {
-    if (qv || filter !== 'all') html = '<li class="slot note">Ninguna página coincide' + (qv ? ' con «' + esc(qv) + '»' : '') + '.</li>';
+    if (qv || view() !== 'all') html = '<li class="slot note">Ninguna página coincide' + (qv ? ' con «' + esc(qv) + '»' : '') + '.</li>';
     else if (!loaded) html = '<li class="slot note">' + esc(status) + '</li>';
     else html = '<li class="slot note">Aún no hay páginas.' + (canEdit ? ' Añade la primera con el bloque de al lado.' : '') + '</li>';
   }
   if (adder) html += '<li class="slot"><button class="tile add" type="button" id="addBtn">＋ Añadir página</button></li>';
+  if (view() === 'fav' && !qv && list.length) html += '<li class="slot"><button class="tile add" type="button" id="allBtn">Ver todas · ' + items.length + '</button></li>';
+  else if (view() === 'all' && !qv && !editMode && canEdit && items.length > 6 && !items.some(function (o) { return o.fijada; })) html += '<li class="slot note">Marca tus favoritas con ★ en «Añadir, ordenar y editar» y el inicio enseñará solo esas.</li>';
   $('post').innerHTML = html;
   if (!introDone && list.length) { introDone = true; $('post').classList.add('intro'); setTimeout(function () { $('post').classList.remove('intro'); }, 1200); }
   $('modeBtn').hidden = !canEdit || !items.length;
@@ -623,7 +631,7 @@ document.addEventListener('click', function (e) {
 function byId(id) { return items.filter(function (o) { return o.id === id; })[0]; }
 async function togglePin(o) {
   var v = !o.fijada; o.fijada = v; sortItems(items); render(); say('');
-  try { await db.doc('paginas/' + o.id).update({ fijada: v }); } catch (e) { o.fijada = !v; sortItems(items); render(); say('No se ha podido fijar. Comprueba la conexión y vuelve a probar.'); }
+  try { await db.doc('paginas/' + o.id).update({ fijada: v }); } catch (e) { o.fijada = !v; sortItems(items); render(); say('No se ha podido marcar como favorita. Comprueba la conexión y vuelve a probar.'); }
 }
 async function move(o, dir) {
   var i = items.indexOf(o), p = items[i + dir]; if (!p) return;
@@ -632,7 +640,8 @@ async function move(o, dir) {
   try { await db.doc('paginas/' + o.id).update({ orden: b }); await db.doc('paginas/' + p.id).update({ orden: a }); }
   catch (e) { say('No se ha podido guardar el orden. Comprueba la conexión y vuelve a probar.'); }
 }
-$('modeBtn').addEventListener('click', function () { editMode = !editMode; say(''); render(); });
+// Editing shows every page, so any of them can be starred or moved
+$('modeBtn').addEventListener('click', function () { editMode = !editMode; if (editMode) filter = 'all'; say(''); renderAll(); });
 $('fCat').innerHTML = CATS.map(function (c) { return '<option>' + c[0] + '</option>'; }).join('');
 function openForm(o) {
   editing = o || null;
@@ -651,6 +660,7 @@ function openForm(o) {
 function fail(msg) { $('fErr').textContent = msg; $('fErr').hidden = false; }
 $('post').addEventListener('click', function (e) {
   if (e.target.closest('#addBtn')) return openForm(null);
+  if (e.target.closest('#allBtn')) { filter = 'all'; renderAll(); return window.scrollTo({ top: 0, behavior: 'smooth' }); }
   var b = e.target.closest('[data-act]'); if (!b) return;
   var o = byId(b.getAttribute('data-id')), act = b.getAttribute('data-act'); if (!o) return;
   if (act === 'edit') openForm(o);
