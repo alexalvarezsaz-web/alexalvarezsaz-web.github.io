@@ -136,6 +136,9 @@ textarea { resize: vertical; min-height: 84px; }
 .flor-s { display: flex; align-items: center; gap: 10px; font: italic 500 15px/1.35 var(--display); color: var(--on-sky); }
 .flor-s .flor-i { flex: none; width: 34px; height: 34px; }
 .hero-b { display: grid; gap: 4px; }
+/* Line of the day: tap for another */
+.frase { display: grid; gap: 6px; padding: 16px 18px 14px; border: 0; border-left: 4px solid var(--star); border-radius: 6px 18px 18px 6px; background: var(--surface); text-align: left; }
+.frase .fq { font: italic 500 20px/1.35 var(--display); text-wrap: pretty; }
 @media (prefers-reduced-motion: no-preference) { .flor .gota { animation: gota 2.6s ease-in infinite; } @keyframes gota { 0% { transform: translateY(-6px); opacity: 0; } 25% { opacity: 1; } 70% { transform: translate(-14px, 14px); opacity: 1; } 100% { transform: translate(-16px, 18px); opacity: 0; } } }
 </style>
 
@@ -151,6 +154,8 @@ textarea { resize: vertical; min-height: 84px; }
   </section>
 
   <section class="due" id="due" aria-label="Pendiente hoy"></section>
+
+  <button type="button" class="frase" id="frase" aria-label="Frase del día; toca para otra"></button>
 
   <section class="sect" id="s-palabras" aria-labelledby="h-pal">
     <div class="sh2"><h2 id="h-pal">Acuérdate de cómo lo pasaste</h2><button class="add" type="button" data-add="palabra" aria-label="Añadir palabras">＋</button></div>
@@ -290,6 +295,33 @@ var FLOR_SVG = '<svg class="flor-i" viewBox="0 0 64 64" aria-hidden="true"><path
   '<g fill="#f2a7a0"><ellipse cx="32" cy="15" rx="6" ry="9"/><ellipse cx="32" cy="15" rx="6" ry="9" transform="rotate(72 32 22)"/><ellipse cx="32" cy="15" rx="6" ry="9" transform="rotate(144 32 22)"/><ellipse cx="32" cy="15" rx="6" ry="9" transform="rotate(216 32 22)"/><ellipse cx="32" cy="15" rx="6" ry="9" transform="rotate(288 32 22)"/></g>' +
   '<circle cx="32" cy="22" r="5" fill="#f2b67a"/><path class="gota" d="M52 6c3 4 4 6 4 8a4 4 0 0 1-8 0c0-2 1-4 4-8z" fill="#8ec5e8"/><path d="M20 60h24" stroke="#a07a5c" stroke-width="3" stroke-linecap="round"/></svg>';
 
+// Lines that remind or push, one a day. Only well-sourced attributions; your own ones (tipo 'frase') join the rotation
+var FRASES = [
+  ['Fue el tiempo que pasaste con tu rosa lo que la hizo tan importante.', 'Antoine de Saint-Exupéry, El principito'],
+  ['Eres responsable para siempre de lo que has domesticado. Eres responsable de tu rosa.', 'Antoine de Saint-Exupéry, El principito'],
+  ['Lo esencial es invisible a los ojos.', 'Antoine de Saint-Exupéry, El principito'],
+  ['Amar no es mirarse el uno al otro, es mirar juntos en la misma dirección.', 'Antoine de Saint-Exupéry, Tierra de hombres'],
+  ['Obras son amores, que no buenas razones.', 'Refrán'],
+  ['Fets i no paraules.', 'Refrany'],
+  ['Gota a gota s\'omple la bóta.', 'Refrany'],
+  ['Caminante, no hay camino, se hace camino al andar.', 'Antonio Machado'],
+  ['Si quieres ser amado, ama.', 'Séneca, Cartas a Lucilio'],
+  ['La atención es la forma más rara y pura de generosidad.', 'Simone Weil'],
+  ['Prestar atención: esa es nuestra tarea interminable.', 'Mary Oliver'],
+  ['El amor es una actividad, no un afecto pasivo.', 'Erich Fromm, El arte de amar'],
+  ['El amor es lo que el amor hace.', 'bell hooks, Todo sobre el amor'],
+  ['Cosas pequeñas, a menudo.', 'John Gottman, sobre las parejas que duran'],
+  ['Cuando te busca con algo pequeño, una mirada o un comentario, es una oferta. Gírate hacia ella.', 'La idea de John Gottman'],
+  ['Cada acción es un voto por la persona que quieres ser.', 'James Clear, Hábitos atómicos'],
+  ['Somos lo que hacemos repetidamente.', 'Will Durant, resumiendo a Aristóteles']
+];
+function frases() {
+  return FRASES.map(function (f, i) { return { id: 'f' + i, texto: f[0], autor: f[1] }; })
+    .concat(all('palabras').filter(function (w) { return w.tipo === 'frase'; }).sort(byOrden).map(function (w) { return { id: w.id, texto: w.texto, autor: '', mia: true }; }));
+}
+var fraseOff = 0;
+function fraseHoy() { var fs = frases(); return fs[(dayNum(today()) * 7 + fraseOff) % fs.length]; }
+
 // ---- Render ----
 function render() {
   var t = today(), p = prefs();
@@ -316,6 +348,8 @@ function render() {
     (r > 1 ? '<span>' + r + ' días seguidos regándola.</span>' : flor ? '' : 'Corto y concreto. Lo demás, mirándola.');
 
   renderDue(t);
+  var fr = fraseHoy();
+  $('frase').innerHTML = '<p class="fq">' + esc(fr.texto) + '</p>' + (fr.autor ? '<p class="small">' + esc(fr.autor) + '</p>' : '<p class="small">Tuya</p>');
   renderPalabras();
   renderFechas(t);
   renderGente();
@@ -454,7 +488,7 @@ function palabraForm(w, tipo) {
   w = w || { tipo: tipo || 'mia' };
   form(w.id ? 'Editar' : 'Añadir', [
     { k: 'texto', label: 'Tal cual lo dijiste o lo viviste', type: 'area' },
-    { k: 'tipo', label: 'Qué es', type: 'chips', opts: [['mia', 'Mis palabras'], ['carta', 'La carta'], ['para', 'Para qué es esto'], ['flor', 'La flor'], ['ejemplo', 'Ejemplo real'], ['habito', 'Hábito a cambiar']] }
+    { k: 'tipo', label: 'Qué es', type: 'chips', opts: [['mia', 'Mis palabras'], ['carta', 'La carta'], ['para', 'Para qué es esto'], ['flor', 'La flor'], ['frase', 'Frase que me ayuda'], ['ejemplo', 'Ejemplo real'], ['habito', 'Hábito a cambiar']] }
   ], w, function (o) { if (!o.texto) return false; if (!o.tipo) o.tipo = 'mia'; if (o.orden == null) o.orden = all('palabras').length; put('palabras', o); },
   w.id && function () { drop('palabras', w.id); });
 }
@@ -545,6 +579,8 @@ function calm() {
     lst('ejemplo', 'Lo que pasó de verdad', 'El examen, la cena, las horas sin contestar. Con detalles.') +
     lst('habito', 'Lo que quieres cambiar', 'Contestar a tiempo, escuchar de verdad…') +
     lst('para', 'Para qué es esto', '') +
+    '<div class="fld"><div class="sh2"><span class="lab" style="flex:1">Frases que te ayudan</span><button class="add" type="button" data-addt="frase" aria-label="Añadir frase">＋</button></div><div class="list">' +
+    frases().map(function (f) { return '<div class="it"><span class="w" style="font-family:var(--display);font-style:italic;font-size:17px">' + esc(f.texto) + '</span><span class="m">' + esc(f.autor || 'Tuya') + '</span></div>'; }).join('') + '</div></div>' +
     '<button class="go" type="button" id="calmGo">Vale. Hoy hago una cosa.</button>';
   sheet('Esto es lo que viviste', h, 'calm');
   bind($('sheetBody'), '[data-cw]', function (b) { palabraForm(S.palabras[b.dataset.cw]); });
@@ -607,6 +643,7 @@ document.querySelectorAll('[data-add]').forEach(function (b) { b.onclick = funct
 $('semHacer').onclick = function () { semanaForm(semanaPendiente() || monday(today())); };
 $('noteB').onclick = apunteForm;
 $('calmB').onclick = calm;
+$('frase').onclick = function () { fraseOff++; render(); };
 $('ajustesB').onclick = ajustes;
 $('buscar').oninput = renderGente;
 $('sheet').addEventListener('click', function (e) { if (e.target === $('sheet')) $('sheet').close(); });
