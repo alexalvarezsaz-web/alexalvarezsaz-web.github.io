@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<defs><radialGradient id="g" cx=".85" cy="0" r="1.2"><stop offset="0" stop-color="#6a2f43"/><stop offset=".72" stop-color="#3a1c2b"/></radialGradient></defs>
+<rect width="512" height="512" fill="url(#g)"/>
+<path d="M256 450V250" stroke="#7fbf8e" stroke-width="20" stroke-linecap="round" fill="none"/>
+<path d="M256 362c-62 0-100-38-108-86 56 0 94 32 108 86zM256 318c54 0 86-30 94-70-48 0-80 24-94 70z" fill="#7fbf8e"/>
+<g fill="#f2a7a0" transform="translate(0 6)"><ellipse cx="256" cy="120" rx="46" ry="70"/><ellipse cx="256" cy="120" rx="46" ry="70" transform="rotate(72 256 176)"/><ellipse cx="256" cy="120" rx="46" ry="70" transform="rotate(144 256 176)"/><ellipse cx="256" cy="120" rx="46" ry="70" transform="rotate(216 256 176)"/><ellipse cx="256" cy="120" rx="46" ry="70" transform="rotate(288 256 176)"/></g>
+<circle cx="256" cy="182" r="38" fill="#f2b67a"/>
+<path d="M410 50c22 30 30 46 30 60a30 30 0 0 1-60 0c0-14 8-30 30-60z" fill="#8ec5e8"/>
+<path d="M150 452h212" stroke="#a07a5c" stroke-width="20" stroke-linecap="round"/>
+</svg>

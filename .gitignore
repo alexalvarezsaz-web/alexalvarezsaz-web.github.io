@@ -4,3 +4,5 @@ _datos/
 cracovia/pagina.html
 # Kept locally (names the owner's email); pasted into the Firebase console
 firestore.rules
+# Personal texts for Dia a dia: loaded once on this computer into Firestore, never published
+dia-a-dia/semilla.js
