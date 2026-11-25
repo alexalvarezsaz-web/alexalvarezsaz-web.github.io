@@ -210,7 +210,7 @@ function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function
 
 // ---- Store: localStorage first, Firestore (via the claude.ai stand-in) when signed in ----
 var COLS = ['palabras', 'acciones', 'fechas', 'personas', 'apuntes', 'planes', 'necesita', 'semanas', 'hechos', 'ajustes'];
-var LS = 'diaadia.v1', S = {}, db = null;
+var LS = 'diaadia.v1', S = {}, db = null, sinSesion = false;
 COLS.forEach(function (c) { S[c] = {}; });
 try { var saved = JSON.parse(localStorage.getItem(LS)); if (saved) COLS.forEach(function (c) { S[c] = saved[c] || {}; }); } catch (e) {}
 function persist() { try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) {} }
@@ -333,7 +333,7 @@ function render() {
 
   var a = accionHoy(), h = S.hechos[t];
   $('hoyLab').textContent = 'Hoy, ' + DIAS[parse(t).getDay()] + ' · una cosa';
-  $('accion').textContent = a ? a.texto : 'Añade las acciones del día abajo, en «Acciones».';
+  $('accion').textContent = a ? a.texto : sinSesion && empty() ? 'Entra con Google (abajo) y aparecen tus cosas.' : 'Añade las acciones del día abajo, en «Acciones».';
   var done = !!(h && h.hecho);
   $('hoyActs').innerHTML = a ? '<button type="button" class="b-done' + (done ? ' on' : '') + '" id="hecho">' + (done ? '✓ Hecho' : 'Hecho') + '</button><button type="button" class="b-other" id="otra">Otra</button>' : '';
   if (a) {
@@ -654,7 +654,7 @@ render();
 (async function () {
   try {
     var c = window.claude && await window.claude.use('db');
-    if (!c) { seed(); return; }
+    if (!c) { sinSesion = true; seed(); render(); return; }
     db = c; var got = {};
     COLS.forEach(function (col) {
       c.collection(col).onSnapshot(function (snap) {
