@@ -530,12 +530,11 @@ var LIVE_FN = {
     var late = open.filter(function (o) { return o.due && o.due <= t; }).length, shut = p.length - open.length;
     return late ? { n: late, u: 'por resolver', s: open.length + ' abiertos' } : { n: open.length, u: plural(open.length, 'abierto', 'abiertos'), s: shut + plural(shut, ' resuelto', ' resueltos') };
   },
-  // Days in a row with today's one thing done (today still counts as open until the night)
+  // Days watered in the last two weeks, like the app's flower (no streak: missing a day shouldn't read as failure)
   'dia-a-dia': function (r) {
     var done = {}; docs(r, 'h').forEach(function (x) { if (x.hecho) done[x.id] = 1; });
-    var d = new Date(), n = 0; if (!done[isoDay(d)]) d.setDate(d.getDate() - 1);
-    while (done[isoDay(d)]) { n++; d.setDate(d.getDate() - 1); }
-    return n ? { n: n, u: plural(n, 'día', 'días'), s: 'regándola' } : null;
+    var d = new Date(), n = 0; for (var i = 0; i < 14; i++) { if (done[isoDay(d)]) n++; d.setDate(d.getDate() - 1); }
+    return n ? { n: n, u: 'de 14 días', s: 'regándola' } : null;
   }
 };
 var LIVE_ALIAS = { 'diari-bolets': 'bolets' };

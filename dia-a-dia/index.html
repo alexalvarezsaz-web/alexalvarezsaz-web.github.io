@@ -16,141 +16,272 @@
 <meta name="apple-mobile-web-app-title" content="Dia a dia">
 <meta name="theme-color" content="#3a1c2b">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,600;0,6..72,800;1,6..72,500&family=Figtree:wght@400;600;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,500;0,6..72,700;0,6..72,800;1,6..72,400;1,6..72,500&family=Figtree:wght@400;500;600;700;800&display=swap">
 <style>
-/* One scroll: today's single action on a dusk card, what's due with her, my words, her people, plans, what she needs, the weekly check. Quick note and "me estoy acomodando" stay fixed at the bottom */
+/* A small garden on top: the sky follows the hour, the flower grows with the days it was watered.
+   Below it, today's one thing, what is due with her, a line of the day, then each part of her world in its own shape. */
 :root {
-  --bg: #f5efeb; --surface: #fffaf7; --ink: #2a1a20; --muted: #6e5a60; --line: #e6d8d2;
-  --acc: #a8433b; --acc-ink: #fff; --ok: #2f7d55; --ok-bg: #dcefe3; --soft: #f3e3dc;
-  --sky1: #3a1c2b; --sky2: #6a2f43; --on-sky: #fff4ef; --on-sky-2: #e4c3c8; --star: #f2b67a;
+  --bg: #f6efe9; --surface: #fffaf6; --surface-2: #f4e9e2; --ink: #2b1a21; --muted: #75606a; --line: #eadbd3;
+  --acc: #b04a40; --acc-ink: #fff; --acc-soft: #f6e0da; --ok: #2f7d55; --ok-soft: #dcefe3;
+  --gold: #e9a25f; --gold-soft: #fbead6; --leaf: #6fae7f; --leaf-soft: #e1f0e4; --sky: #5c8fb3; --sky-soft: #e0edf5;
+  --plum: #3a1c2b; --plum-2: #6a2f43; --on-plum: #fff4ef; --on-plum-2: #e4c3c8; --star: #f2b67a;
+  --shadow: 0 1px 0 rgba(58, 28, 43, .04), 0 10px 30px -18px rgba(58, 28, 43, .35);
   --display: "Newsreader", Georgia, serif; --body: "Figtree", "Segoe UI", sans-serif;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #170d12; --surface: #241520; --ink: #f6e9ea; --muted: #b9a1a8; --line: #3b2532;
-  --acc: #f08f80; --acc-ink: #1d0f15; --ok: #6fcf9a; --ok-bg: #173226; --soft: #3a2029; color-scheme: dark;
+  --bg: #150b10; --surface: #21131a; --surface-2: #2b1922; --ink: #f6e9ea; --muted: #b9a1a8; --line: #36222c;
+  --acc: #f08f80; --acc-ink: #1d0f15; --acc-soft: #3a1f25; --ok: #6fcf9a; --ok-soft: #173226;
+  --gold-soft: #3a2a1a; --leaf-soft: #1b2e22; --sky-soft: #172833; --shadow: 0 10px 30px -18px rgba(0, 0, 0, .8); color-scheme: dark;
 } }
 :root[data-theme="dark"] {
-  --bg: #170d12; --surface: #241520; --ink: #f6e9ea; --muted: #b9a1a8; --line: #3b2532;
-  --acc: #f08f80; --acc-ink: #1d0f15; --ok: #6fcf9a; --ok-bg: #173226; --soft: #3a2029; color-scheme: dark;
+  --bg: #150b10; --surface: #21131a; --surface-2: #2b1922; --ink: #f6e9ea; --muted: #b9a1a8; --line: #36222c;
+  --acc: #f08f80; --acc-ink: #1d0f15; --acc-soft: #3a1f25; --ok: #6fcf9a; --ok-soft: #173226;
+  --gold-soft: #3a2a1a; --leaf-soft: #1b2e22; --sky-soft: #172833; --shadow: 0 10px 30px -18px rgba(0, 0, 0, .8); color-scheme: dark;
 }
-* { box-sizing: border-box; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 body { background: var(--bg); color: var(--ink); font: 400 16px/1.45 var(--body); }
 button, input, textarea { font: inherit; color: inherit; }
-button { cursor: pointer; touch-action: manipulation; }
-:focus-visible { outline: 3px solid var(--star); outline-offset: 2px; }
+button { cursor: pointer; touch-action: manipulation; transition: transform .15s ease, background-color .2s, opacity .2s; }
+button:active { transform: scale(.97); }
+:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 h1, h2, h3 { font-family: var(--display); line-height: 1.12; margin: 0; text-wrap: balance; }
-html, body { max-width: 100%; overflow-x: clip; }
-.wrap { max-width: 620px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 12px 118px; }
-.lab { font-size: 12px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
-.small { font-size: 13.5px; color: var(--muted); margin: 0; }
 p { margin: 0; }
+html, body { max-width: 100%; overflow-x: clip; }
+.wrap { max-width: 620px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; padding-left: max(14px, env(safe-area-inset-left, 0px)); padding-right: max(14px, env(safe-area-inset-right, 0px)); padding-block: 10px 124px; }
+.lab { font-size: 11.5px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
+.small { font-size: 13.5px; color: var(--muted); }
+.empty { color: var(--muted); font-size: 14.5px; padding: 6px 2px; }
 
-/* Hero: the letter's line, then the one thing for today */
-.hero { border-radius: 20px; color: var(--on-sky); background: radial-gradient(120% 90% at 90% 0%, var(--sky2), var(--sky1) 72%); overflow: hidden; }
-.hero-in { padding: 16px 18px 18px; display: grid; gap: 12px; }
-.hero .lab { color: var(--on-sky-2); }
-.carta { font: italic 500 17px/1.35 var(--display); color: var(--on-sky-2); }
-.hero h1 { font-size: clamp(27px, 7.6vw, 38px); font-weight: 800; }
-.hero .acts { display: flex; flex-wrap: wrap; gap: 8px; }
-.hero .acts button { min-height: 48px; padding: 0 16px; border-radius: 14px; font-weight: 800; border: 0; }
-.b-done { background: var(--star); color: #2a1408; }
-.b-done.on { background: rgba(255,255,255,.16); color: var(--on-sky); }
-.b-other { background: transparent; color: var(--on-sky-2); border: 1px solid rgba(255,255,255,.28) !important; }
-.hero-b { padding: 10px 18px 12px; background: rgba(0,0,0,.22); font-size: 14px; color: var(--on-sky-2); }
+/* ---------- Hero: garden + today ---------- */
+.hero { position: relative; border-radius: 28px; overflow: hidden; background: var(--surface); box-shadow: var(--shadow); }
+.scene { position: relative; height: 232px; overflow: hidden; color: var(--ink); }
+.scene.dark { color: var(--on-plum); }
+.garden, .rain { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.scene-top { position: absolute; left: 18px; right: 18px; top: 16px; display: grid; gap: 6px; }
+.fecha-hoy { font-size: 12px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; opacity: .75; }
+.carta { font: italic 500 17px/1.3 var(--display); max-width: 19em; text-wrap: balance; }
+.today { position: relative; margin-top: -26px; padding: 20px 18px 16px; border-radius: 26px 26px 0 0; background: var(--surface); display: grid; gap: 12px; }
+.today h1 { font-size: clamp(26px, 7.4vw, 34px); font-weight: 700; letter-spacing: -.01em; }
+.acts { display: flex; gap: 8px; }
+.b-done { flex: 1; min-height: 54px; border: 0; border-radius: 16px; background: var(--plum); color: var(--on-plum); font: 800 17px var(--body); display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.b-done svg { width: 18px; height: 18px; }
+.b-done.on { background: var(--ok-soft); color: var(--ok); }
+.b-other { min-height: 54px; padding: 0 18px; border-radius: 16px; border: 1px solid var(--line); background: transparent; font-weight: 700; color: var(--muted); }
+.week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.wd { display: grid; justify-items: center; gap: 4px; font-size: 11px; font-weight: 800; color: var(--muted); }
+.wd i { width: 26px; height: 26px; border-radius: 50%; border: 1.5px dashed var(--line); display: grid; place-items: center; }
+.wd.done i { border: 0; background: var(--sky-soft); }
+.wd.done i::after { content: ""; width: 10px; height: 13px; background: var(--sky); border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; clip-path: polygon(50% 0, 100% 62%, 92% 88%, 50% 100%, 8% 88%, 0 62%); }
+.wd.now { color: var(--ink); }
+.wd.now i { border: 2px solid var(--plum-2); }
+.wd.future i { opacity: .45; }
+.flor-line { display: flex; gap: 10px; align-items: center; padding-top: 12px; border-top: 1px solid var(--line); font: italic 500 15px/1.35 var(--display); color: var(--muted); }
+.flor-line svg { flex: none; width: 30px; height: 30px; }
+.grow { font-size: 13px; color: var(--muted); }
+.grow b { color: var(--ink); }
 
-.sect { padding: 16px; border-radius: 18px; background: var(--surface); display: grid; gap: 12px; }
-.sect h2 { font-size: 25px; font-weight: 800; }
-.sh2 { display: flex; align-items: center; gap: 8px; }
-.sh2 h2 { flex: 1; }
-.add { min-height: 44px; min-width: 44px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--line); background: transparent; font-weight: 800; color: var(--acc); }
+/* watering: drops fall onto the flower, then it pops */
+.rain .dr { opacity: 0; }
+.hero.regando .rain .dr { animation: fall 1.1s ease-in both; }
+.hero.regando .rain .dr:nth-child(2) { animation-delay: .18s; }
+.hero.regando .rain .dr:nth-child(3) { animation-delay: .34s; }
+@keyframes fall { 0% { opacity: 0; transform: translateY(-30px); } 20% { opacity: 1; } 85% { opacity: 1; } 100% { opacity: 0; transform: translateY(120px); } }
+.flower { transform-box: fill-box; transform-origin: 50% 100%; }
+.hero.grew .flower { animation: pop .7s cubic-bezier(.3, 1.6, .5, 1); }
+@keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.08) rotate(-2deg); } 100% { transform: scale(1); } }
+.sway { transform-box: fill-box; transform-origin: 50% 100%; animation: sway 6s ease-in-out infinite; }
+@keyframes sway { 0%, 100% { transform: rotate(-1.2deg); } 50% { transform: rotate(1.2deg); } }
+.tw { animation: tw 3.2s ease-in-out infinite; }
+.tw:nth-child(2n) { animation-delay: 1.1s; } .tw:nth-child(3n) { animation-delay: 2s; }
+@keyframes tw { 50% { opacity: .25; } }
+
+/* ---------- Due today ---------- */
+.due { display: grid; gap: 10px; }
+.dc { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 4px 12px; padding: 14px; border-radius: 20px; background: var(--surface); box-shadow: var(--shadow); align-items: start; }
+.dc .ic { grid-row: span 3; width: 40px; height: 40px; border-radius: 14px; display: grid; place-items: center; }
+.dc .ic svg { width: 21px; height: 21px; }
+.dc.gold .ic { background: var(--gold-soft); color: #b8702f; }
+.dc.rose .ic { background: var(--acc-soft); color: var(--acc); }
+.dc.leaf .ic { background: var(--leaf-soft); color: var(--ok); }
+.dc.plum .ic { background: var(--plum); color: var(--star); }
+.dc .t { font-weight: 600; line-height: 1.35; }
+.dc .t b { font-weight: 800; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.dc .row { margin-top: 6px; }
+.pill { min-height: 40px; padding: 0 14px; border-radius: 12px; border: 0; background: var(--plum); color: var(--on-plum); font-weight: 700; font-size: 14.5px; }
+.pill.alt { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+
+/* ---------- Line of the day ---------- */
+.frase { position: relative; display: grid; gap: 8px; padding: 22px 22px 18px 22px; border: 0; background: transparent; text-align: center; justify-items: center; color: var(--ink); }
+.frase::before { content: "“"; font: 700 64px/0.6 var(--display); color: var(--gold); height: 26px; }
+.frase .fq { font: italic 500 clamp(20px, 5.6vw, 24px)/1.32 var(--display); text-wrap: balance; max-width: 22em; }
+.frase .fa { font-size: 12.5px; font-weight: 700; letter-spacing: .04em; color: var(--muted); }
+.frase .fa::after { content: " · toca para otra"; font-weight: 500; opacity: .7; }
+.frase.fade .fq, .frase.fade .fa { animation: fadein .45s ease both; }
+@keyframes fadein { from { opacity: 0; transform: translateY(4px); } }
+
+/* ---------- Sections ---------- */
+.sect { padding: 18px; border-radius: 24px; background: var(--surface); box-shadow: var(--shadow); display: grid; gap: 14px; }
+.sh2 { display: flex; align-items: center; gap: 12px; }
+.sh2 .si { flex: none; width: 36px; height: 36px; border-radius: 12px; display: grid; place-items: center; background: var(--surface-2); color: var(--acc); }
+.sh2 .si svg { width: 19px; height: 19px; }
+.sh2 div { flex: 1; min-width: 0; display: grid; gap: 1px; }
+.sh2 h2 { font-size: 22px; font-weight: 700; }
+.sh2 .small { font-size: 13px; }
+.add { flex: none; width: 40px; height: 40px; border-radius: 50%; border: 0; background: var(--surface-2); color: var(--acc); font-size: 22px; font-weight: 600; line-height: 1; display: grid; place-items: center; }
+.add.txt { width: auto; border-radius: 12px; padding: 0 14px; font-size: 14.5px; font-weight: 800; }
 .list { display: grid; gap: 8px; }
-.it { display: grid; gap: 2px; padding: 12px 14px; border-radius: 14px; background: var(--bg); text-align: left; border: 0; width: 100%; min-width: 0; }
+.it { display: grid; gap: 2px; padding: 12px 14px; border-radius: 16px; background: var(--surface-2); text-align: left; border: 0; width: 100%; min-width: 0; }
 .it .t { font-weight: 600; overflow-wrap: anywhere; }
 .it .m { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
 .it .w { font-size: 14.5px; overflow-wrap: anywhere; }
-.quote { font: italic 500 19px/1.35 var(--display); }
-.empty { color: var(--muted); }
+/* folded sections: one line each until opened, so the page says one thing first */
+.sect.fold { gap: 0; padding-block: 12px; }
+.sect.fold > :not(.sh2) { display: none !important; }
+.sh2 > div[role=button] { cursor: pointer; border-radius: 10px; }
+.sh2 > div[role=button] h2::after { content: ""; display: inline-block; width: 7px; height: 7px; margin: 0 0 3px 10px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(-135deg); transition: transform .25s; vertical-align: middle; }
+.sect.fold .sh2 > div[role=button] h2::after { transform: rotate(45deg); }
+.sect.fold .sh2 h2 { font-size: 19px; }
+.cnt { font-size: 12.5px; font-weight: 700; color: var(--acc); }
+.sect:not(.fold) .cnt { display: none; }
+.sect.fold .sh2 .small:not(.cnt) { display: none; }
+.more { justify-self: start; min-height: 36px; border: 0; background: transparent; color: var(--acc); font-weight: 700; font-size: 14px; padding: 0 2px; }
 
-/* Due today: dates before and after, yesterday's notes, the weekly check */
-.due { display: grid; gap: 8px; }
-.dc { padding: 12px 14px; border-radius: 14px; background: var(--soft); display: grid; gap: 8px; }
-.dc .t { font-weight: 600; }
-.dc .t b { color: var(--acc); }
-.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.pill { min-height: 42px; padding: 0 14px; border-radius: 12px; border: 0; background: var(--acc); color: var(--acc-ink); font-weight: 800; }
-.pill.alt { background: transparent; color: var(--ink); border: 1px solid var(--line); }
-.linkb { min-height: 44px; border: 0; background: transparent; color: var(--muted); font-weight: 700; text-decoration: underline; padding: 0 4px; }
+/* my words: a letter, not a list of boxes */
+.letter { display: grid; }
+.ql { display: grid; gap: 4px; padding: 14px 4px 14px 16px; border: 0; border-left: 3px solid var(--acc-soft); background: transparent; text-align: left; }
+.ql + .ql { margin-top: 4px; }
+.ql .q { font: italic 500 19px/1.35 var(--display); }
+.ql .k { font-size: 11.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--acc); }
+.ql.carta-q { border-left-color: var(--gold); }
+.ql.flor-q { border-left-color: var(--leaf); }
 
-.ppl { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); gap: 8px; }
-.tag { display: inline-block; font-size: 12px; font-weight: 800; padding: 1px 8px; border-radius: 8px; background: var(--soft); color: var(--acc); margin-left: 6px; vertical-align: 2px; }
+/* dates: a calendar leaf each */
+.fe { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 12px; align-items: center; padding: 8px; border-radius: 16px; background: var(--surface-2); border: 0; text-align: left; width: 100%; }
+.cal { width: 52px; border-radius: 12px; overflow: hidden; background: var(--surface); text-align: center; box-shadow: 0 1px 0 var(--line); }
+.cal span { display: block; background: var(--acc); color: var(--acc-ink); font-size: 10.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; padding: 2px 0; }
+.cal b { display: block; font: 700 22px/1.3 var(--display); }
+.fe.past .cal span { background: var(--muted); }
+.fe .t { font-weight: 600; overflow-wrap: anywhere; }
+.fe .m { font-size: 13px; color: var(--muted); }
+.fe .m.ask { color: var(--acc); font-weight: 700; }
+
+/* her people: a face for each, even if it's only initials */
+.ppl { display: grid; gap: 8px; }
+.pe { display: grid; grid-template-columns: 46px minmax(0, 1fr); gap: 2px 12px; padding: 12px; border-radius: 18px; background: var(--surface-2); border: 0; text-align: left; width: 100%; align-items: start; }
+.av { grid-row: span 4; width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; font: 700 17px var(--display); color: #2b1a21; }
+.pe .n { font-weight: 700; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.tag { font-size: 11.5px; font-weight: 800; padding: 1px 8px; border-radius: 8px; background: var(--surface); color: var(--muted); }
+.pe .w { font-size: 14.5px; overflow-wrap: anywhere; }
+.pe .m { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+.pe .now { font-size: 13px; color: var(--acc); font-weight: 600; }
+#buscar { margin-top: -4px; }
+
+/* plans: two columns, the one whose turn it is lights up */
 .cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.cols h3 { font-size: 18px; font-weight: 800; margin-bottom: 6px; }
-.turn { padding: 10px 14px; border-radius: 12px; background: var(--soft); font-weight: 700; }
-details summary { cursor: pointer; color: var(--muted); font-weight: 700; min-height: 36px; display: flex; align-items: center; }
-.wk { display: grid; gap: 4px; }
-.wk b { font-weight: 800; }
+.col { padding: 12px; border-radius: 18px; background: var(--surface-2); display: grid; gap: 8px; align-content: start; border: 2px solid transparent; }
+.col.toca { border-color: var(--gold); background: var(--gold-soft); }
+.col h3 { font: 800 12px var(--body); letter-spacing: .09em; text-transform: uppercase; color: var(--muted); display: flex; gap: 6px; align-items: center; }
+.col.toca h3::after { content: "Te toca"; font-size: 10.5px; padding: 2px 7px; border-radius: 7px; background: var(--gold); color: #2a1408; letter-spacing: .05em; }
+.col .it { background: var(--surface); }
+.col.dos { background: var(--leaf-soft); }
+.col.dos .list { grid-template-columns: repeat(auto-fill, minmax(min(100%, 128px), 1fr)); }
+.it .m.soon { color: var(--acc); font-weight: 700; }
+details summary { cursor: pointer; color: var(--muted); font-weight: 700; font-size: 14px; min-height: 36px; display: flex; align-items: center; }
 
-/* Fixed actions */
-.bar { position: fixed; z-index: 5; left: 0; right: 0; bottom: 0; background: var(--bg); border-top: 1px solid var(--line); padding: 8px max(12px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px)); }
-.bar-in { max-width: 620px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1.25fr; gap: 8px; }
-.bar button { min-height: 60px; border: 0; border-radius: 16px; font: 800 18px/1.1 var(--display); }
-.b-note { background: var(--acc); color: var(--acc-ink); }
-.b-calm { background: var(--sky1); color: var(--on-sky); }
-.b-calm small { display: block; font: 600 12px var(--body); color: var(--on-sky-2); }
-.toast { position: fixed; z-index: 30; left: max(12px, env(safe-area-inset-left, 0px)); right: max(12px, env(safe-area-inset-right, 0px)); bottom: calc(90px + env(safe-area-inset-bottom, 0px)); max-width: 596px; margin: 0 auto; padding: 8px 8px 8px 14px; min-height: 52px; border-radius: 14px; background: var(--ink); color: var(--bg); font-weight: 700; display: flex; align-items: center; gap: 10px; }
+/* what she needs: her own words, large */
+.nq { position: relative; display: grid; gap: 6px; padding: 16px 16px 14px 46px; border-radius: 18px; background: var(--acc-soft); border: 0; text-align: left; width: 100%; }
+.nq::before { content: "«"; position: absolute; left: 14px; top: 6px; font: 700 40px/1 var(--display); color: var(--acc); opacity: .6; }
+.nq .q { font: italic 500 18.5px/1.35 var(--display); overflow-wrap: anywhere; }
+.nq .m { font-size: 12.5px; color: var(--muted); }
+
+.wk { display: grid; gap: 6px; padding: 14px; border-radius: 18px; background: var(--surface-2); border: 0; text-align: left; width: 100%; }
+.wk .t { font-weight: 700; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.wk .w { font-size: 14px; overflow-wrap: anywhere; }
+.wk .w b { color: var(--muted); font-weight: 700; }
+.ok-tag { font-size: 11.5px; font-weight: 800; padding: 1px 8px; border-radius: 8px; background: var(--ok-soft); color: var(--ok); }
+
+.foot { display: flex; justify-content: center; }
+.linkb { min-height: 44px; border: 0; background: transparent; color: var(--muted); font-weight: 600; font-size: 14px; text-decoration: underline; text-underline-offset: 3px; padding: 0 6px; }
+
+/* entrance, once */
+@media (prefers-reduced-motion: no-preference) {
+  .wrap > * { animation: up .55s cubic-bezier(.2, .8, .3, 1) both; }
+  .wrap > :nth-child(2) { animation-delay: .06s; } .wrap > :nth-child(3) { animation-delay: .12s; } .wrap > :nth-child(4) { animation-delay: .18s; }
+  .wrap > :nth-child(5) { animation-delay: .24s; } .wrap > :nth-child(n+6) { animation-delay: .3s; }
+  @keyframes up { from { opacity: 0; transform: translateY(14px); } }
+}
+@media (prefers-reduced-motion: reduce) { .sway, .tw, .hero.regando .rain .dr, .hero.grew .flower { animation: none !important; } }
+
+/* ---------- Fixed bar ---------- */
+.bar { position: fixed; z-index: 5; left: 0; right: 0; bottom: 0; padding: 10px max(12px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px)); background: color-mix(in srgb, var(--bg) 78%, transparent); -webkit-backdrop-filter: blur(16px) saturate(1.4); backdrop-filter: blur(16px) saturate(1.4); border-top: 1px solid color-mix(in srgb, var(--line) 70%, transparent); }
+.bar-in { max-width: 620px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1.35fr; gap: 8px; }
+.bar button { min-height: 58px; border: 0; border-radius: 18px; display: flex; align-items: center; justify-content: center; gap: 10px; text-align: left; }
+.bar svg { flex: none; width: 22px; height: 22px; }
+.b-note { background: var(--acc); color: var(--acc-ink); font: 800 16.5px var(--body); }
+.b-calm { background: var(--plum); color: var(--on-plum); }
+.b-calm span { display: grid; font: 700 16px/1.15 var(--display); }
+.b-calm small { font: 600 11.5px var(--body); color: var(--on-plum-2); }
+.toast { position: fixed; z-index: 30; left: max(12px, env(safe-area-inset-left, 0px)); right: max(12px, env(safe-area-inset-right, 0px)); bottom: calc(92px + env(safe-area-inset-bottom, 0px)); max-width: 596px; margin: 0 auto; padding: 8px 8px 8px 16px; min-height: 52px; border-radius: 16px; background: var(--ink); color: var(--bg); font-weight: 600; display: flex; align-items: center; gap: 10px; box-shadow: 0 12px 30px -10px rgba(0,0,0,.45); animation: toastin .35s cubic-bezier(.2, .9, .3, 1.2); }
+@keyframes toastin { from { opacity: 0; transform: translateY(16px) scale(.98); } }
 .toast span { flex: 1; min-width: 0; }
 .toast button { min-height: 40px; padding: 0 12px; border: 1px solid currentColor; border-radius: 10px; background: transparent; color: inherit; font-weight: 800; }
 
-/* Sheets */
-.sheet { width: 100%; max-width: 620px; height: 100dvh; max-height: none; margin: 0 auto; border: 0; padding: 0; background: var(--bg); color: var(--ink); }
-.sheet[open] { display: flex; }
-.sheet::backdrop { background: rgba(20, 8, 14, .6); }
-.sh { flex: 1; min-width: 0; overflow-y: auto; display: grid; gap: 16px; align-content: start; padding: calc(14px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) calc(20px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+/* ---------- Sheets: rise from the bottom ---------- */
+.sheet { width: 100%; max-width: 620px; height: auto; max-height: 94dvh; margin: auto auto 0; border: 0; padding: 0; border-radius: 26px 26px 0 0; background: var(--bg); color: var(--ink); box-shadow: 0 -10px 40px -10px rgba(0,0,0,.3); }
+.sheet[open] { display: flex; animation: rise .38s cubic-bezier(.2, .9, .3, 1); }
+@keyframes rise { from { transform: translateY(40px); opacity: 0; } }
+.sheet::backdrop { background: rgba(28, 10, 18, .5); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+.sh { flex: 1; min-width: 0; overflow-y: auto; display: grid; gap: 16px; align-content: start; padding: 10px max(18px, env(safe-area-inset-right, 0px)) calc(22px + env(safe-area-inset-bottom, 0px)) max(18px, env(safe-area-inset-left, 0px)); }
+.sh::before { content: ""; justify-self: center; width: 40px; height: 5px; border-radius: 3px; background: var(--line); }
 .sh-top { display: flex; align-items: center; gap: 10px; }
-.sh-top h2 { flex: 1; font-size: 28px; font-weight: 800; }
-.x { flex: none; width: 44px; min-height: 44px; border: 1px solid var(--line); border-radius: 10px; background: transparent; font-size: 22px; line-height: 1; color: var(--muted); }
+.sh-top h2 { flex: 1; font-size: 27px; font-weight: 700; }
+.x { flex: none; width: 40px; height: 40px; border: 0; border-radius: 50%; background: var(--surface-2); font-size: 22px; line-height: 1; color: var(--muted); }
 .fld { display: grid; gap: 8px; }
 .fld > span { font-weight: 700; }
-textarea, input[type=text], input[type=date] { width: 100%; min-width: 0; padding: 10px 11px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font-size: 16px; }
-textarea { resize: vertical; min-height: 84px; }
+textarea, input[type=text], input[type=date] { width: 100%; min-width: 0; padding: 12px 13px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font-size: 16px; }
+textarea:focus, input:focus { outline: none; border-color: var(--acc); box-shadow: 0 0 0 3px var(--acc-soft); }
+textarea { resize: vertical; min-height: 88px; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.chips button { min-height: 44px; padding: 0 15px; border-radius: 22px; border: 1px solid var(--line); background: var(--surface); font-weight: 700; }
-.chips button.on { background: var(--acc); color: var(--acc-ink); border-color: transparent; }
+.chips button { min-height: 42px; padding: 0 15px; border-radius: 21px; border: 1px solid var(--line); background: var(--surface); font-weight: 600; }
+.chips button.on { background: var(--plum); color: var(--on-plum); border-color: transparent; }
 .chk { display: flex; gap: 10px; align-items: center; min-height: 44px; font-weight: 600; }
-.chk input { width: 22px; height: 22px; accent-color: var(--acc); }
-.go { min-height: 58px; border: 0; border-radius: 16px; background: var(--acc); color: var(--acc-ink); font: 800 20px var(--display); }
-.del { min-height: 48px; border: 1px solid var(--line); border-radius: 14px; background: transparent; color: var(--acc); font-weight: 800; }
-/* The "me estoy acomodando" sheet reads like a letter to myself */
-.calm .sh { background: radial-gradient(120% 60% at 90% 0%, var(--sky2), var(--sky1) 70%); color: var(--on-sky); }
-.calm .sh-top h2 { color: var(--on-sky); }
-.calm .x { color: var(--on-sky-2); border-color: rgba(255,255,255,.25); }
-.calm .lab { color: var(--on-sky-2); }
-.calm .it { background: rgba(255,255,255,.08); color: var(--on-sky); }
-.calm .it .m { color: var(--on-sky-2); }
-.calm .add { color: var(--star); border-color: rgba(255,255,255,.25); }
-.calm .big { font: italic 500 clamp(22px, 6vw, 28px)/1.3 var(--display); color: var(--star); }
+.chk input { width: 22px; height: 22px; accent-color: var(--plum-2); }
+.go { min-height: 56px; border: 0; border-radius: 18px; background: var(--plum); color: var(--on-plum); font: 800 17px var(--body); }
+.del { min-height: 48px; border: 0; border-radius: 14px; background: transparent; color: var(--acc); font-weight: 700; }
+.calm { max-height: 100dvh; height: 100dvh; border-radius: 0; }
+.calm .sh { background: radial-gradient(130% 55% at 85% 0%, var(--plum-2), var(--plum) 70%); color: var(--on-plum); padding-top: calc(10px + env(safe-area-inset-top, 0px)); }
+.calm .sh::before { background: rgba(255,255,255,.2); }
+.calm .sh-top h2 { color: var(--on-plum); }
+.calm .x { background: rgba(255,255,255,.1); color: var(--on-plum-2); }
+.calm .lab { color: var(--on-plum-2); }
+.calm .ql { border-left-color: rgba(255,255,255,.18); }
+.calm .ql .k { color: var(--star); }
+.calm .it { background: rgba(255,255,255,.07); color: var(--on-plum); }
+.calm .it .m { color: var(--on-plum-2); }
+.calm .add { background: rgba(255,255,255,.1); color: var(--star); }
+.calm .big { font: italic 500 clamp(23px, 6.4vw, 30px)/1.28 var(--display); color: var(--star); text-wrap: balance; }
 .calm .go { background: var(--star); color: #2a1408; }
-/* The flower: loving it is leaving it there and watering it */
-.flor { display: grid; justify-items: center; gap: 10px; padding: 22px 18px 20px; border: 0; border-radius: 20px; background: rgba(255,255,255,.07); color: var(--on-sky); text-align: center; font: italic 500 clamp(20px, 5.6vw, 25px)/1.35 var(--display); text-wrap: balance; }
-.flor .flor-i { width: 84px; height: 84px; }
-.flor-s { display: flex; align-items: center; gap: 10px; font: italic 500 15px/1.35 var(--display); color: var(--on-sky); }
-.flor-s .flor-i { flex: none; width: 34px; height: 34px; }
-.hero-b { display: grid; gap: 4px; }
-/* Line of the day: tap for another */
-.frase { display: grid; gap: 6px; padding: 16px 18px 14px; border: 0; border-left: 4px solid var(--star); border-radius: 6px 18px 18px 6px; background: var(--surface); text-align: left; }
-.frase .fq { font: italic 500 20px/1.35 var(--display); text-wrap: pretty; }
+.flor { display: grid; justify-items: center; gap: 12px; padding: 24px 18px 22px; border: 0; border-radius: 24px; background: rgba(255,255,255,.06); color: var(--on-plum); text-align: center; font: italic 500 clamp(20px, 5.6vw, 25px)/1.35 var(--display); text-wrap: balance; }
+.flor svg { width: 88px; height: 88px; }
 @media (prefers-reduced-motion: no-preference) { .flor .gota { animation: gota 2.6s ease-in infinite; } @keyframes gota { 0% { transform: translateY(-6px); opacity: 0; } 25% { opacity: 1; } 70% { transform: translate(-14px, 14px); opacity: 1; } 100% { transform: translate(-16px, 18px); opacity: 0; } } }
 </style>
 
 <main class="wrap">
-  <section class="hero" aria-label="Hoy">
-    <div class="hero-in">
-      <p class="carta" id="carta"></p>
+  <section class="hero" id="hero" aria-label="Hoy">
+    <div class="scene" id="scene">
+      <div id="garden"></div>
+      <svg class="rain" viewBox="0 0 360 232" preserveAspectRatio="xMidYMax slice" aria-hidden="true"><g fill="#8ec5e8"><path class="dr" d="M168 40c5 7 7 11 7 14a7 7 0 0 1-14 0c0-3 2-7 7-14z"/><path class="dr" d="M184 26c5 7 7 11 7 14a7 7 0 0 1-14 0c0-3 2-7 7-14z"/><path class="dr" d="M198 44c5 7 7 11 7 14a7 7 0 0 1-14 0c0-3 2-7 7-14z"/></g></svg>
+      <div class="scene-top"><p class="fecha-hoy" id="fechaHoy"></p><p class="carta" id="carta"></p></div>
+    </div>
+    <div class="today">
       <div class="lab" id="hoyLab">Hoy, una cosa</div>
       <h1 id="accion"></h1>
       <div class="acts" id="hoyActs"></div>
+      <div class="week" id="week" aria-label="Esta semana"></div>
+      <p class="grow" id="grow"></p>
+      <p class="flor-line" id="florLine" hidden></p>
     </div>
-    <div class="hero-b" id="heroB"></div>
   </section>
 
   <section class="due" id="due" aria-label="Pendiente hoy"></section>
@@ -158,48 +289,44 @@ textarea { resize: vertical; min-height: 84px; }
   <button type="button" class="frase" id="frase" aria-label="Frase del día; toca para otra"></button>
 
   <section class="sect" id="s-palabras" aria-labelledby="h-pal">
-    <div class="sh2"><h2 id="h-pal">Acuérdate de cómo lo pasaste</h2><button class="add" type="button" data-add="palabra" aria-label="Añadir palabras">＋</button></div>
-    <div class="list" id="palabras"></div>
+    <div class="sh2"><span class="si" data-i="pluma"></span><div><h2 id="h-pal">Acuérdate de cómo lo pasaste</h2></div><button class="add" type="button" data-add="palabra" aria-label="Añadir palabras">＋</button></div>
+    <div class="letter" id="palabras"></div>
   </section>
 
   <section class="sect" id="s-fechas" aria-labelledby="h-fec">
-    <div class="sh2"><h2 id="h-fec">Sus fechas</h2><button class="add" type="button" data-add="fecha" aria-label="Añadir fecha">＋</button></div>
-    <p class="small">Te avisa el día antes y te recuerda preguntarle qué tal ha ido.</p>
+    <div class="sh2"><span class="si" data-i="cal"></span><div><h2 id="h-fec">Sus fechas</h2><p class="small">Aviso antes, y después preguntarle qué tal.</p></div><button class="add" type="button" data-add="fecha" aria-label="Añadir fecha">＋</button></div>
     <div class="list" id="fechas"></div>
   </section>
 
   <section class="sect" id="s-gente" aria-labelledby="h-gen">
-    <div class="sh2"><h2 id="h-gen">Su gente</h2><button class="add" type="button" data-add="persona" aria-label="Añadir persona">＋</button></div>
-    <p class="small">Una frase por persona sirve. Que los de su trabajo tengan cara.</p>
-    <input type="text" id="buscar" placeholder="Buscar" aria-label="Buscar persona" hidden>
+    <div class="sh2"><span class="si" data-i="gente"></span><div><h2 id="h-gen">Su gente</h2><p class="small">Que los de su trabajo tengan cara.</p></div><button class="add" type="button" data-add="persona" aria-label="Añadir persona">＋</button></div>
+    <input type="text" id="buscar" placeholder="Buscar a alguien" aria-label="Buscar persona" hidden>
     <div class="ppl" id="gente"></div>
   </section>
 
   <section class="sect" id="s-planes" aria-labelledby="h-pla">
-    <div class="sh2"><h2 id="h-pla">Planes</h2><button class="add" type="button" data-add="plan" aria-label="Añadir plan">＋</button></div>
-    <div class="turn" id="turno"></div>
-    <div class="cols"><div><h3>Suyos</h3><div class="list" id="pl-suyo"></div></div><div><h3>Míos</h3><div class="list" id="pl-mio"></div></div></div>
+    <div class="sh2"><span class="si" data-i="plan"></span><div><h2 id="h-pla">Planes</h2><p class="small" id="turno"></p></div><button class="add" type="button" data-add="plan" aria-label="Añadir plan">＋</button></div>
+    <div class="col dos" id="col-juntos"><h3>De los dos</h3><div class="list" id="pl-juntos"></div></div>
+    <div class="cols"><div class="col" id="col-suyo"><h3>Suyos</h3><div class="list" id="pl-suyo"></div></div><div class="col" id="col-mio"><h3>Míos</h3><div class="list" id="pl-mio"></div></div></div>
     <details id="pl-hechos-d"><summary>Planes hechos</summary><div class="list" id="pl-hechos"></div></details>
   </section>
 
   <section class="sect" id="s-necesita" aria-labelledby="h-nec">
-    <div class="sh2"><h2 id="h-nec">Lo que me dice que necesita</h2><button class="add" type="button" data-add="necesita" aria-label="Añadir lo que necesita">＋</button></div>
-    <p class="small">Con sus palabras, tal como lo dijo.</p>
+    <div class="sh2"><span class="si" data-i="oido"></span><div><h2 id="h-nec">Lo que me dice que necesita</h2><p class="small">Con sus palabras, tal cual.</p></div><button class="add" type="button" data-add="necesita" aria-label="Añadir lo que necesita">＋</button></div>
     <div class="list" id="necesita"></div>
   </section>
 
   <section class="sect" id="s-semana" aria-labelledby="h-sem">
-    <div class="sh2"><h2 id="h-sem">Chequeo semanal</h2><button class="add" type="button" id="semHacer">Hacerlo</button></div>
-    <p class="small">Dos minutos. Sobre mí, no sobre ella.</p>
+    <div class="sh2"><span class="si" data-i="check"></span><div><h2 id="h-sem">Chequeo semanal</h2><p class="small">Dos minutos. Sobre mí, no sobre ella.</p></div><button class="add txt" type="button" id="semHacer">Hacerlo</button></div>
     <div class="list" id="semanas"></div>
   </section>
 
-  <div class="row" style="justify-content:center"><button class="linkb" type="button" id="ajustesB">Acciones, secciones y recordatorios</button></div>
+  <div class="foot"><button class="linkb" type="button" id="ajustesB">Acciones, secciones y recordatorios</button></div>
 </main>
 
 <div class="bar"><div class="bar-in">
-  <button class="b-note" type="button" id="noteB">＋ Apunte</button>
-  <button class="b-calm" type="button" id="calmB">Me estoy acomodando<small>Lo que viví estos días</small></button>
+  <button class="b-note" type="button" id="noteB"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>Apunte</button>
+  <button class="b-calm" type="button" id="calmB"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M32 60V30" stroke="#7fbf8e" stroke-width="4" stroke-linecap="round"/><g fill="#f2a7a0"><ellipse cx="32" cy="15" rx="7" ry="10"/><ellipse cx="32" cy="15" rx="7" ry="10" transform="rotate(72 32 23)"/><ellipse cx="32" cy="15" rx="7" ry="10" transform="rotate(144 32 23)"/><ellipse cx="32" cy="15" rx="7" ry="10" transform="rotate(216 32 23)"/><ellipse cx="32" cy="15" rx="7" ry="10" transform="rotate(288 32 23)"/></g><circle cx="32" cy="23" r="6" fill="#f2b67a"/></svg><span>Me estoy acomodando<small>Lo que viví estos días</small></span></button>
 </div></div>
 <div class="toast" id="toast" role="status" hidden></div>
 <dialog class="sheet" id="sheet"><div class="sh" id="sheetBody"></div></dialog>
@@ -232,6 +359,7 @@ function seed() {
 // ---- Dates ----
 var DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
 var MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+var MESES_L = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 function pad(n) { return (n < 10 ? '0' : '') + n; }
 function key(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
 function parse(k) { var a = k.split('-').map(Number); return new Date(a[0], a[1] - 1, a[2]); }
@@ -252,11 +380,70 @@ function rel(k) {
 // ---- Toast ----
 var toastT = 0;
 function toast(msg, label, fn) {
-  var el = $('toast'); clearTimeout(toastT); el.hidden = false;
+  var el = $('toast'); clearTimeout(toastT); el.hidden = true; void el.offsetWidth; el.hidden = false;
   el.innerHTML = '<span>' + esc(msg) + '</span>' + (label ? '<button type="button" id="toastB">' + esc(label) + '</button>' : '');
   if (label) $('toastB').onclick = function () { el.hidden = true; fn(); };
   toastT = setTimeout(function () { el.hidden = true; }, label ? 6000 : 3000);
 }
+
+// ---- Icons (line, currentColor) ----
+var ICON = {
+  pluma: '<path d="M20 4c-6 0-12 5-13 12l-2 4"/><path d="M7 16c4 0 8-2 10-6"/>',
+  cal: '<rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M9 3v4M15 3v4"/>',
+  gente: '<circle cx="9" cy="9" r="3.2"/><path d="M3.5 19c.8-3.2 3-5 5.5-5s4.7 1.8 5.5 5"/><circle cx="17" cy="8" r="2.4"/><path d="M15.5 13.6c2.3.2 4 1.8 4.6 4.4"/>',
+  plan: '<path d="M12 21s-6-5.6-6-11a6 6 0 0 1 12 0c0 5.4-6 11-6 11z"/><circle cx="12" cy="10" r="2.2"/>',
+  oido: '<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>',
+  check: '<circle cx="12" cy="12" r="8.5"/><path d="M8.5 12.2l2.4 2.4 4.6-5"/>',
+  charla: '<path d="M5 18l-1 3 3.6-1.6A8.5 8.5 0 1 0 5 18z"/>',
+  gota: '<path d="M12 3c4 5 6 8.2 6 11a6 6 0 0 1-12 0c0-2.8 2-6 6-11z"/>'
+};
+function ico(n) { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICON[n] + '</svg>'; }
+document.querySelectorAll('.si[data-i]').forEach(function (s) { s.innerHTML = ico(s.dataset.i); });
+
+// A flower left in the ground with a drop of water falling on it: loving it is watering it, not cutting it
+var FLOR_SVG = '<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M32 60V30" stroke="#7fbf8e" stroke-width="3" stroke-linecap="round" fill="none"/><path d="M32 46c-8 0-13-5-14-11 7 0 12 4 14 11zM32 40c7 0 11-4 12-9-6 0-10 3-12 9z" fill="#7fbf8e"/>' +
+  '<g fill="#f2a7a0"><ellipse cx="32" cy="15" rx="6" ry="9"/><ellipse cx="32" cy="15" rx="6" ry="9" transform="rotate(72 32 22)"/><ellipse cx="32" cy="15" rx="6" ry="9" transform="rotate(144 32 22)"/><ellipse cx="32" cy="15" rx="6" ry="9" transform="rotate(216 32 22)"/><ellipse cx="32" cy="15" rx="6" ry="9" transform="rotate(288 32 22)"/></g>' +
+  '<circle cx="32" cy="22" r="5" fill="#f2b67a"/><path class="gota" d="M52 6c3 4 4 6 4 8a4 4 0 0 1-8 0c0-2 1-4 4-8z" fill="#8ec5e8"/><path d="M20 60h24" stroke="#a07a5c" stroke-width="3" stroke-linecap="round"/></svg>';
+
+// ---- The garden: sky by hour, flower by days watered in the last two weeks (missing a day never kills it) ----
+function phase() { var h = new Date().getHours(); return h < 7 || h >= 21 ? 'noche' : h < 13 ? 'manana' : h < 19 ? 'tarde' : 'ocaso'; }
+var SKY = {
+  manana: { s1: '#f4bfa8', s2: '#fdeee2', h1: '#eab7a0', h2: '#d99a87', g: '#c88a74', sun: '#fff4dc', dark: false },
+  tarde: { s1: '#ec9b80', s2: '#fbd8b2', h1: '#da8a74', h2: '#be6e60', g: '#a65a50', sun: '#fff1cc', dark: false },
+  ocaso: { s1: '#4f2134', s2: '#e0876c', h1: '#7a3a4d', h2: '#4d2436', g: '#3a1c2b', sun: '#f6c27f', dark: true },
+  noche: { s1: '#140910', s2: '#3a1c2b', h1: '#2e1520', h2: '#22101a', g: '#1a0b12', sun: '#f3e6cf', dark: true }
+};
+function flowerAt(x, ground, g, petal, cls) {
+  var stem = 30 + 82 * g, top = ground - stem, head = .5 + .5 * g, s = '<g class="' + (cls || '') + '">';
+  s += '<path d="M' + x + ' ' + ground + ' Q' + (x - 5) + ' ' + (ground - stem / 2) + ' ' + x + ' ' + top + '" stroke="#6fae7f" stroke-width="' + (3 + 2 * g) + '" fill="none" stroke-linecap="round"/>';
+  if (stem > 46) s += '<path d="M' + (x - 2) + ' ' + (ground - stem * .38) + ' c-' + (20 * head) + ' 0 -' + (30 * head) + ' -' + (10 * head) + ' -' + (32 * head) + ' -' + (24 * head) + ' c' + (18 * head) + ' 0 ' + (28 * head) + ' ' + (8 * head) + ' ' + (32 * head) + ' ' + (24 * head) + 'z" fill="#7fbf8e"/>' +
+    '<path d="M' + (x + 1) + ' ' + (ground - stem * .58) + ' c' + (16 * head) + ' 0 ' + (26 * head) + ' -' + (9 * head) + ' ' + (28 * head) + ' -' + (21 * head) + ' c-' + (15 * head) + ' 0 -' + (24 * head) + ' ' + (7 * head) + ' -' + (28 * head) + ' ' + (21 * head) + 'z" fill="#8ccb9a"/>';
+  if (g < .15) { // a sprout
+    s += '<path d="M' + x + ' ' + top + ' c-10 0-15-6-15-12 8 0 13 5 15 12zM' + x + ' ' + top + ' c9 0 14-5 14-11-7 0-12 4-14 11z" fill="#8ccb9a"/>';
+  } else if (g < .4) { // a bud
+    s += '<g transform="translate(' + x + ' ' + top + ') scale(' + head + ')"><ellipse cx="0" cy="-12" rx="9" ry="14" fill="' + petal + '"/><path d="M-9 -6 Q0 6 9 -6 Q0 2 -9 -6z" fill="#7fbf8e"/></g>';
+  } else { // in bloom
+    s += '<g transform="translate(' + x + ' ' + top + ') scale(' + head + ')">' + [0, 60, 120, 180, 240, 300].map(function (a) { return '<ellipse cx="0" cy="-17" rx="10.5" ry="17" transform="rotate(' + a + ')" fill="' + petal + '"/>'; }).join('') +
+      '<circle r="10" fill="#f2b67a"/><circle r="4" cx="-3" cy="-3" fill="#f7cf98"/></g>';
+  }
+  return s + '</g>';
+}
+function garden(n) {
+  var p = SKY[phase()], g = Math.min(1, n / 10), ground = 206;
+  var s = '<svg class="garden" viewBox="0 0 360 232" preserveAspectRatio="xMidYMax slice" aria-hidden="true"><defs><linearGradient id="sk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + p.s1 + '"/><stop offset="1" stop-color="' + p.s2 + '"/></linearGradient></defs><rect width="360" height="232" fill="url(#sk)"/>';
+  if (phase() === 'noche') s += '<g fill="#fff4ef">' + [[30, 28], [74, 62], [118, 22], [160, 48], [222, 18], [262, 52], [318, 30], [344, 74], [20, 96], [96, 104], [300, 104]].map(function (q) { return '<circle class="tw" cx="' + q[0] + '" cy="' + q[1] + '" r="1.5"/>'; }).join('') + '</g>' +
+    '<circle cx="292" cy="62" r="20" fill="' + p.sun + '"/><circle cx="301" cy="55" r="18" fill="' + p.s1 + '"/>';
+  else s += '<circle cx="292" cy="70" r="46" fill="' + p.sun + '" opacity=".28"/><circle cx="292" cy="70" r="26" fill="' + p.sun + '"/>';
+  s += '<path d="M0 160 C60 140 120 150 180 142 C250 132 300 148 360 138 V232 H0Z" fill="' + p.h1 + '"/>' +
+    '<path d="M0 190 C80 174 160 186 230 178 C290 172 330 180 360 174 V232 H0Z" fill="' + p.h2 + '"/>' +
+    '<rect y="' + ground + '" width="360" height="26" fill="' + p.g + '"/>';
+  if (n >= 7) s += flowerAt(108, ground, .55, '#f2b67a', 'sway');
+  if (n >= 11) s += flowerAt(256, ground, .45, '#c9a0dc', 'sway');
+  s += '<g class="flower sway">' + flowerAt(180, ground, g, '#f2a7a0') + '</g>';
+  s += '<path d="M150 ' + ground + 'l3-9 2 9M168 ' + ground + 'l2-7 3 7M196 ' + ground + 'l2-8 2 8M212 ' + ground + 'l3-6 2 6" stroke="#6fae7f" stroke-width="2" fill="none" stroke-linecap="round"/>';
+  return s + '</svg>';
+}
+function regadas(days) { var n = 0, k = today(); for (var i = 0; i < days; i++) { if (S.hechos[k] && S.hechos[k].hecho) n++; k = addDays(k, -1); } return n; }
 
 // ---- Today's action: a different one each day, in order ----
 function acciones() { return all('acciones').filter(function (a) { return !a.pausada; }).sort(function (a, b) { return (a.orden || 0) - (b.orden || 0) || (a.id < b.id ? -1 : 1); }); }
@@ -266,10 +453,27 @@ function accionHoy() {
   if (h && h.accion && S.acciones[h.accion] && !S.acciones[h.accion].pausada) return S.acciones[h.accion];
   return as[dayNum(today()) % as.length];
 }
-function racha() {
-  var n = 0, k = today(); if (!(S.hechos[k] && S.hechos[k].hecho)) k = addDays(k, -1);
-  while (S.hechos[k] && S.hechos[k].hecho) { n++; k = addDays(k, -1); }
-  return n;
+// The right moment beats the rotation: what's happening in her days becomes today's one thing
+function contexto(t) {
+  var c = [];
+  all('fechas').forEach(function (f) {
+    if (!f.fecha) return; var n = diff(f.fecha, t);
+    if ((n === -1 || n === -2) && !f.preguntado) c.push({ o: 0, k: 'f:' + f.id, fecha: f.id, texto: 'Pregúntale qué tal le fue: ' + f.titulo + '.' });
+    if (n === 0) c.push({ o: 1, k: 'f:' + f.id, texto: 'Hoy tiene ' + f.titulo + '. Escríbele antes y pregúntale a la vuelta.' });
+    if (n === 1) c.push({ o: 2, k: 'f:' + f.id, texto: 'Mañana tiene ' + f.titulo + '. Díselo: que sepa que te acuerdas.' });
+  });
+  all('apuntes').forEach(function (n) {
+    if (n.hecho || n.fecha !== addDays(t, -1)) return; var p = n.persona && S.personas[n.persona];
+    c.push({ o: 3, k: 'a:' + n.id, apunte: n.id, texto: 'Pregúntale cómo sigue lo de ' + (p ? p.nombre + ': ' : '') + n.texto.charAt(0).toLowerCase() + n.texto.slice(1) + '.' });
+  });
+  c.sort(function (a, b) { return a.o - b.o; });
+  return c[0] || null;
+}
+function hoy() {
+  var t = today(), h = S.hechos[t];
+  if (h && h.hecho && h.texto) return { texto: h.texto, k: h.k || '', hecha: true };
+  if (!(h && h.accion)) { var c = contexto(t); if (c) return c; }
+  var a = accionHoy(); return a ? { texto: a.texto, accion: a.id, tarde: a.momento === 'tarde' } : null;
 }
 
 // ---- Weekly check ----
@@ -286,16 +490,7 @@ function semanaPendiente() {
   return wk && !S.semanas[wk] ? wk : null;
 }
 
-// ---- Sections the user can hide ("quitar las que no se usen") ----
-var SECS = [['palabras', 'Acuérdate de cómo lo pasaste'], ['fechas', 'Sus fechas'], ['gente', 'Su gente'], ['planes', 'Planes'], ['necesita', 'Lo que necesita'], ['semana', 'Chequeo semanal']];
-function prefs() { return S.ajustes.prefs || { id: 'prefs', ocultas: [] }; }
-
-// A flower left in the ground with a drop of water falling on it: loving it is watering it, not cutting it
-var FLOR_SVG = '<svg class="flor-i" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 60V30" stroke="#7fbf8e" stroke-width="3" stroke-linecap="round" fill="none"/><path d="M32 46c-8 0-13-5-14-11 7 0 12 4 14 11zM32 40c7 0 11-4 12-9-6 0-10 3-12 9z" fill="#7fbf8e"/>' +
-  '<g fill="#f2a7a0"><ellipse cx="32" cy="15" rx="6" ry="9"/><ellipse cx="32" cy="15" rx="6" ry="9" transform="rotate(72 32 22)"/><ellipse cx="32" cy="15" rx="6" ry="9" transform="rotate(144 32 22)"/><ellipse cx="32" cy="15" rx="6" ry="9" transform="rotate(216 32 22)"/><ellipse cx="32" cy="15" rx="6" ry="9" transform="rotate(288 32 22)"/></g>' +
-  '<circle cx="32" cy="22" r="5" fill="#f2b67a"/><path class="gota" d="M52 6c3 4 4 6 4 8a4 4 0 0 1-8 0c0-2 1-4 4-8z" fill="#8ec5e8"/><path d="M20 60h24" stroke="#a07a5c" stroke-width="3" stroke-linecap="round"/></svg>';
-
-// Lines that remind or push, one a day. Only well-sourced attributions; your own ones (tipo 'frase') join the rotation
+// ---- Lines that remind or push, one a day. Only well-sourced attributions; your own ones (tipo 'frase') join the rotation ----
 var FRASES = [
   ['Fue el tiempo que pasaste con tu rosa lo que la hizo tan importante.', 'Antoine de Saint-Exupéry, El principito'],
   ['Eres responsable para siempre de lo que has domesticado. Eres responsable de tu rosa.', 'Antoine de Saint-Exupéry, El principito'],
@@ -322,85 +517,164 @@ function frases() {
 var fraseOff = 0;
 function fraseHoy() { var fs = frases(); return fs[(dayNum(today()) * 7 + fraseOff) % fs.length]; }
 
+// ---- Sections the user can hide ("quitar las que no se usen") ----
+var SECS = [['palabras', 'Acuérdate de cómo lo pasaste'], ['fechas', 'Sus fechas'], ['gente', 'Su gente'], ['planes', 'Planes'], ['necesita', 'Lo que necesita'], ['semana', 'Chequeo semanal']];
+function prefs() { return S.ajustes.prefs || { id: 'prefs', ocultas: [] }; }
+function byOrden(a, b) { return (a.orden || 0) - (b.orden || 0) || (a.t || 0) - (b.t || 0); }
+
 // ---- Render ----
 function render() {
   var t = today(), p = prefs();
   SECS.forEach(function (s) { $('s-' + s[0]).hidden = p.ocultas.indexOf(s[0]) >= 0; });
-
-  var cartas = all('palabras').filter(function (w) { return w.tipo === 'carta'; });
-  $('carta').textContent = cartas.length ? '«' + cartas[0].texto + '»' : '';
-  $('carta').hidden = !cartas.length;
-
-  var a = accionHoy(), h = S.hechos[t];
-  $('hoyLab').textContent = 'Hoy, ' + DIAS[parse(t).getDay()] + ' · una cosa';
-  $('accion').textContent = a ? a.texto : sinSesion && empty() ? 'Entra con Google (abajo) y aparecen tus cosas.' : 'Añade las acciones del día abajo, en «Acciones».';
-  var done = !!(h && h.hecho);
-  $('hoyActs').innerHTML = a ? '<button type="button" class="b-done' + (done ? ' on' : '') + '" id="hecho">' + (done ? '✓ Hecho' : 'Hecho') + '</button><button type="button" class="b-other" id="otra">Otra</button>' : '';
-  if (a) {
-    $('hecho').onclick = function () { put('hechos', { id: t, accion: a.id, hecho: !done }); if (!done) toast('Hecho. Mañana, otra.'); };
-    $('otra').onclick = function () {
-      var as = acciones(), i = as.indexOf(a), nx = as[(i + 1) % as.length];
-      put('hechos', { id: t, accion: nx.id, hecho: false });
-    };
-  }
-  var r = racha(), flor = all('palabras').filter(function (w) { return w.tipo === 'flor'; })[0];
-  $('heroB').innerHTML = (flor ? '<span class="flor-s">' + FLOR_SVG + '<span>' + esc(flor.texto) + '</span></span>' : '') +
-    (r > 1 ? '<span>' + r + ' días seguidos regándola.</span>' : flor ? '' : 'Corto y concreto. Lo demás, mirándola.');
-
+  renderHero(t);
   renderDue(t);
   var fr = fraseHoy();
-  $('frase').innerHTML = '<p class="fq">' + esc(fr.texto) + '</p>' + (fr.autor ? '<p class="small">' + esc(fr.autor) + '</p>' : '<p class="small">Tuya</p>');
+  $('frase').innerHTML = '<p class="fq">' + esc(fr.texto) + '</p><p class="fa">' + esc(fr.autor || 'Tuya') + '</p>';
   renderPalabras();
   renderFechas(t);
   renderGente();
   renderPlanes();
   renderNecesita();
   renderSemanas();
+  resumenes(t);
 }
 
+// ---- Folding: every section starts as one line; opening one is counted, to know what to remove later ----
+var LSF = 'diaadia.pliegue', FOLD = { open: {}, uso: {} };
+try { FOLD = Object.assign(FOLD, JSON.parse(localStorage.getItem(LSF)) || {}); } catch (e) {}
+function saveFold() { try { localStorage.setItem(LSF, JSON.stringify(FOLD)); } catch (e) {} }
+document.querySelectorAll('.sect').forEach(function (s) {
+  var id = s.id.slice(2), hd = s.querySelector('.sh2 > div');
+  hd.setAttribute('role', 'button'); hd.tabIndex = 0;
+  var c = document.createElement('p'); c.className = 'small cnt'; c.id = 'c-' + id; hd.appendChild(c);
+  function apply() { s.classList.toggle('fold', !FOLD.open[id]); hd.setAttribute('aria-expanded', !!FOLD.open[id]); }
+  function tog() { FOLD.open[id] = !FOLD.open[id]; if (FOLD.open[id]) FOLD.uso[id] = (FOLD.uso[id] || 0) + 1; saveFold(); apply(); }
+  hd.onclick = tog; hd.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tog(); } };
+  apply();
+});
+function resumenes(t) {
+  function set(id, s) { var el = $('c-' + id); if (el) el.textContent = s; }
+  var pal = all('palabras').filter(function (w) { return ['mia', 'carta', 'para', 'flor'].indexOf(w.tipo) >= 0; }).length;
+  set('palabras', pal ? pal + ' cosas que no quieres olvidar' : 'Vacío');
+  var fe = all('fechas').filter(function (f) { return f.fecha && f.fecha >= t; }).sort(function (a, b) { return a.fecha < b.fecha ? -1 : 1; });
+  set('fechas', fe.length ? 'Próxima: ' + fe[0].titulo + ', ' + rel(fe[0].fecha) : 'Ninguna apuntada');
+  var pe = all('personas').length; set('gente', pe ? pe + (pe === 1 ? ' persona' : ' personas') : 'Nadie aún');
+  var pl = all('planes').filter(function (p) { return !p.hecho; }).length; set('planes', pl + ' por hacer · ' + $('turno').textContent.split('.')[0]);
+  var ne = all('necesita').length; set('necesita', ne ? ne + (ne === 1 ? ' cosa' : ' cosas') + ' con sus palabras' : 'Vacío');
+  var se = all('semanas').length; set('semana', se ? se + (se === 1 ? ' semana' : ' semanas') + (semanaPendiente() ? ' · toca hacerlo' : '') : 'El primero, el domingo');
+}
+
+function renderHero(t) {
+  var d = parse(t), n14 = regadas(14), sky = SKY[phase()];
+  $('scene').className = 'scene' + (sky.dark ? ' dark' : '');
+  $('garden').innerHTML = garden(n14);
+  $('fechaHoy').textContent = DIAS[d.getDay()] + ', ' + d.getDate() + ' de ' + MESES_L[d.getMonth()];
+  var carta = all('palabras').filter(function (w) { return w.tipo === 'carta'; })[0];
+  $('carta').textContent = carta ? '«' + carta.texto + '»' : '';
+
+  var a = hoy(), h = S.hechos[t], done = !!(h && h.hecho), late = a && a.tarde && new Date().getHours() < 16;
+  $('hoyLab').textContent = a && a.k && !a.hecha ? 'Hoy, lo que toca' : late ? 'Hoy, para esta tarde' : 'Hoy, una cosa';
+  $('accion').textContent = a ? a.texto : sinSesion && empty() ? 'Entra con Google (abajo) y aparecen tus cosas.' : 'Añade las acciones del día en «Acciones», abajo del todo.';
+  $('hoyActs').innerHTML = a ? '<button type="button" class="b-done' + (done ? ' on' : '') + '" id="hecho">' + (done ? '✓ Hecho hoy' : ico('gota') + 'Hecho') + '</button>' + (done ? '' : '<button type="button" class="b-other" id="otra">Otra</button>') : '';
+  if (a) {
+    $('hecho').onclick = function () {
+      if (done) { var u = Object.assign({}, h); u.hecho = false; put('hechos', u); return; }
+      // Doing a contextual one also closes what it answered: the date's "how did it go", yesterday's note
+      if (a.fecha) { var f = Object.assign({}, S.fechas[a.fecha]); f.preguntado = true; put('fechas', f, true); }
+      if (a.apunte) { var n = Object.assign({}, S.apuntes[a.apunte]); n.hecho = true; put('apuntes', n, true); }
+      put('hechos', { id: t, accion: a.accion || '', k: a.k || '', texto: a.texto, hecho: true });
+      regar(); toast('Regada. Mañana, otra.');
+      if (a.fecha) setTimeout(function () { preguntado(a.fecha); }, 900);
+    };
+    if (!done) $('otra').onclick = function () {
+      var as = acciones(); if (!as.length) return;
+      if (a.accion) { var s = Object.assign({}, S.acciones[a.accion]); s.saltos = (s.saltos || 0) + 1; put('acciones', s, true); }
+      var i = a.accion ? as.findIndex(function (x) { return x.id === a.accion; }) : dayNum(t) % as.length - 1;
+      put('hechos', { id: t, accion: as[(i + 1 + as.length) % as.length].id, hecho: false });
+    };
+  }
+  var mon = monday(t), L = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+  $('week').innerHTML = L.map(function (l, i) {
+    var k = addDays(mon, i), c = 'wd' + (S.hechos[k] && S.hechos[k].hecho ? ' done' : '') + (k === t ? ' now' : k > t ? ' future' : '');
+    return '<span class="' + c + '"><i></i>' + l + '</span>';
+  }).join('');
+  $('grow').innerHTML = n14 ? 'La has regado <b>' + n14 + ' de los últimos 14 días</b>. Si un día no, no se marchita.' : 'Cada día que lo haces, la flor crece un poco.';
+  var flor = all('palabras').filter(function (w) { return w.tipo === 'flor'; })[0];
+  $('florLine').hidden = !flor;
+  if (flor) $('florLine').innerHTML = FLOR_SVG + '<span>' + esc(flor.texto) + '</span>';
+}
+function regar() {
+  var h = $('hero'); h.classList.remove('regando', 'grew'); void h.offsetWidth; h.classList.add('regando');
+  setTimeout(function () { h.classList.add('grew'); }, 1100);
+  setTimeout(function () { h.classList.remove('regando', 'grew'); }, 2000);
+}
+
+function dueCard(kind, icon, html, actions) { return '<div class="dc ' + kind + '"><span class="ic">' + ico(icon) + '</span><div class="t">' + html + '</div>' + (actions ? '<div class="row">' + actions + '</div>' : '') + '</div>'; }
+var LSI = 'diaadia.ics';
+function icsListo() { try { return !!localStorage.getItem(LSI); } catch (e) { return true; } }
 function renderDue(t) {
-  var out = [];
+  var out = [], top = hoy(), hk = top && top.k;
+  // Without the calendar file nothing reaches him unless he opens the app; nudge once per device until done
+  if (!icsListo() && !sinSesion) out.push({ o: -30, h: dueCard('plum', 'cal', 'Para que te llegue <b>sin abrir la app</b>: pon los avisos en el calendario del iPhone. Uno al día a las 9, el domingo el chequeo y sus fechas.', '<button class="pill" type="button" id="icsGo">Descargar avisos</button><button class="pill alt" type="button" id="icsYa">Ya los tengo</button>') });
   all('fechas').forEach(function (f) {
-    if (!f.fecha) return; var n = diff(f.fecha, t);
-    if (n >= 0 && n <= 2) out.push({ o: n, h: '<div class="dc" data-f="' + f.id + '"><div class="t">' + (n === 0 ? 'Hoy' : n === 1 ? 'Mañana' : 'Pasado mañana') + ' tiene <b>' + esc(f.titulo) + '</b>.' + (f.nota ? ' <span class="small">' + esc(f.nota) + '</span>' : '') + '</div><div class="small">' + (n === 0 ? 'Escríbele antes y acuérdate a la vuelta.' : 'Díselo: que sepa que te acuerdas.') + '</div></div>' });
-    if (n < 0 && n >= -5 && !f.preguntado) out.push({ o: -10 + n, h: '<div class="dc"><div class="t">Fue ' + rel(f.fecha) + ': <b>' + esc(f.titulo) + '</b>. Pregúntale qué tal ha ido.</div><div class="row"><button class="pill" type="button" data-preg="' + f.id + '">Ya le pregunté</button></div></div>' });
+    if (!f.fecha || hk === 'f:' + f.id) return; var n = diff(f.fecha, t);
+    if (n >= 0 && n <= 2) out.push({ o: n, h: dueCard('gold', 'cal', (n === 0 ? 'Hoy' : n === 1 ? 'Mañana' : 'Pasado mañana') + ' tiene <b>' + esc(f.titulo) + '</b>.' + (f.nota ? ' <span class="small">' + esc(f.nota) + '</span>' : '') + '<div class="small">' + (n === 0 ? 'Escríbele antes y acuérdate a la vuelta.' : 'Díselo: que sepa que te acuerdas.') + '</div>') });
+    if (n < 0 && n >= -5 && !f.preguntado) out.push({ o: -10 + n, h: dueCard('rose', 'charla', 'Fue ' + rel(f.fecha) + ': <b>' + esc(f.titulo) + '</b>. Pregúntale qué tal ha ido.', '<button class="pill" type="button" data-preg="' + f.id + '">Ya le pregunté</button>') });
   });
   all('apuntes').forEach(function (n) {
-    if (n.hecho || !n.fecha || n.fecha >= t) return;
+    if (n.hecho || !n.fecha || n.fecha >= t || hk === 'a:' + n.id) return;
     var per = n.persona && S.personas[n.persona];
-    out.push({ o: -20, h: '<div class="dc"><div class="t">' + (n.fecha === addDays(t, -1) ? 'Ayer' : 'El ' + fmt(n.fecha)) + ' te contó: <b>' + esc(n.texto) + '</b>' + (per ? ' · ' + esc(per.nombre) : '') + '</div><div class="small">Pregúntale cómo sigue.</div><div class="row"><button class="pill" type="button" data-apu="' + n.id + '">Ya le pregunté</button>' + (per ? '<button class="pill alt" type="button" data-ficha="' + n.id + '">Pasar a su ficha</button>' : '') + '</div></div>' });
+    out.push({ o: -20, h: dueCard('leaf', 'charla', (n.fecha === addDays(t, -1) ? 'Ayer' : 'El ' + fmt(n.fecha)) + ' te contó: <b>' + esc(n.texto) + '</b>' + (per ? ' · ' + esc(per.nombre) : '') + '<div class="small">Pregúntale cómo sigue.</div>',
+      '<button class="pill" type="button" data-apu="' + n.id + '">Ya le pregunté</button>' + (per ? '<button class="pill alt" type="button" data-ficha="' + n.id + '">Pasar a su ficha</button>' : '')) });
+  });
+  if (prefs().ocultas.indexOf('planes') < 0) all('planes').forEach(function (p) {
+    if (p.hecho || !p.hasta) return; var left = diff(p.hasta, t);
+    if (left >= 0 && left <= 7 && (!p.desde || p.desde <= addDays(t, 7))) out.push({ o: 3 + left / 10, h: dueCard('gold', 'plan', (left === 0 ? 'Hoy es el último día' : 'Quedan ' + left + (left === 1 ? ' día' : ' días')) + ' para <b>' + esc(p.titulo) + '</b>. ¿Lo proponéis?') });
   });
   var wk = semanaPendiente();
-  if (wk && prefs().ocultas.indexOf('semana') < 0) out.push({ o: 5, h: '<div class="dc"><div class="t">Toca el <b>chequeo de la semana</b>. Dos minutos. Y relee la carta.</div><div class="row"><button class="pill" type="button" id="dueSem">Hacerlo</button></div></div>' });
+  if (wk && prefs().ocultas.indexOf('semana') < 0) out.push({ o: 5, h: dueCard('plum', 'check', 'Toca el <b>chequeo de la semana</b>. Dos minutos. Y relee la carta.', '<button class="pill" type="button" id="dueSem">Hacerlo</button>') });
   out.sort(function (a, b) { return a.o - b.o; });
   $('due').innerHTML = out.map(function (x) { return x.h; }).join('');
   $('due').hidden = !out.length;
-  $('due').querySelectorAll('[data-preg]').forEach(function (b) { b.onclick = function () { preguntado(b.dataset.preg); }; });
-  $('due').querySelectorAll('[data-apu]').forEach(function (b) { b.onclick = function () { var n = Object.assign({}, S.apuntes[b.dataset.apu]); n.hecho = true; put('apuntes', n); toast('Bien.', 'Deshacer', function () { n.hecho = false; put('apuntes', n); }); }; });
-  $('due').querySelectorAll('[data-ficha]').forEach(function (b) { b.onclick = function () { aFicha(b.dataset.ficha); }; });
+  bind($('due'), '[data-preg]', function (b) { preguntado(b.dataset.preg); });
+  bind($('due'), '[data-apu]', function (b) { var n = Object.assign({}, S.apuntes[b.dataset.apu]); n.hecho = true; put('apuntes', n); toast('Bien.', 'Deshacer', function () { n.hecho = false; put('apuntes', n); }); });
+  bind($('due'), '[data-ficha]', function (b) { aFicha(b.dataset.ficha); });
   if ($('dueSem')) $('dueSem').onclick = function () { semanaForm(wk); };
+  if ($('icsGo')) $('icsGo').onclick = function () { descargarIcs(); icsHecho(); };
+  if ($('icsYa')) $('icsYa').onclick = icsHecho;
 }
+function icsHecho() { try { localStorage.setItem(LSI, today()); } catch (e) {} renderDue(today()); }
 
 function item(attr, title, meta, cls) { return '<button type="button" class="it" ' + attr + '><span class="' + (cls || 't') + '">' + title + '</span>' + (meta ? '<span class="m">' + meta + '</span>' : '') + '</button>'; }
 function bind(root, sel, fn) { root.querySelectorAll(sel).forEach(function (b) { b.onclick = function () { fn(b); }; }); }
 
+var palAll = false;
 function renderPalabras() {
   var ws = all('palabras').filter(function (w) { return w.tipo === 'mia' || w.tipo === 'carta' || w.tipo === 'para' || w.tipo === 'flor'; }).sort(byOrden);
-  $('palabras').innerHTML = ws.length ? ws.map(function (w) { return item('data-pal="' + w.id + '"', esc(w.texto), w.tipo === 'carta' ? 'La carta' : w.tipo === 'para' ? 'Para qué es esto' : w.tipo === 'flor' ? 'La flor' : '', 'quote'); }).join('') : '<p class="empty">Tus propias palabras de estos días. Las que no quieres olvidar.</p>';
+  var shown = palAll ? ws : ws.slice(0, 3);
+  var K = { carta: 'La carta', para: 'Para qué es esto', flor: 'La flor', mia: '' };
+  $('palabras').innerHTML = ws.length ? shown.map(function (w) {
+    return '<button type="button" class="ql ' + (w.tipo === 'carta' ? 'carta-q' : w.tipo === 'flor' ? 'flor-q' : '') + '" data-pal="' + w.id + '">' + (K[w.tipo] ? '<span class="k">' + K[w.tipo] + '</span>' : '') + '<span class="q">' + esc(w.texto) + '</span></button>';
+  }).join('') + (ws.length > 3 ? '<button type="button" class="more" id="palMore">' + (palAll ? 'Ver menos' : 'Ver las ' + ws.length) + '</button>' : '') : '<p class="empty">Tus propias palabras de estos días. Las que no quieres olvidar.</p>';
   bind($('palabras'), '[data-pal]', function (b) { palabraForm(S.palabras[b.dataset.pal]); });
+  if ($('palMore')) $('palMore').onclick = function () { palAll = !palAll; renderPalabras(); };
 }
-function byOrden(a, b) { return (a.orden || 0) - (b.orden || 0) || (a.t || 0) - (b.t || 0); }
 
 function renderFechas(t) {
-  var fs = all('fechas').sort(function (a, b) { return a.fecha < b.fecha ? -1 : 1; });
-  var next = fs.filter(function (f) { return f.fecha >= addDays(t, -5); });
-  $('fechas').innerHTML = next.length ? next.map(function (f) {
-    var past = f.fecha < t;
-    return item('data-fec="' + f.id + '"', esc(f.titulo), esc(rel(f.fecha)) + (past ? (f.preguntado ? ' · le preguntaste' + (f.como ? ': ' + esc(f.como) : '') : ' · pregúntale qué tal') : '') + (f.nota ? ' · ' + esc(f.nota) : ''));
+  var fs = all('fechas').filter(function (f) { return f.fecha && f.fecha >= addDays(t, -5); }).sort(function (a, b) { return a.fecha < b.fecha ? -1 : 1; });
+  $('fechas').innerHTML = fs.length ? fs.map(function (f) {
+    var d = parse(f.fecha), past = f.fecha < t, m = past ? (f.preguntado ? 'Le preguntaste' + (f.como ? ': ' + esc(f.como) : '') : 'Pregúntale qué tal') : esc(rel(f.fecha)) + (f.nota ? ' · ' + esc(f.nota) : '');
+    return '<button type="button" class="fe' + (past ? ' past' : '') + '" data-fec="' + f.id + '"><span class="cal"><span>' + MESES[d.getMonth()] + '</span><b>' + d.getDate() + '</b></span><span><span class="t">' + esc(f.titulo) + '</span><br><span class="m' + (past && !f.preguntado ? ' ask' : '') + '">' + m + '</span></span></button>';
   }).join('') : '<p class="empty">Exámenes, citas, cosas importantes. Ella siempre se acordaba de los tuyos.</p>';
   bind($('fechas'), '[data-fec]', function (b) { fechaForm(S.fechas[b.dataset.fec]); });
 }
 
+var AV = ['#f2b9ae', '#f6cf9e', '#b7d9bd', '#b6d6ec', '#d7bfe6', '#ecd29a', '#f0b3c6', '#c4d7a4'];
+function avatar(name) {
+  var h = 0; for (var i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+  var ini = name.trim().split(/\s+/).slice(0, 2).map(function (w) { return w.charAt(0).toUpperCase(); }).join('');
+  return '<span class="av" style="background:' + AV[h % AV.length] + '">' + esc(ini) + '</span>';
+}
 function renderGente() {
   var ps = all('personas').sort(function (a, b) { return (b.t || 0) - (a.t || 0); });
   $('buscar').hidden = ps.length < 8;
@@ -408,46 +682,56 @@ function renderGente() {
   if (q) ps = ps.filter(function (p) { return (p.nombre + ' ' + (p.de || '') + ' ' + (p.contado || '') + ' ' + (p.ahora || '')).toLowerCase().indexOf(q) >= 0; });
   $('gente').innerHTML = ps.length ? ps.map(function (p) {
     var ap = all('apuntes').filter(function (n) { return n.persona === p.id; }).sort(function (a, b) { return a.fecha < b.fecha ? 1 : -1; })[0];
-    return '<button type="button" class="it" data-per="' + p.id + '"><span class="t">' + esc(p.nombre) + (p.de ? '<span class="tag">' + esc(p.de) + '</span>' : '') + '</span>' +
+    return '<button type="button" class="pe" data-per="' + p.id + '">' + avatar(p.nombre) + '<span class="n">' + esc(p.nombre) + (p.de ? '<span class="tag">' + esc(p.de) + '</span>' : '') + '</span>' +
       (p.contado ? '<span class="w">' + esc(p.contado) + '</span>' : '') +
-      (p.ahora ? '<span class="m">Ahora: ' + esc(p.ahora) + '</span>' : '') +
-      (ap ? '<span class="m">Último apunte (' + fmt(ap.fecha) + '): ' + esc(ap.texto) + '</span>' : '') + '</button>';
-  }).join('') : '<p class="empty">' + (q ? 'Nadie con eso.' : 'Nombre, de qué la conoce y lo que te ha contado.') + '</p>';
+      (p.ahora ? '<span class="now">Ahora: ' + esc(p.ahora) + '</span>' : '') +
+      (ap && ap.texto !== p.ahora ? '<span class="m">' + fmt(ap.fecha) + ': ' + esc(ap.texto) + '</span>' : '') + '</button>';
+  }).join('') : '<p class="empty">' + (q ? 'Nadie con eso.' : 'Nombre, de qué la conoce y lo que te ha contado. Una frase sirve.') + '</p>';
   bind($('gente'), '[data-per]', function (b) { personaForm(S.personas[b.dataset.per]); });
 }
 
+// A plan can have a window ("Fira de Santa Llúcia, 27 nov – 23 dic"): show it and warn before it closes
+function ventana(p, t) {
+  if (!p.hasta && !p.desde) return { txt: '', soon: false, gone: false, o: 1e9 };
+  var left = p.hasta ? diff(p.hasta, t) : null, gone = left !== null && left < 0;
+  var txt = p.desde && p.desde > t ? 'del ' + fmt(p.desde) + (p.hasta ? ' al ' + fmt(p.hasta) : '') : gone ? 'se pasó el ' + fmt(p.hasta) : left === 0 ? 'último día hoy' : left !== null ? 'hasta el ' + fmt(p.hasta) + (left <= 7 ? ' · quedan ' + left + ' días' : '') : 'desde el ' + fmt(p.desde);
+  return { txt: txt, soon: left !== null && left >= 0 && left <= 7, gone: gone, o: gone ? 2e9 : left === null ? 1e9 : left };
+}
+function planItem(p, t) {
+  var v = ventana(p, t), meta = [v.txt, p.nota ? esc(p.nota) : ''].filter(Boolean).join(' · ');
+  return '<button type="button" class="it" data-pla="' + p.id + '"><span class="t">' + esc(p.titulo) + '</span>' + (meta ? '<span class="m' + (v.soon ? ' soon' : '') + '">' + meta + '</span>' : '') + '</button>';
+}
 function renderPlanes() {
-  var ps = all('planes'), pend = ps.filter(function (p) { return !p.hecho; }), hechos = ps.filter(function (p) { return p.hecho; }).sort(function (a, b) { return a.hecho < b.hecho ? 1 : -1; });
-  ['suyo', 'mio'].forEach(function (de) {
-    var l = pend.filter(function (p) { return p.de === de; }).sort(byOrden);
-    $('pl-' + de).innerHTML = l.length ? l.map(function (p) { return item('data-pla="' + p.id + '"', esc(p.titulo), p.nota ? esc(p.nota) : ''); }).join('') : '<p class="empty small">' + (de === 'suyo' ? 'Los que le gustan a ella de verdad.' : 'Ninguno.') + '</p>';
+  var t = today(), ps = all('planes'), pend = ps.filter(function (p) { return !p.hecho; }), hechos = ps.filter(function (p) { return p.hecho; }).sort(function (a, b) { return a.hecho < b.hecho ? 1 : -1; });
+  // Turns alternate between hers and mine; the ones for both never break the turn
+  var last = hechos.filter(function (p) { return p.de !== 'juntos'; })[0], toca = !last ? 'suyo' : last.de === 'suyo' ? 'mio' : 'suyo';
+  ['juntos', 'suyo', 'mio'].forEach(function (de) {
+    var l = pend.filter(function (p) { return (p.de || 'suyo') === de; }).sort(function (a, b) { return ventana(a, t).o - ventana(b, t).o || byOrden(a, b); });
+    $('col-' + de).classList.toggle('toca', de === toca);
+    $('pl-' + de).innerHTML = l.length ? l.map(function (p) { return planItem(p, t); }).join('') : '<p class="empty small">' + (de === 'suyo' ? 'Los que le gustan a ella de verdad.' : de === 'juntos' ? 'Lo que queréis hacer los dos.' : 'Ninguno aún.') + '</p>';
   });
-  var last = hechos[0];
-  var toca = !last ? 'suyo' : last.de === 'suyo' ? 'mio' : 'suyo';
-  var dias = last ? diff(today(), last.hecho) : null;
-  $('turno').textContent = 'Toca uno ' + (toca === 'suyo' ? 'suyo' : 'tuyo') + '.' + (dias != null ? ' El último fue ' + rel(last.hecho) + ': ' + last.titulo + '.' : '');
+  $('turno').textContent = 'Toca uno ' + (toca === 'suyo' ? 'suyo' : 'tuyo') + (last ? '. El último, ' + rel(last.hecho) + ': ' + last.titulo + '.' : '. Los de los dos valen siempre.');
   $('pl-hechos-d').hidden = !hechos.length;
-  $('pl-hechos').innerHTML = hechos.map(function (p) { return item('data-pla="' + p.id + '"', esc(p.titulo), (p.de === 'suyo' ? 'Suyo' : 'Mío') + ' · ' + fmt(p.hecho)); }).join('');
+  $('pl-hechos').innerHTML = hechos.map(function (p) { return item('data-pla="' + p.id + '"', esc(p.titulo), (p.de === 'suyo' ? 'Suyo' : p.de === 'juntos' ? 'De los dos' : 'Mío') + ' · ' + fmt(p.hecho)); }).join('');
   bind($('s-planes'), '[data-pla]', function (b) { planForm(S.planes[b.dataset.pla]); });
 }
 
 function renderNecesita() {
   var ns = all('necesita').sort(function (a, b) { return (a.fecha || '') < (b.fecha || '') ? 1 : -1; });
-  $('necesita').innerHTML = ns.length ? ns.map(function (n) { return item('data-nec="' + n.id + '"', '«' + esc(n.texto) + '»', n.fecha ? fmt(n.fecha) : '', 'quote'); }).join('') : '<p class="empty">Cuando te diga lo que necesita, apúntalo aquí tal cual.</p>';
+  $('necesita').innerHTML = ns.length ? ns.map(function (n) { return '<button type="button" class="nq" data-nec="' + n.id + '"><span class="q">' + esc(n.texto) + '</span>' + (n.fecha ? '<span class="m">Te lo dijo el ' + fmt(n.fecha) + '</span>' : '') + '</button>'; }).join('') : '<p class="empty">Cuando te diga lo que necesita, apúntalo aquí tal cual lo dijo.</p>';
   bind($('necesita'), '[data-nec]', function (b) { necesitaForm(S.necesita[b.dataset.nec]); });
 }
 
 function renderSemanas() {
   var ws = all('semanas').sort(function (a, b) { return a.id < b.id ? 1 : -1; });
   $('semanas').innerHTML = ws.length ? ws.map(function (w) {
-    return '<button type="button" class="it wk" data-sem="' + w.id + '"><span class="t">Semana del ' + fmt(w.id) + (w.releida ? ' · carta releída' : '') + '</span>' +
+    return '<button type="button" class="wk" data-sem="' + w.id + '"><span class="t">Semana del ' + fmt(w.id) + (w.releida ? ' <span class="ok-tag">carta releída</span>' : '') + '</span>' +
       PREG.filter(function (q) { return w[q[0]]; }).map(function (q) { return '<span class="w"><b>' + esc(q[1].replace(/\?.*$/, '?')) + '</b> ' + esc(w[q[0]]) + '</span>'; }).join('') + '</button>';
   }).join('') : '<p class="empty">El primero, el domingo.</p>';
   bind($('semanas'), '[data-sem]', function (b) { semanaForm(b.dataset.sem); });
 }
 
 // ---- Generic sheet form ----
-// fields: {k, label, type: text|area|date|chips|check, opts, ph, other}
 function sheet(title, html, cls) {
   var d = $('sheet'); d.className = 'sheet' + (cls ? ' ' + cls : '');
   $('sheetBody').innerHTML = '<div class="sh-top"><h2>' + esc(title) + '</h2><button class="x" type="button" id="shX" aria-label="Cerrar">×</button></div>' + html;
@@ -457,12 +741,12 @@ function sheet(title, html, cls) {
 }
 function form(title, fields, obj, onSave, onDel, extra) {
   obj = obj || {};
-  var h = '<form id="f" class="fld" style="gap:16px">' + fields.map(function (f) {
+  var h = '<form id="f" class="fld" style="gap:18px">' + fields.map(function (f) {
     var v = obj[f.k] == null ? (f.def == null ? '' : f.def) : obj[f.k];
     if (f.type === 'check') return '<label class="chk"><input type="checkbox" name="' + f.k + '"' + (v ? ' checked' : '') + '>' + esc(f.label) + '</label>';
     var inp = f.type === 'area' ? '<textarea name="' + f.k + '" placeholder="' + esc(f.ph || '') + '">' + esc(v) + '</textarea>'
       : '<input type="' + (f.type === 'date' ? 'date' : 'text') + '" name="' + f.k + '" value="' + esc(v) + '" placeholder="' + esc(f.ph || '') + '"' + (f.type === 'chips' && !f.other ? ' hidden' : '') + '>';
-    var chips = f.type === 'chips' ? '<div class="chips" data-for="' + f.k + '">' + f.opts.map(function (o) { var val = o[0] != null ? o[0] : o; var lab = o[1] || o; return '<button type="button" data-v="' + esc(val) + '" class="' + (String(v) === String(val) ? 'on' : '') + '">' + esc(lab) + '</button>'; }).join('') + '</div>' : '';
+    var chips = f.type === 'chips' ? '<div class="chips" data-for="' + f.k + '">' + f.opts.map(function (o) { var val = Array.isArray(o) ? o[0] : o, lab = Array.isArray(o) ? o[1] : o; return '<button type="button" data-v="' + esc(val) + '" class="' + (String(v) === String(val) ? 'on' : '') + '">' + esc(lab) + '</button>'; }).join('') + '</div>' : '';
     return '<label class="fld"><span>' + esc(f.label) + '</span>' + chips + inp + (f.help ? '<span class="small">' + esc(f.help) + '</span>' : '') + '</label>';
   }).join('') + (extra || '') + '<button class="go" type="submit">Guardar</button>' + (onDel ? '<button class="del" type="button" id="fDel">Borrar</button>' : '') + '</form>';
   sheet(title, h);
@@ -474,7 +758,7 @@ function form(title, fields, obj, onSave, onDel, extra) {
       if (!on) b.classList.add('on'); inp.value = on ? '' : b.dataset.v;
     }; });
   });
-  var first = F.querySelector('input[type=text]:not([hidden]),textarea'); if (first && !obj.id) setTimeout(function () { first.focus(); }, 50);
+  var first = F.querySelector('input[type=text]:not([hidden]),textarea'); if (first && !obj.id) setTimeout(function () { first.focus(); }, 80);
   F.onsubmit = function (e) {
     e.preventDefault(); var o = Object.assign({}, obj);
     fields.forEach(function (f) { var el = F.elements[f.k]; o[f.k] = f.type === 'check' ? el.checked : el.value.trim(); });
@@ -524,13 +808,15 @@ function aFicha(nid) {
   toast('Pasado a la ficha de ' + p.nombre + '.');
 }
 function planForm(p, de) {
-  p = p || { de: de || 'suyo' };
+  p = p || { de: de || 'juntos' };
   form(p.id ? 'Plan' : 'Nuevo plan', [
     { k: 'titulo', label: 'Qué', type: 'text' },
-    { k: 'de', label: 'De quién es', type: 'chips', opts: [['suyo', 'Suyo'], ['mio', 'Mío']], help: 'Suyo de verdad: que le apetezca a ella, no solo que a ti te vaya bien.' },
+    { k: 'de', label: 'De quién es', type: 'chips', opts: [['juntos', 'De los dos'], ['suyo', 'Suyo'], ['mio', 'Mío']], help: 'Suyo de verdad: que le apetezca a ella, no solo que a ti te vaya bien.' },
     { k: 'nota', label: 'Nota (opcional)', type: 'text' },
+    { k: 'desde', label: 'Se puede desde (opcional)', type: 'date' },
+    { k: 'hasta', label: 'Se puede hasta (opcional, te aviso una semana antes)', type: 'date' },
     { k: 'hecho', label: 'Hecho el día (vacío si aún no)', type: 'date' }
-  ], p, function (o) { if (!o.titulo) return false; if (!o.de) o.de = 'suyo'; put('planes', o); },
+  ], p, function (o) { if (!o.titulo) return false; if (!o.de) o.de = 'juntos'; put('planes', o); if (o.hecho && !p.hecho) toast('Apuntado. Bien hecho.'); },
   p.id && function () { drop('planes', p.id); });
 }
 function necesitaForm(n) {
@@ -570,7 +856,7 @@ function calm() {
   function lst(tipo, lab, add) {
     var l = grp(tipo);
     return '<div class="fld"><div class="sh2"><span class="lab" style="flex:1">' + lab + '</span><button class="add" type="button" data-addt="' + tipo + '" aria-label="Añadir">＋</button></div>' +
-      (l.length ? '<div class="list">' + l.map(function (w) { return item('data-cw="' + w.id + '"', esc(w.texto), '', tipo === 'mia' ? 'quote' : 'w'); }).join('') + '</div>' : '<p class="small" style="color:var(--on-sky-2)">' + add + '</p>') + '</div>';
+      (l.length ? '<div class="list">' + l.map(function (w) { return tipo === 'mia' ? '<button type="button" class="ql" data-cw="' + w.id + '"><span class="q">' + esc(w.texto) + '</span></button>' : item('data-cw="' + w.id + '"', esc(w.texto), '', 'w'); }).join('') + '</div>' : (add ? '<p class="small" style="color:var(--on-plum-2)">' + add + '</p>' : '')) + '</div>';
   }
   var c = grp('carta')[0], fl = grp('flor')[0];
   var h = (c ? '<p class="big">«' + esc(c.texto) + '»</p>' : '') +
@@ -592,9 +878,11 @@ function calm() {
 function ajustes() {
   var as = all('acciones').sort(byOrden), p = prefs();
   var h = '<div class="fld"><div class="sh2"><span class="lab" style="flex:1">Acciones del día (' + acciones().length + ' activas)</span><button class="add" type="button" id="aNew">＋</button></div><p class="small">Una cada día, en orden. Pocas y que sirvan: quita las que no uses.</p><div class="list">' +
-    as.map(function (a) { return item('data-acc="' + a.id + '"', esc(a.texto), a.pausada ? 'En pausa' : ''); }).join('') + '</div></div>' +
+    as.map(function (a) { return item('data-acc="' + a.id + '"', esc(a.texto), [a.pausada ? 'En pausa' : '', a.momento === 'tarde' ? 'Por la tarde' : '', !a.pausada && (a.saltos || 0) >= 3 ? 'La saltas a menudo (' + a.saltos + '): ¿la pausas?' : ''].filter(Boolean).join(' · ')); }).join('') + '</div></div>' +
+    '<div class="fld"><span class="lab">Lo que abres</span><p class="small">' + SECS.map(function (s) { return s[1] + ': ' + (FOLD.uso[s[0]] || 0); }).join(' · ') + '. Lo que no abras en semanas, quítalo de la vista.</p></div>' +
     '<div class="fld"><span class="lab">Secciones a la vista</span>' + SECS.map(function (s) { return '<label class="chk"><input type="checkbox" data-sec="' + s[0] + '"' + (p.ocultas.indexOf(s[0]) < 0 ? ' checked' : '') + '>' + esc(s[1]) + '</label>'; }).join('') + '</div>' +
-    '<div class="fld"><span class="lab">Recordatorios en el calendario</span><p class="small">Un archivo para el calendario del iPhone: aviso diario a las 9:00 para abrir la app, chequeo el domingo a las 20:00, el martes «acuérdate» y, por cada fecha suya, aviso el día antes y el día después. Los títulos son neutros («Dia a dia») por si salen en la pantalla bloqueada.</p><button class="pill" type="button" id="ics">Descargar recordatorios (.ics)</button><p class="small">En el iPhone, ábrelo desde Safari, no desde la app de la pantalla de inicio. Si cambian las fechas, vuelve a descargarlo (borra antes los anteriores).</p></div>';
+    '<div class="fld"><span class="lab">Recordatorios en el calendario</span><p class="small">Un archivo para el calendario del iPhone: aviso diario a las 9:00 para abrir la app, chequeo el domingo a las 20:00, el martes «acuérdate» y, por cada fecha suya, aviso el día antes y el día después. Los títulos son neutros («Dia a dia») por si salen en la pantalla bloqueada.</p><button class="pill" type="button" id="ics">Descargar recordatorios (.ics)</button><p class="small">En el iPhone, ábrelo desde Safari, no desde la app de la pantalla de inicio. Si cambian las fechas, vuelve a descargarlo (borra antes los anteriores).</p></div>' +
+    '<div class="fld"><span class="lab">Copia de seguridad</span><p class="small">Todo lo que hay en la app, en un archivo. Guárdalo donde quieras.</p><button class="pill alt" type="button" id="jsonB">Descargar copia (.json)</button></div>';
   sheet('Ajustes', h);
   $('aNew').onclick = function () { accionForm(); };
   bind($('sheetBody'), '[data-acc]', function (b) { accionForm(S.acciones[b.dataset.acc]); });
@@ -602,11 +890,17 @@ function ajustes() {
     var q = prefs(), o = q.ocultas.filter(function (x) { return x !== c.dataset.sec; });
     if (!c.checked) o.push(c.dataset.sec); put('ajustes', { id: 'prefs', ocultas: o });
   }; });
-  $('ics').onclick = descargarIcs;
+  $('ics').onclick = function () { descargarIcs(); icsHecho(); };
+  $('jsonB').onclick = function () {
+    var blob = new Blob([JSON.stringify(S, null, 1)], { type: 'application/json' }), a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = 'dia-a-dia-' + today() + '.json'; document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  };
 }
 function accionForm(a) {
   form(a ? 'Acción' : 'Nueva acción', [
     { k: 'texto', label: 'Una sola acción, corta', type: 'text' },
+    { k: 'momento', label: 'Cuándo tiene sentido', type: 'chips', opts: [['', 'Cualquier momento'], ['tarde', 'Por la tarde']] },
     { k: 'pausada', label: 'En pausa', type: 'check' }
   ], a, function (o) { if (!o.texto) return false; if (o.orden == null) o.orden = all('acciones').length; put('acciones', o); setTimeout(ajustes, 0); return false; },
   a && function () { drop('acciones', a.id); setTimeout(ajustes, 0); });
@@ -643,12 +937,13 @@ document.querySelectorAll('[data-add]').forEach(function (b) { b.onclick = funct
 $('semHacer').onclick = function () { semanaForm(semanaPendiente() || monday(today())); };
 $('noteB').onclick = apunteForm;
 $('calmB').onclick = calm;
-$('frase').onclick = function () { fraseOff++; render(); };
 $('ajustesB').onclick = ajustes;
 $('buscar').oninput = renderGente;
+$('frase').onclick = function () { fraseOff++; render(); var f = $('frase'); f.classList.remove('fade'); void f.offsetWidth; f.classList.add('fade'); };
 $('sheet').addEventListener('click', function (e) { if (e.target === $('sheet')) $('sheet').close(); });
-// Days change while the app sits open on the phone
+// Days and the sky change while the app sits open on the phone
 document.addEventListener('visibilitychange', function () { if (!document.hidden) render(); });
+setInterval(function () { if (!document.hidden && !$('sheet').open) renderHero(today()); }, 10 * 60 * 1000);
 
 render();
 (async function () {
@@ -665,7 +960,7 @@ render();
         if (Object.keys(got).length === COLS.length) seed();
       }, function () {});
     });
-  } catch (e) { seed(); }
+  } catch (e) { sinSesion = true; seed(); render(); }
 })();
 </script>
 </body></html>
