@@ -568,7 +568,7 @@ function gastosReales(fn) { Object.values(S.movs).forEach(function (x) { if (x.t
 function mesesHasta(m, n) { var out = [], k = m; for (var i = 0; i < n && k >= S.aj.desde; i++, k = mesAdd(k, -1)) out.push(k); return out; }
 // Charges that come back every month: a fixed bill, a subscription category, or the same concept at nearly the same price in 3 of the last 6 months
 function suscripciones() {
-  var hoy = mesHoy(), desde = mesAdd(hoy, -5), g = {};
+  var hoy = mesHoy(), desde = mesAdd(hoy, -5), g = {}, off = S.aj.subsOff || {};
   gastosReales(function (x) {
     if (mesDe(x.fecha) < desde) return;
     var k = x.fijo ? 'f:' + x.fijo : String(x.desc || '').toLowerCase().trim(); if (!k) return;
@@ -582,8 +582,11 @@ function suscripciones() {
     var sd = Math.sqrt(vals.reduce(function (s, v) { return s + (v - mean) * (v - mean); }, 0) / nm), f = a[0].fijo && S.fijos[a[0].fijo];
     var es = (f && f.cat === 'suscr') || (nm >= 3 && (a[0].cat === 'suscr' || sd / mean < 0.08));
     if (!es || mesDe(a[0].fecha) < mesAdd(hoy, -1) && !(f && !f.hasta)) return;
+    // Marked as no longer paid: hidden until a new charge appears after that day
+    if (off[k] && a[0].fecha <= off[k]) return;
+    if (f && f.hasta && f.hasta < hoy) return;
     var cada = f ? +f.cada || 1 : 1, mensual = (f ? +f.importe : +a[0].importe) / cada;
-    out.push({ n: f ? f.nombre : a[0].desc, cat: a[0].cat, last: a[0].fecha, mensual: mensual, cada: cada, importe: f ? +f.importe : +a[0].importe, meses: nm });
+    out.push({ k: k, f: f ? f.id : '', n: f ? f.nombre : a[0].desc, cat: a[0].cat, last: a[0].fecha, mensual: mensual, cada: cada, importe: f ? +f.importe : +a[0].importe, meses: nm });
   });
   return out.sort(function (p, q) { return q.mensual - p.mensual; });
 }
@@ -596,7 +599,7 @@ function vSubs() {
     var c = cat(x.cat), d = new Date(x.last + 'T12:00:00');
     var per = x.cada === 12 ? '/año' : x.cada > 1 ? '/' + x.cada + ' meses' : '/mes';
     var nota = x.cada > 1 ? CADA[x.cada] + ', unos ' + eur(x.mensual) + ' al mes' : eur0(x.mensual * 12) + ' al año';
-    h += '<div class="row"><div class="ic" style="--h:' + hueOf(x.cat) + '">' + c.e + '</div><div class="mid"><b>' + esc(x.n) + '</b><span>Último cargo el ' + d.getDate() + ' ' + MES3[d.getMonth()].toLowerCase() + ' · ' + nota + '</span></div><div class="amt num">' + eur(x.importe) + '<span class="small">' + per + '</span></div></div>';
+    h += '<div class="row"><div class="ic" style="--h:' + hueOf(x.cat) + '">' + c.e + '</div><div class="mid"><b>' + esc(x.n) + '</b><span>Último cargo el ' + d.getDate() + ' ' + MES3[d.getMonth()].toLowerCase() + ' · ' + nota + '</span><button type="button" class="lnk" style="padding:4px 0;color:var(--muted)" data-act="subsoff" data-k="' + esc(x.k) + '" data-f="' + esc(x.f) + '">Ya no la pago</button></div><div class="amt num">' + eur(x.importe) + '<span class="small">' + per + '</span></div></div>';
   });
   return h + '</section>';
 }
@@ -1044,6 +1047,14 @@ document.addEventListener('click', function (e) {
   else if (act === 'csv') exportCSV();
   else if (act === 'json') bajar('cashflow-copia-' + today() + '.json', JSON.stringify(S, null, 1), 'application/json');
   else if (act === 'imp') $('impf').click();
+  else if (act === 'subsoff') {
+    var fid = a.dataset.f;
+    if (fid && S.fijos[fid]) {
+      // A fixed bill stops from this month on (or from next, if this month's charge is already in)
+      var fo = Object.assign({}, S.fijos[fid]), hm = mesHoy(); fo.hasta = pagoDe(fo, hm) ? hm : mesAdd(hm, -1); if (fo.hasta < fo.desde) fo.hasta = fo.desde; put('fijos', fo);
+    } else { var aj4 = Object.assign({}, S.aj), so = Object.assign({}, aj4.subsOff || {}); so[a.dataset.k] = today(); aj4.subsOff = so; put('aj', aj4); }
+    toast('Quitada de tus suscripciones');
+  }
   else if (act === 'shots') $('shotf').click();
   else if (act === 'invshot') $('invf').click();
   else if (act === 'newinv') openInv(null);
