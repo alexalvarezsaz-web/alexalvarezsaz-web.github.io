@@ -319,6 +319,8 @@ function today() { return iso(new Date()); }
 function mesDe(f) { return String(f).slice(0, 7); }
 function mesHoy() { return mesDe(today()); }
 function mesAdd(m, n) { var y = +m.slice(0, 4), k = +m.slice(5, 7) - 1 + n; y += Math.floor(k / 12); k = ((k % 12) + 12) % 12; return y + '-' + pad(k + 1); }
+function mesesEntre(a, b) { return (+b.slice(0, 4) - +a.slice(0, 4)) * 12 + (+b.slice(5, 7) - +a.slice(5, 7)); }
+var CADA = { 1: 'Cada mes', 3: 'Cada 3 meses', 6: 'Cada 6 meses', 12: 'Cada año' };
 function mesNom(m) { return MESES[+m.slice(5, 7) - 1] + ' ' + m.slice(0, 4); }
 function diasMes(m) { return new Date(+m.slice(0, 4), +m.slice(5, 7), 0).getDate(); }
 function defAj() { return { init: false, ini: { banco: 0, efectivo: 0 }, desde: mesHoy(), cats: DEF_CATS.slice(), pres: {} }; }
@@ -375,7 +377,8 @@ function saldoInicio(m) {
   return o;
 }
 function fijosMes(m) {
-  return Object.values(S.fijos).filter(function (f) { return f.desde <= m && (!f.hasta || m <= f.hasta); })
+  // A bill every n months falls due in its starting month and every n months after
+  return Object.values(S.fijos).filter(function (f) { return f.desde <= m && (!f.hasta || m <= f.hasta) && mesesEntre(f.desde, m) % (+f.cada || 1) === 0; })
     .sort(function (a, b) { return (a.dia || 99) - (b.dia || 99) || String(a.nombre).localeCompare(b.nombre); });
 }
 function pagoDe(f, m) { var ms = movsMes(m); for (var i = 0; i < ms.length; i++) if (ms[i].fijo === f.id) return ms[i]; return null; }
@@ -468,7 +471,7 @@ function vMes() {
   fs.forEach(function (f) {
     var p = pagoDe(f, m), c = f.tipo === 'ahorro' ? { e: '🐷', n: (S.metas[f.meta] || {}).nombre || 'Ahorro' } : cat(f.cat);
     var vence = f.dia ? m + '-' + pad(Math.min(f.dia, diasMes(m))) : '', tarde = !p && vence && vence < hoy;
-    var sub = (f.dia ? (tarde ? '<span class="due">⚠ Vencido el ' + f.dia + '</span>' : 'Día ' + f.dia) + ' · ' : '') + esc(c.n) + ' · ' + CUENTAS[f.cuenta || 'banco'].n;
+    var sub = (f.dia ? (tarde ? '<span class="due">⚠ Vencido el ' + f.dia + '</span>' : 'Día ' + f.dia) + ' · ' : '') + (+f.cada > 1 ? CADA[f.cada] + ' · ' : '') + esc(c.n) + ' · ' + CUENTAS[f.cuenta || 'banco'].n;
     h += '<div class="row"><button type="button" class="chk' + (p ? ' on' : '') + '" data-act="pagar" data-id="' + f.id + '" aria-pressed="' + !!p + '" aria-label="' + (p ? 'Pagado: ' : 'Marcar como pagado: ') + esc(f.nombre) + '">✓</button>' +
       '<div class="mid tap" data-act="editfijo" data-id="' + f.id + '"><b>' + esc(f.nombre) + '</b><span>' + sub + '</span></div>' +
       '<div class="amt num' + (f.tipo === 'ingreso' ? ' pos' : '') + '">' + eur(p ? p.importe : f.importe) + '</div></div>';
@@ -579,8 +582,8 @@ function suscripciones() {
     var sd = Math.sqrt(vals.reduce(function (s, v) { return s + (v - mean) * (v - mean); }, 0) / nm), f = a[0].fijo && S.fijos[a[0].fijo];
     var es = (f && f.cat === 'suscr') || (nm >= 3 && (a[0].cat === 'suscr' || sd / mean < 0.08));
     if (!es || mesDe(a[0].fecha) < mesAdd(hoy, -1) && !(f && !f.hasta)) return;
-    var mensual = f ? +f.importe : +a[0].importe;
-    out.push({ n: f ? f.nombre : a[0].desc, cat: a[0].cat, last: a[0].fecha, mensual: mensual, meses: nm });
+    var cada = f ? +f.cada || 1 : 1, mensual = (f ? +f.importe : +a[0].importe) / cada;
+    out.push({ n: f ? f.nombre : a[0].desc, cat: a[0].cat, last: a[0].fecha, mensual: mensual, cada: cada, importe: f ? +f.importe : +a[0].importe, meses: nm });
   });
   return out.sort(function (p, q) { return q.mensual - p.mensual; });
 }
@@ -591,7 +594,9 @@ function vSubs() {
   h += '<div class="sum"><span class="small">Al mes</span><b class="num">' + eurH(tot) + '</b></div><p class="small" style="margin:-6px 0 6px">Son ' + eur0(tot * 12) + ' al año.</p>';
   s.forEach(function (x) {
     var c = cat(x.cat), d = new Date(x.last + 'T12:00:00');
-    h += '<div class="row"><div class="ic" style="--h:' + hueOf(x.cat) + '">' + c.e + '</div><div class="mid"><b>' + esc(x.n) + '</b><span>Último cargo el ' + d.getDate() + ' ' + MES3[d.getMonth()].toLowerCase() + ' · ' + eur0(x.mensual * 12) + ' al año</span></div><div class="amt num">' + eur(x.mensual) + '<span class="small">/mes</span></div></div>';
+    var per = x.cada === 12 ? '/año' : x.cada > 1 ? '/' + x.cada + ' meses' : '/mes';
+    var nota = x.cada > 1 ? CADA[x.cada] + ', unos ' + eur(x.mensual) + ' al mes' : eur0(x.mensual * 12) + ' al año';
+    h += '<div class="row"><div class="ic" style="--h:' + hueOf(x.cat) + '">' + c.e + '</div><div class="mid"><b>' + esc(x.n) + '</b><span>Último cargo el ' + d.getDate() + ' ' + MES3[d.getMonth()].toLowerCase() + ' · ' + nota + '</span></div><div class="amt num">' + eur(x.importe) + '<span class="small">' + per + '</span></div></div>';
   });
   return h + '</section>';
 }
@@ -636,9 +641,13 @@ function vGraf() {
   if (r.ing > 0 && sobra >= 0) {
     h += donut([{ n: 'Gastos fijos', v: r.fijos, c: 'var(--s-fijo)' }, { n: 'Gastos del día a día', v: r.vars, c: 'var(--s-var)' }, { n: 'Ahorro', v: Math.max(0, r.aho), c: 'var(--s-aho)' }, { n: 'Sobra', v: sobra, c: 'var(--line)' }], eur0(sobra), 'sobra de ' + eur0(r.ing));
     h += '<p class="small">Los fijos se llevan el <b>' + Math.round(r.fijos / r.ing * 100) + ' %</b> de lo que entra' + (r.aho > 0 ? ' y ahorras el <b>' + Math.round(r.aho / r.ing * 100) + ' %</b>' : '') + '.</p>';
+  } else if (r.ing > 0 && r.gas <= r.ing) {
+    // Spending fits in what came in; it is the saving or investing that goes beyond it, paid from money already there
+    h += donut([{ n: 'Gastos fijos', v: r.fijos, c: 'var(--s-fijo)' }, { n: 'Gastos del día a día', v: r.vars, c: 'var(--s-var)' }, { n: 'Ahorro e inversión', v: Math.max(0, r.aho), c: 'var(--s-aho)' }], eur0(r.ing - r.gas), 'te sobra al gastar');
+    h += '<p class="small">Has gastado <b>' + eur0(r.gas) + '</b> de los <b>' + eur0(r.ing) + '</b> que han entrado. Además has apartado <b>' + eur0(r.aho) + '</b>, así que <b>' + eur0(-sobra) + '</b> han salido de dinero que ya tenías (o que pasaste desde otra cuenta).</p>';
   } else if (r.ing > 0) {
-    h += donut([{ n: 'Gastos fijos', v: r.fijos, c: 'var(--s-fijo)' }, { n: 'Gastos del día a día', v: r.vars, c: 'var(--s-var)' }, { n: 'Ahorro', v: Math.max(0, r.aho), c: 'var(--s-aho)' }], '−' + eur0(-sobra), 'más de lo que entra');
-    h += '<p class="small" style="color:var(--crit-ink)">⚠ Este mes ha salido más de lo que ha entrado.</p>';
+    h += donut([{ n: 'Gastos fijos', v: r.fijos, c: 'var(--s-fijo)' }, { n: 'Gastos del día a día', v: r.vars, c: 'var(--s-var)' }, { n: 'Ahorro e inversión', v: Math.max(0, r.aho), c: 'var(--s-aho)' }], '−' + eur0(r.gas - r.ing), 'gastas más de lo que entra');
+    h += '<p class="small" style="color:var(--crit-ink)">⚠ Este mes has gastado ' + eur0(r.gas - r.ing) + ' más de lo que ha entrado, sin contar lo que has ahorrado o invertido.</p>';
   } else h += '<p class="empty">Apunta los ingresos del mes para ver qué parte se llevan los fijos, el día a día y el ahorro.</p>';
   h += '</section>';
   h += vRanking(m) + vSubs() + vMedias(m);
@@ -831,7 +840,7 @@ function vAjustes() {
   h += '<section class="card"><h2>📌 Gastos fijos <button class="lnk" data-act="newfijo">+ Añadir</button></h2>';
   var fs = Object.values(S.fijos).sort(function (x, y) { return (x.hasta ? 1 : 0) - (y.hasta ? 1 : 0) || (x.dia || 99) - (y.dia || 99); });
   if (!fs.length) h += '<p class="empty">Ninguno todavía.</p>';
-  fs.forEach(function (f) { h += '<div class="row tap" data-act="editfijo" data-id="' + f.id + '"><div class="ic">' + (f.tipo === 'ahorro' ? '🐷' : cat(f.cat).e) + '</div><div class="mid"><b>' + esc(f.nombre) + '</b><span>' + (f.hasta ? 'Terminado en ' + mesNom(f.hasta).toLowerCase() : (f.dia ? 'Día ' + f.dia + ' · ' : '') + 'Desde ' + mesNom(f.desde).toLowerCase()) + '</span></div><div class="amt num">' + eur(f.importe) + '</div></div>'; });
+  fs.forEach(function (f) { h += '<div class="row tap" data-act="editfijo" data-id="' + f.id + '"><div class="ic">' + (f.tipo === 'ahorro' ? '🐷' : cat(f.cat).e) + '</div><div class="mid"><b>' + esc(f.nombre) + '</b><span>' + (f.hasta ? 'Terminado en ' + mesNom(f.hasta).toLowerCase() : (f.dia ? 'Día ' + f.dia + ' · ' : '') + (CADA[f.cada || 1] || '') + ' · Desde ' + mesNom(f.desde).toLowerCase()) + '</span></div><div class="amt num">' + eur(f.importe) + '</div></div>'; });
   h += '</section>';
   h += '<section class="card"><h2>Categorías y presupuestos</h2><p class="small" style="margin-top:0">Pon un límite al mes en las categorías que quieras vigilar (déjalo vacío si no).</p><h3>Gastos</h3>';
   a.cats.forEach(function (c, i) { if (c.t === 'g') h += catRow(c, i, true); });
@@ -907,7 +916,8 @@ function drawFijo() {
   var f = F.x, h = hd(f.id ? 'Editar fijo' : 'Nuevo gasto fijo');
   h += '<div class="seg" role="group" aria-label="Tipo">' + [['gasto', 'Gasto'], ['ahorro', 'Ahorro'], ['ingreso', 'Ingreso']].map(function (o) { return '<button type="button" data-tipo="' + o[0] + '" aria-pressed="' + (f.tipo === o[0]) + '">' + o[1] + '</button>'; }).join('') + '</div>';
   h += '<label class="f" for="fjN">Nombre</label><input class="in" id="fjN" value="' + esc(f.nombre) + '" placeholder="' + (f.tipo === 'ingreso' ? 'Nómina' : f.tipo === 'ahorro' ? 'Fondo de emergencia' : 'Alquiler, gimnasio…') + '">';
-  h += '<div class="two"><div><label class="f" for="fjI">Importe al mes</label><input class="in num" id="fjI" inputmode="decimal" value="' + numTxt(f.importe) + '" placeholder="0,00"></div><div><label class="f" for="fjD">Día de pago</label><input class="in num" id="fjD" inputmode="numeric" value="' + (f.dia || '') + '" placeholder="Ej. 5"></div></div>';
+  h += '<div class="two"><div><label class="f" for="fjI">Importe</label><input class="in num" id="fjI" inputmode="decimal" value="' + numTxt(f.importe) + '" placeholder="0,00"></div><div><label class="f" for="fjD">Día de pago</label><input class="in num" id="fjD" inputmode="numeric" value="' + (f.dia || '') + '" placeholder="Ej. 5"></div></div>';
+  h += '<label class="f">Se repite</label>' + chips('cada', [['1', 'Cada mes'], ['3', 'Cada 3 meses'], ['12', 'Cada año']], String(f.cada || 1));
   h += '<label class="f">' + (f.tipo === 'ingreso' ? 'Entra en' : 'Se paga con') + '</label>' + chips('cuenta', [['banco', '🏦 Banco'], ['efectivo', '💶 Efectivo']], f.cuenta);
   if (f.tipo === 'ahorro') h += '<label class="f">Hucha</label>' + chips('meta', [['', '💰 Sin hucha']].concat(Object.values(S.metas).map(function (m) { return [m.id, esc((m.emoji || '🐷') + ' ' + m.nombre)]; })), f.meta || '');
   else h += '<label class="f">Categoría</label>' + chips('cat', S.aj.cats.filter(function (c) { return c.t === (f.tipo === 'ingreso' ? 'i' : 'g'); }).map(function (c) { return [c.id, c.e + ' ' + esc(c.n)]; }), f.cat);
@@ -1002,6 +1012,7 @@ document.addEventListener('click', function (e) {
     if (!fj.nombre) { $('fjN').focus(); return; }
     if (!(fj.importe > 0)) { $('fjI').focus(); return; }
     if (fj.tipo !== 'ahorro' && !fj.cat) fj.cat = fj.tipo === 'ingreso' ? 'otrosi' : 'otros';
+    fj.cada = +fj.cada > 1 ? +fj.cada : 1;
     if (!fj.id) { fj.id = uid(); fj.ts = Date.now(); }
     put('fijos', fj); closeSheet();
   }
