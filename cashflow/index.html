@@ -54,7 +54,10 @@ button { cursor: pointer; touch-action: manipulation; }
 .pos { color: var(--pos); } .neg { color: var(--neg); } .mut { color: var(--muted); }
 .ico { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
 
-/* shell */
+/* shell: the page scrolls inside its own box, so the tab bar stays on screen even where a host stretches the frame to the page's full length (the iPhone viewer does) */
+html, body { height: 100%; overflow: hidden; }
+.sc { position: fixed; inset: 0; overflow-x: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; }
+.wrap { padding-top: env(safe-area-inset-top, 0px); }
 .wrap { max-width: 560px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-bottom: calc(132px + env(safe-area-inset-bottom, 0px)); }
 .top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-block: 10px; background: var(--bg); }
 .top.sh { box-shadow: 0 8px 12px -12px rgba(0, 0, 0, .25); }
@@ -84,6 +87,8 @@ button { cursor: pointer; touch-action: manipulation; }
 .hero .lbl { display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--on-forest2); }
 .hero .big { font-size: 42px; line-height: 1.05; margin: 8px 0 4px; }
 .hero .delta { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 600; padding: 3px 9px; border-radius: 999px; background: rgba(255, 255, 255, .09); color: var(--on-forest); }
+.hero .bd { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 10px; font-size: 12px; color: var(--on-forest2); }
+.hero .bd b { color: var(--on-forest); font-weight: 600; font-variant-numeric: tabular-nums; }
 .hero .spark { display: block; width: calc(100% + 40px); height: 64px; margin: 10px -20px 6px; }
 .hero .accs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .hero .acc { border: 1px solid rgba(255, 255, 255, .09); background: rgba(255, 255, 255, .06); border-radius: 14px; padding: 9px 12px; text-align: left; color: inherit; }
@@ -306,7 +311,7 @@ textarea.in { padding: 10px 13px; min-height: 70px; resize: vertical; }
 .welcome p { color: var(--ink2); margin: 0 0 8px; }
 </style>
 
-<div class="wrap">
+<div class="sc" id="sc"><div class="wrap">
   <header class="top" id="top">
     <div class="brand"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="15" fill="#0b231a"/><path d="M12 42c8 0 10-14 20-14s12 10 20 10" fill="none" stroke="#3fd09a" stroke-width="6" stroke-linecap="round"/><path d="M44 30l9 8-10 5" fill="none" stroke="#3fd09a" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Cash Flow</span></div>
     <div class="mnav" id="mnav" role="group" aria-label="Periodo">
@@ -317,7 +322,7 @@ textarea.in { padding: 10px 13px; min-height: 70px; resize: vertical; }
   </header>
   <div class="sync" id="sync" role="status"></div>
   <main id="view" class="view"></main>
-</div>
+</div></div>
 
 <button type="button" class="fab" id="fab" aria-label="Añadir movimiento"><svg class="ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
 <nav class="tabs" aria-label="Secciones"><div class="in" id="tabs">
@@ -476,9 +481,10 @@ function fijosMes(m) {
 const pagoDe = (f, m) => movsMes(m).find(x => x.fijo === f.id) || null;
 function resumen(m) {
   if (RES[m]) return RES[m];
-  const r = { ing: 0, gas: 0, fijos: 0, vars: 0, aho: 0, inv: 0, porPagar: 0, porCat: {}, porCta: { banco: 0, efectivo: 0 }, n: 0 };
+  const r = { ing: 0, gas: 0, fijos: 0, vars: 0, aho: 0, inv: 0, prop: 0, porPagar: 0, porCat: {}, porCta: { banco: 0, efectivo: 0 }, n: 0 };
   movsMes(m).forEach(x => {
-    const v = +x.importe || 0; if (!isReal(x)) return;
+    // Money to or from Alex's other accounts moves the balance without being income or spending; it is kept apart as prop
+    const v = +x.importe || 0; if (!isReal(x)) { r.prop += x.tipo === 'ingreso' ? v : -v; return; }
     if (x.tipo === 'ingreso') r.ing += v;
     else if (x.tipo === 'gasto') { r.gas += v; r.n++; if (x.fijo) r.fijos += v; else r.vars += v; r.porCat[x.cat] = (r.porCat[x.cat] || 0) + v; r.porCta[x.cuenta || 'banco'] += v; }
     else if (x.tipo === 'ahorro') { r.aho += v; if (x.meta === 'inv') r.inv += v; }
@@ -540,7 +546,8 @@ let UI = {}; try { UI = JSON.parse(localStorage.getItem(LSV) || '{}') || {}; } c
 const V = { v: ['inicio', 'movs', 'analisis', 'ahorro', 'ajustes'].indexOf(UI.v) >= 0 ? UI.v : 'inicio', m: mesHoy(), an: UI.an || 'mes', q: '', ft: 'todo', fc: '', fcta: '', fm: '', lim: 40 };
 function saveUI() { try { localStorage.setItem(LSV, JSON.stringify({ v: V.v, an: V.an })); } catch (e) {} }
 let lastView = '';
-function setView(v) { V.v = v; saveUI(); render(); window.scrollTo(0, 0); }
+const SC = $('sc');
+function setView(v) { V.v = v; saveUI(); render(); SC.scrollTo(0, 0); }
 function render() {
   document.querySelectorAll('#tabs button').forEach(b => b.dataset.v === V.v ? b.setAttribute('aria-current', 'page') : b.removeAttribute('aria-current'));
   const yearMode = V.v === 'analisis' && V.an === 'anio';
@@ -567,7 +574,7 @@ function countUp() {
   const t0 = performance.now(), dur = 650;
   (function step(t) { const p = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - p, 3); el.innerHTML = eurH(from + (to - from) * e); if (p < 1 && el.isConnected) requestAnimationFrame(step); })(t0);
 }
-addEventListener('scroll', () => $('top').classList.toggle('sh', scrollY > 4), { passive: true });
+SC.addEventListener('scroll', () => $('top').classList.toggle('sh', SC.scrollTop > 4), { passive: true });
 
 // ================= Screens =================
 function vCargando() { return '<div class="sk" style="height:220px;border-radius:24px;margin-bottom:12px"></div><div class="sk" style="height:70px;margin-bottom:12px"></div><div class="sk" style="height:160px;margin-bottom:12px"></div><div class="sk" style="height:260px"></div>'; }
@@ -592,7 +599,9 @@ function vInicio() {
   let h = '<div class="greet"><small>' + (cur ? saludo() + (NOMBRE ? ', ' + esc(NOMBRE) : '') : 'Así cerró') + '</small><h1>' + esc(MESES[+m.slice(5) - 1]) + (m.slice(0, 4) !== String(new Date().getFullYear()) ? ' ' + m.slice(0, 4) : '') + '</h1></div>';
   h += '<section class="hero"><div class="lbl"><span>' + (cur ? 'Saldo total' : 'Saldo al cierre') + '</span><span>' + (r.porPagar ? 'Fijos por pagar ' + eur0(r.porPagar) : '') + '</span></div>' +
     '<div class="big fig" data-count="' + r2(total) + '">' + eurH(total) + '</div>' +
-    '<span class="delta">' + ico(delta >= 0 ? 'up' : 'down') + '<b>' + eurH(delta, true) + '</b> este mes</span>' + spark(m) +
+    '<span class="delta">' + ico(delta >= 0 ? 'up' : 'down') + '<b>' + eurH(delta, true) + '</b> este mes</span>' +
+    // Where that change comes from, so the curve and the month's figures add up
+    '<div class="bd"><span><b>' + eurH(r.ing, true) + '</b> entra</span><span><b>' + eurH(-r.gas, true) + '</b> gastos</span>' + (r.aho ? '<span><b>' + eurH(-r.aho, true) + '</b> apartado</span>' : '') + (r.prop ? '<span><b>' + eurH(r.prop, true) + '</b> ' + (r.prop > 0 ? 'de' : 'a') + ' tus otras cuentas</span>' : '') + '</div>' + spark(m) +
     '<div class="accs"><button type="button" class="acc" data-act="filtcta" data-v="banco"><span>Banco</span><b class="fig">' + eurH(r.fin.banco) + '</b></button><button type="button" class="acc" data-act="filtcta" data-v="efectivo"><span>Efectivo</span><b class="fig">' + eurH(r.fin.efectivo) + '</b></button></div>' +
     (r.porPagar ? '<div class="foot"><span>Después de los fijos te quedan</span><b class="fig">' + eurH(total - r.porPagar) + '</b></div>' : '') + '</section>';
   h += '<div class="qa"><button type="button" data-act="nuevo">' + ico('plus') + 'Apuntar</button><button type="button" data-act="shots">' + ico('cam') + 'Capturas</button><button type="button" data-act="cajero">' + ico('traspaso') + 'Cajero</button><button type="button" data-act="ahorrar">' + ico('hucha') + 'Ahorrar</button></div>';
@@ -824,7 +833,7 @@ function vAnio() {
     if (!x.r) return; s += '<path d="' + barTop(cx - bw - 1, Y(x.r.ing), bw, B - Y(x.r.ing)) + '" fill="var(--s3)"/><path d="' + barTop(cx + 1, Y(x.r.gas), bw, B - Y(x.r.gas)) + '" fill="var(--s2)"/>';
     s += '<rect x="' + (L + 2 + gw * i) + '" y="0" width="' + gw + '" height="' + B + '" fill="transparent" data-tip="' + esc(MESES[i] + ' · entra ' + eur(x.r.ing) + ' · gastas ' + eur(x.r.gas)) + '"/>'; });
   h += '<section class="card"><h2>Mes a mes</h2><div class="legend"><span><i style="background:var(--s3)"></i>Entra</span><span><i style="background:var(--s2)"></i>Gastas</span></div>' + s + '</svg></section>';
-  const pts = ms.filter(x => x.r).map(x => ({ i: +x.m.slice(5) - 1, v: x.r.fin.banco + x.r.fin.efectivo }));
+  const pts = ms.filter(x => x.r).map(x => ({ i: +x.m.slice(5) - 1, v: x.r.fin.banco + x.r.fin.efectivo, r: x.r }));
   if (pts.length > 1) {
     const vs = pts.map(p => p.v), lo0 = Math.min(...vs), hi0 = Math.max(...vs), st = niceMax((hi0 - lo0 || hi0 || 1) / 3), lo = Math.max(0, Math.floor(lo0 / st) * st), hi = Math.ceil(hi0 / st) * st || st;
     const X = i => L + 2 + gw * i + gw / 2, Y2 = v => B - (B - T) * (v - lo) / ((hi - lo) || 1);
@@ -832,12 +841,23 @@ function vAnio() {
     MES3.forEach((n, i) => { l += '<text x="' + X(i) + '" y="' + (B + 16) + '" text-anchor="middle">' + n.charAt(0).toUpperCase() + '</text>'; });
     const d = pts.map((p, k) => (k ? 'L' : 'M') + X(p.i).toFixed(1) + ',' + Y2(p.v).toFixed(1)).join('');
     l += '<path d="' + d + 'L' + X(pts[pts.length - 1].i) + ',' + B + 'L' + X(pts[0].i) + ',' + B + 'Z" fill="var(--s3)" opacity=".1"/><path d="' + d + '" fill="none" stroke="var(--s3)" stroke-width="2" stroke-linejoin="round"/>';
-    pts.forEach(p => { l += '<circle cx="' + X(p.i) + '" cy="' + Y2(p.v) + '" r="3.5" fill="var(--s3)" stroke="var(--surface)" stroke-width="2"/><circle cx="' + X(p.i) + '" cy="' + Y2(p.v) + '" r="14" fill="transparent" data-tip="' + esc(MESES[p.i] + ': ' + eur(p.v)) + '"/>'; });
-    h += '<section class="card"><h2>Tu dinero al cerrar cada mes</h2>' + l + '</svg></section>';
+    pts.forEach(p => {
+      const r = p.r, own = r.prop, big = Math.abs(own) >= 500, dm = r.ing - r.gas - r.aho;
+      const tipTxt = MESES[p.i] + ': cerró con ' + eur0(p.v) + ' · del mes ' + (dm >= 0 ? '+' : '−') + eur0(Math.abs(dm)) + (own ? ' · ' + (own > 0 ? '+' : '−') + eur0(Math.abs(own)) + (own > 0 ? ' de' : ' a') + ' tus otras cuentas' : '');
+      // Months moved mostly by transfers between Alex's own accounts carry their amount, so a jump is not read as spending or saving
+      if (big) l += '<text x="' + X(p.i) + '" y="' + (own > 0 ? Y2(p.v) - 9 : Y2(p.v) + 17) + '" text-anchor="middle" style="fill:var(--ink2);font-weight:600">' + (own > 0 ? '↑' : '↓') + kfmt(Math.abs(own)) + '</text>';
+      l += '<circle cx="' + X(p.i) + '" cy="' + Y2(p.v) + '" r="' + (big ? 4.5 : 3.5) + '" fill="' + (big ? 'var(--surface)' : 'var(--s3)') + '" stroke="var(--s3)" stroke-width="2"/><circle cx="' + X(p.i) + '" cy="' + Y2(p.v) + '" r="14" fill="transparent" data-tip="' + esc(tipTxt) + '"/>';
+    });
+    h += '<section class="card"><h2>Saldo al cerrar cada mes</h2>' + l + '</svg><p class="note">Es lo que había en tu cuenta y en efectivo. Los puntos huecos con ↑ o ↓ son meses en los que pasaste dinero desde o hacia tus otras cuentas: por eso la línea salta aunque ese mes no ganaras ni gastaras tanto.</p></section>';
   }
-  h += '<section class="card"><h2>Resumen por meses</h2><div class="tblw"><table class="tbl"><thead><tr><th>Mes</th><th>Entra</th><th>Gasta</th><th>Aparta</th><th>Balance</th></tr></thead><tbody>';
-  ms.forEach((x, i) => { if (!x.r) return; const bal = x.r.ing - x.r.gas - x.r.aho; h += '<tr' + (x.m === now ? ' class="now"' : '') + '><td>' + MESES[i] + '</td><td>' + eur0(x.r.ing) + '</td><td>' + eur0(x.r.gas) + '</td><td>' + eur0(x.r.aho) + '</td><td class="' + (bal < 0 ? 'neg' : 'pos') + '">' + (bal > 0 ? '+' : '') + eur0(bal) + '</td></tr>'; });
-  h += '</tbody></table></div></section>';
+  // Each row adds up: what came in, minus spending and saving, plus transfers with other accounts, is how much the balance moved
+  const sg = v => (v > 0 ? '+' : v < 0 ? '−' : '') + eur0(Math.abs(v));
+  h += '<section class="card"><h2>Cómo se movió tu saldo</h2><div class="tblw"><table class="tbl"><thead><tr><th>Mes</th><th>Entra</th><th>Gasta</th><th>Aparta</th><th>Del mes</th><th>Tus cuentas</th><th>Saldo</th></tr></thead><tbody>';
+  let tdm = 0, tpr = 0;
+  ms.forEach((x, i) => { if (!x.r) return; const dm = x.r.ing - x.r.gas - x.r.aho, d = dm + x.r.prop; tdm += dm; tpr += x.r.prop;
+    h += '<tr' + (x.m === now ? ' class="now"' : '') + '><td>' + MES3[i].charAt(0).toUpperCase() + MES3[i].slice(1) + '</td><td>' + eur0(x.r.ing) + '</td><td>' + eur0(x.r.gas) + '</td><td>' + eur0(x.r.aho) + '</td><td class="' + (dm < 0 ? 'neg' : 'pos') + '">' + sg(dm) + '</td><td class="mut">' + (x.r.prop ? sg(x.r.prop) : '—') + '</td><td><b>' + sg(d) + '</b></td></tr>'; });
+  h += '<tr><td><b>Total</b></td><td></td><td></td><td></td><td class="' + (tdm < 0 ? 'neg' : 'pos') + '"><b>' + sg(tdm) + '</b></td><td class="mut"><b>' + sg(tpr) + '</b></td><td><b>' + sg(tdm + tpr) + '</b></td></tr>';
+  h += '</tbody></table></div><p class="note"><b>Del mes</b> es lo que entra menos lo que gastas y apartas. <b>Tus cuentas</b> es lo que pasas desde (+) o hacia (−) tus otras cuentas y Revolut. <b>Saldo</b> es la suma de las dos: lo que subió o bajó tu cuenta.</p></section>';
   const pc = {}; ms.forEach(x => { if (x.r) Object.keys(x.r.porCat).forEach(k => { pc[k] = (pc[k] || 0) + x.r.porCat[k]; }); });
   const rows = Object.keys(pc).map(k => ({ l: cat(k).n, c: k, v: pc[k] })).sort((a, b) => b.v - a.v).slice(0, 10);
   if (rows.length) h += '<section class="card"><h2>Lo que más pesa en ' + y + '</h2>' + hbars(rows) + '</section>';
@@ -1088,7 +1108,7 @@ document.addEventListener('change', e => {
   if (t.classList.contains('impchk')) { const it = F.items && F.items[+t.dataset.i]; if (it) { it.on = t.checked; const g = $('impGo'); if (g) g.textContent = impGoTxt(); } }
   if (t.classList.contains('cartchk')) { const it = F.items && F.items[+t.dataset.i]; if (it) it.on = t.checked; }
 });
-$('tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { if (b.dataset.v === V.v) window.scrollTo({ top: 0, behavior: 'smooth' }); else { if (b.dataset.v === 'movs') V.fm = ''; setView(b.dataset.v); } } });
+$('tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { if (b.dataset.v === V.v) SC.scrollTo({ top: 0, behavior: 'smooth' }); else { if (b.dataset.v === 'movs') V.fm = ''; setView(b.dataset.v); } } });
 function step(n) { V.m = mesAdd(V.m, V.v === 'analisis' && V.an === 'anio' ? 12 * n : n); render(); }
 $('mPrev').onclick = () => step(-1); $('mNext').onclick = () => step(1);
 $('mLab').onclick = () => { V.m = mesHoy(); render(); };
@@ -1129,7 +1149,7 @@ document.addEventListener('click', async e => {
     case 'an': V.an = a.dataset.v; saveUI(); render(); break;
     case 'vermes': V.q = ''; V.ft = 'todo'; V.fc = ''; V.fcta = ''; V.fm = V.m; V.lim = 400; setView('movs'); break;
     case 'fmoff': V.fm = ''; V.lim = 40; render(); break;
-    case 'vermesan': V.m = a.dataset.v; V.an = 'mes'; render(); window.scrollTo({ top: 0, behavior: 'smooth' }); break;
+    case 'vermesan': V.m = a.dataset.v; V.an = 'mes'; render(); SC.scrollTo({ top: 0, behavior: 'smooth' }); break;
     case 'filtcta': V.fcta = a.dataset.v; V.ft = 'todo'; V.fc = ''; V.q = ''; setView('movs'); break;
     case 'ft': V.ft = a.dataset.v; V.lim = 40; render(); break;
     case 'fcta': V.fcta = V.fcta === a.dataset.v ? '' : a.dataset.v; V.lim = 40; render(); break;
@@ -1393,7 +1413,7 @@ function onPoint(e) {
 }
 document.addEventListener('pointermove', e => { if (e.pointerType === 'mouse') onPoint(e); });
 document.addEventListener('pointerdown', onPoint);
-addEventListener('scroll', hideTip, { passive: true });
+SC.addEventListener('scroll', hideTip, { passive: true });
 
 render();
 setInterval(() => { if (!sheet.open && !askD.open && (!document.activeElement || document.activeElement.tagName !== 'INPUT')) { RES = {}; render(); } }, 60000);
