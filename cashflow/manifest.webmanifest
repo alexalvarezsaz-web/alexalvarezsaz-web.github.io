@@ -1,0 +1,15 @@
+{
+  "name": "Cash Flow",
+  "short_name": "Cash Flow",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f2f4ef",
+  "theme_color": "#0f3b2c",
+  "icons": [
+    { "src": "icon-192.png?v=1", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png?v=1", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon.svg?v=1", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

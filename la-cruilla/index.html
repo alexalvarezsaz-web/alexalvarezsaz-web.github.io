@@ -332,6 +332,13 @@ var POSTERS = {
     '<g fill="#f2a7a0" transform="translate(282 70)">' + [0, 72, 144, 216, 288].map(function (a) { return '<ellipse cx="0" cy="-17" rx="12" ry="19" transform="rotate(' + a + ')"/>'; }).join('') + '</g><circle cx="282" cy="70" r="10" fill="#f2b67a"/>' +
     '<g fill="#8ec5e8">' + [[338, 28, 1], [326, 50, .8], [314, 70, .6]].map(function (d) { return '<path transform="translate(' + d[0] + ' ' + d[1] + ') scale(' + d[2] + ')" d="M0 -9 C5 -2 7 2 7 5 A7 7 0 0 1 -7 5 C-7 2 -5 -2 0 -9Z"/>'; }).join('') + '</g>' +
     '<path d="M246 176 H318" stroke="#a07a5c" stroke-width="5" stroke-linecap="round"/>'),
+  'cashflow': poster('#0f3b2c', bands(['#0b2f23', '#0f3b2c', '#134733', '#17573f', '#1c6649']) +
+    '<g fill="#e9c46a" stroke="#b8902e" stroke-width="3">' + [[300, 176], [300, 160], [300, 144], [336, 176], [336, 160], [64, 176]].map(function (c) { return '<ellipse cx="' + c[0] + '" cy="' + c[1] + '" rx="26" ry="9"/>'; }).join('') + '</g>' +
+    '<rect x="92" y="150" width="120" height="34" rx="5" fill="#8fd4a8" transform="rotate(-8 152 167)"/><circle cx="152" cy="167" r="10" fill="none" stroke="#0f3b2c" stroke-width="3" transform="rotate(-8 152 167)"/>' +
+    '<path d="M30 120 C90 120 100 60 170 64 S250 110 300 70 L350 40" fill="none" stroke="#3fc58b" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>' +
+    '<path d="M326 34 L356 36 L348 64" fill="none" stroke="#3fc58b" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>' +
+    '<text x="70" y="70" font-family="Segoe UI,Arial,sans-serif" font-weight="800" font-size="44" fill="#f1fbf5">€</text>' +
+    '<rect y="194" width="400" height="26" fill="#0a281e"/>'),
   'pronosticos': poster('#1b1c4a', bands(['#14153a', '#1b1c4a', '#23246a', '#2e2f7c', '#3d3e96']) +
     '<g fill="#f3f3ff">' + [[40, 30], [96, 62], [150, 20], [196, 50], [232, 22], [24, 96], [132, 104], [380, 140], [214, 92]].map(function (p, i) { return '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="' + (i % 3 ? 1.6 : 2.3) + '"/>'; }).join('') + '</g>' +
     '<circle cx="304" cy="66" r="52" fill="#9a98f0" fill-opacity=".14"/><circle cx="304" cy="66" r="40" fill="#b9b7ff"/><circle cx="304" cy="66" r="40" fill="none" stroke="#e9e8ff" stroke-width="3"/><path d="M280 48 C286 36 298 30 312 29" fill="none" stroke="#ffffff" stroke-opacity=".8" stroke-width="6" stroke-linecap="round"/><path d="M284 82 L296 70 L307 78 L324 58" fill="none" stroke="#3b3aa8" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="324" cy="58" r="5" fill="#3b3aa8"/>' +
@@ -436,7 +443,8 @@ var LIVE_SRC = {
   'per-molts-anys': [['gente', 'personas']],
   rebotica: [['turnos', 'guardias']],
   pronosticos: [['pred', 'predicciones']],
-  'dia-a-dia': [['h', 'hechos']]
+  'dia-a-dia': [['h', 'hechos']],
+  cashflow: [['movs', 'movs', function (q) { var d = new Date(); return q.where('fecha', '>=', d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-01'); }]]
 };
 // Each returns { n: big figure, u: its unit, s: one short line } or null when there is nothing worth showing
 var LIVE_FN = {
@@ -535,6 +543,12 @@ var LIVE_FN = {
     var done = {}; docs(r, 'h').forEach(function (x) { if (x.hecho) done[x.id] = 1; });
     var d = new Date(), n = 0; for (var i = 0; i < 14; i++) { if (done[isoDay(d)]) n++; d.setDate(d.getDate() - 1); }
     return n ? { n: n, u: 'de 14 días', s: 'regándola' } : null;
+  },
+  // What has gone out this month, the same total as Cash Flow's "Gastos" tile
+  cashflow: function (r) {
+    var g = 0, i = 0; docs(r, 'movs').forEach(function (x) { if (x.tipo === 'gasto') g += +x.importe || 0; else if (x.tipo === 'ingreso') i += +x.importe || 0; });
+    if (!g && !i) return null;
+    return { n: Math.round(g), u: '€ gastados este mes', s: i ? 'Han entrado ' + Math.round(i) + ' €' : '' };
   }
 };
 var LIVE_ALIAS = { 'diari-bolets': 'bolets' };
@@ -711,7 +725,8 @@ var NEW_PAGES = [['formigues', { nombre: 'Formigues', texto: 'Diario y mapa del 
   ['pronosticos', { nombre: 'Pronósticos', texto: 'Apunta lo que crees que va a pasar y mira cómo de bien calibrado estás.', categoria: 'Otros' }, '../pronosticos/'],
   ['estrat', { nombre: 'Estrat', texto: 'Mapa geológico del Berguedà, tus sitios de fósiles y minerales, y tu colección', categoria: 'Naturaleza' }, '../estrat/'],
   ['calendario', { nombre: 'Cuándo Toca', texto: 'Tu agenda: escribe el plan tal cual y se apunta en su día', categoria: 'Casa' }, '../calendario/'],
-  ['dia-a-dia', { nombre: 'Dia a dia', texto: 'Una cosa cada día para no acomodarte, y la flor que se riega', categoria: 'Otros' }, '../dia-a-dia/']];
+  ['dia-a-dia', { nombre: 'Dia a dia', texto: 'Una cosa cada día para no acomodarte, y la flor que se riega', categoria: 'Otros' }, '../dia-a-dia/'],
+  ['cashflow', { nombre: 'Cash Flow', texto: 'Tu dinero del mes: banco y efectivo, fijos, huchas e inversiones', categoria: 'Casa' }, '../cashflow/']];
 var adding = false;
 async function addOnce() {
   if (adding || location.protocol !== 'https:') return;
